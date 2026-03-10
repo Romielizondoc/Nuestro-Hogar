@@ -144,9 +144,51 @@
 
   @media(max-width:900px){ .grid-3{grid-template-columns:1fr 1fr} }
   @media(max-width:600px){ .grid-3,.grid-2{grid-template-columns:1fr} .notes-grid{grid-template-columns:1fr} .tabs{flex-wrap:wrap} header{padding:12px 14px} .container{padding:14px} .header-date{display:none} }
+
+  /* PASSWORD SCREEN */
+  #password-screen {
+    position:fixed; inset:0; background:var(--charcoal);
+    display:flex; align-items:center; justify-content:center;
+    z-index:99999; padding:24px;
+  }
+  #password-screen.hidden { display:none; }
+  .pwd-box {
+    background:white; border-radius:28px; padding:40px;
+    width:100%; max-width:380px; text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,0.4);
+  }
+  .pwd-logo { font-family:'Playfair Display',serif; font-size:32px; color:var(--charcoal); margin-bottom:6px; }
+  .pwd-logo span { color:var(--terracota); }
+  .pwd-sub { color:var(--text-light); font-size:14px; margin-bottom:28px; }
+  .pwd-input {
+    width:100%; padding:14px 16px; border:2px solid var(--warm);
+    border-radius:14px; font-family:'DM Sans',sans-serif; font-size:16px;
+    color:var(--charcoal); background:var(--cream); outline:none;
+    text-align:center; letter-spacing:4px; margin-bottom:12px;
+    transition:border-color .2s;
+  }
+  .pwd-input:focus { border-color:var(--terracota); }
+  .pwd-btn {
+    width:100%; padding:14px; border-radius:14px; border:none;
+    background:var(--terracota); color:white; font-family:'DM Sans',sans-serif;
+    font-size:15px; font-weight:500; cursor:pointer; transition:.2s;
+  }
+  .pwd-btn:hover { background:#b5503a; }
+  .pwd-error { color:var(--terracota); font-size:13px; margin-top:10px; min-height:18px; }
 </style>
 </head>
 <body>
+
+<!-- PASSWORD SCREEN -->
+<div id="password-screen">
+  <div class="pwd-box">
+    <div class="pwd-logo">✦ <span>Nuestro</span> Hogar</div>
+    <div class="pwd-sub">Panel familiar privado</div>
+    <input class="pwd-input" id="pwd-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPwd()"/>
+    <button class="pwd-btn" onclick="checkPwd()">Entrar</button>
+    <div class="pwd-error" id="pwd-error"></div>
+  </div>
+</div>
 
 <header>
   <div class="logo">✦ <span>Nuestro</span> Hogar</div>
@@ -490,13 +532,33 @@ function toast(msg, type='') {
   setTimeout(() => el.classList.remove('show'), 2800);
 }
 
+// ── Contraseña ──
+const PWD = 'Casa1230';
+function checkPwd() {
+  const val = document.getElementById('pwd-input').value;
+  if (val === PWD) {
+    sessionStorage.setItem('hogar-auth', '1');
+    document.getElementById('password-screen').classList.add('hidden');
+    syncAll();
+  } else {
+    document.getElementById('pwd-error').textContent = 'Contraseña incorrecta, intenta de nuevo';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
 // ── Init ──
 document.getElementById('headerDate').textContent = (() => {
   const s = new Date().toLocaleDateString('es-CL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   return s.charAt(0).toUpperCase()+s.slice(1);
 })();
 
-syncAll();
+if (sessionStorage.getItem('hogar-auth') === '1') {
+  document.getElementById('password-screen').classList.add('hidden');
+  syncAll();
+} else {
+  setTimeout(() => document.getElementById('pwd-input').focus(), 300);
+}
 </script>
 </body>
 </html>
