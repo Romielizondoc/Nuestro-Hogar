@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -303,7 +304,7 @@ function pesos(n){return '$'+Number(n||0).toLocaleString('es-CL');}
 function priorityBadge(p){const m={urgente:['badge-red','Urgente'],semanal:['badge-blue','Semanal'],diario:['badge-gold','Diario'],normal:['badge-green','Normal']};return m[p]||['badge-green',p||'Normal'];}
 function emptyMsg(m){return`<div class="empty-msg">${m}</div>`;}
 
-function renderAll(){renderTareas();renderCompras();renderFinanzas();renderTramites();renderNotas();renderMetas();renderCalendario();renderEventos();renderPersonal();renderExtras();renderResumen();}
+function renderAll(){renderTareas();renderCompras();renderFinanzas();renderTramites();renderNotas();renderMetas();renderCalendario();renderEventos();renderPersonal();renderExtras();setTimeout(()=>renderResumen(),150);}
 
 function renderCheckList(items,id,type){const el=document.getElementById(id);if(!items?.length){el.innerHTML=emptyMsg('Sin elementos aún');return;}el.innerHTML=items.map(item=>{const[cls,label]=priorityBadge(item.priority);const done=isDone(item.done);return`<div class="task-item"><div class="task-check ${done?'done':''}" onclick="toggleItem('${type}',${item.id})"></div><div class="task-text ${done?'done':''}">${item.text}</div><span class="task-badge ${cls}">${label}</span><div class="task-who" style="${whoStyle(item.who)}">${item.who}</div><span class="del-btn" onclick="deleteItem('${type}',${item.id})">×</span></div>`;}).join('');}
 function renderTareas(){renderCheckList(data.tareas,'list-tareas','tareas');}
