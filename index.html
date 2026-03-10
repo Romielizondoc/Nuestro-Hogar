@@ -695,6 +695,7 @@ header{
     <button class="tab"     onclick="showTab('tramites',this)">📋 Trámites</button>
     <button class="tab"     onclick="showTab('notas',this)">📌 Notas</button>
     <button class="tab" id="tab-noticias" onclick="showTab('noticias',this);setTimeout(triggerNews,50)">📰 Noticias</button>
+    <button class="tab" id="tab-pascal" onclick="showTab('pascal',this)">🧒 Pascal</button>
   </div>
 
   <!-- RESUMEN -->
@@ -831,6 +832,49 @@ header{
       </div>
     </div>
   </div>
+  <!-- PASCAL -->
+  <div class="panel" id="panel-pascal">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:500;font-style:italic;color:var(--ink)">🧒 Pascal</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-ghost" onclick="openModal('pascal-medico')">🏥 Hora médica</button>
+        <button class="btn-ghost" onclick="openModal('pascal-examen')">🔬 Examen</button>
+        <button class="btn-ghost" onclick="openModal('pascal-actividad')">⭐ Actividad colegio</button>
+        <button class="btn-ghost" onclick="openModal('pascal-nota')">📝 Nota libre</button>
+      </div>
+    </div>
+
+    <!-- Stats rápidas -->
+    <div class="g4 gap" style="margin-bottom:18px">
+      <div class="stat-card sc-rust"><div class="sc-pill pill-rust">Médico</div><div class="sc-lbl">Próximas citas</div><div class="sc-val" id="ps-medico">—</div><div class="sc-sub">este mes</div></div>
+      <div class="stat-card sc-sage"><div class="sc-pill pill-sage">Colegio</div><div class="sc-lbl">Actividades</div><div class="sc-val" id="ps-activ">—</div><div class="sc-sub">pendientes</div></div>
+      <div class="stat-card sc-amber"><div class="sc-pill pill-amber">Exámenes</div><div class="sc-lbl">Pendientes</div><div class="sc-val" id="ps-exam">—</div><div class="sc-sub">sin resultado</div></div>
+      <div class="stat-card sc-plum"><div class="sc-pill pill-plum">Total</div><div class="sc-lbl">Registros</div><div class="sc-val" id="ps-total">—</div><div class="sc-sub">todos</div></div>
+    </div>
+
+    <div class="g2 gap">
+      <!-- Próximos -->
+      <div class="card card-warm">
+        <div class="ch"><div class="ct">📅 Próximos</div></div>
+        <div id="pascal-proximos"><div class="skel" style="height:40px;margin-bottom:8px"></div></div>
+      </div>
+      <!-- Historial -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">📋 Historial</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-ghost" id="pf-all"   onclick="setPascalFilter('all')"    style="font-size:10px;padding:3px 10px;background:var(--rust);color:#fff;border-color:var(--rust)">Todos</button>
+            <button class="btn-ghost" id="pf-medico" onclick="setPascalFilter('medico')" style="font-size:10px;padding:3px 10px">🏥</button>
+            <button class="btn-ghost" id="pf-examen" onclick="setPascalFilter('examen')" style="font-size:10px;padding:3px 10px">🔬</button>
+            <button class="btn-ghost" id="pf-activ"  onclick="setPascalFilter('actividad')" style="font-size:10px;padding:3px 10px">⭐</button>
+            <button class="btn-ghost" id="pf-nota"   onclick="setPascalFilter('nota')"   style="font-size:10px;padding:3px 10px">📝</button>
+          </div>
+        </div>
+        <div id="pascal-list"><div class="skel" style="height:40px;margin-bottom:8px"></div></div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /wrap -->
 
 <!-- MODAL IMPORTAR SANTANDER -->
@@ -858,6 +902,18 @@ header{
     <div class="m-actions" style="margin-top:16px">
       <button class="btn-sec" onclick="closeImport()">Cancelar</button>
       <button class="btn-prim" id="import-save-btn" onclick="confirmImport()" style="display:none">Importar movimientos</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PASCAL -->
+<div class="ov" id="pascal-modal-ov" onclick="if(event.target===this)closePascalModal()" style="display:none">
+  <div class="modal">
+    <div class="m-title" id="pm-modal-title">Pascal</div>
+    <div id="pm-modal-body"></div>
+    <div class="m-actions" style="margin-top:16px">
+      <button class="btn-sec" onclick="closePascalModal()">Cancelar</button>
+      <button class="btn-prim" id="pm-save-btn" onclick="savePascalItem()">Guardar</button>
     </div>
   </div>
 </div>
@@ -891,7 +947,7 @@ const GAS = 'https://script.google.com/macros/s/AKfycbwn0kzfnv6c0lSekbOhlT9B56aI
 const PWD = 'Casa1230';
 
 /* ─────────────── STATE ─────────────── */
-let D = {tareas:[],compras:[],finanzas:[],tramites:[],notas:[],metas:[],eventos:[],personal:[],extras:[],recurrentes:[]};
+let D = {tareas:[],compras:[],finanzas:[],tramites:[],notas:[],metas:[],eventos:[],personal:[],extras:[],recurrentes:[],pascal:[]};
 let curModal=null, cbN=0, calY, calM, CH={}, fabOpen=false;
 let nCache={cl:null,int:null}, newsLoading=false;
 
@@ -957,7 +1013,7 @@ function auth(){
 async function syncAll(){
   const btn=document.getElementById('sync-btn');
   btn.classList.add('syncing');
-  const types=['tareas','compras','finanzas','tramites','notas','metas','eventos','personal','extras','recurrentes'];
+  const types=['tareas','compras','finanzas','tramites','notas','metas','eventos','personal','extras','recurrentes','pascal'];
   /* Paralelo: todas las hojas al mismo tiempo, mucho mas rapido */
   await Promise.allSettled(types.map(async t=>{
     try{const r=await jsonp({type:t});if(r?.ok)D[t]=r.data||[];}catch(e){}
@@ -1004,7 +1060,7 @@ const mLabel=ym=>{if(!ym)return'';const[y,m]=ym.split('-');return['Ene','Feb','M
 
 /* ─────────────── RENDER ALL ─────────────── */
 function renderAll(){
-  rTareas();rCompras();rFinanzas();rTramites();rNotas();rMetas();rCalendario();rEventos();rPersonal();rExtras();rResumen();rSpotify();
+  rTareas();rCompras();rFinanzas();rTramites();rNotas();rMetas();rCalendario();rEventos();rPersonal();rExtras();rResumen();rSpotify();rPascal();
 }
 
 /* checklist */
@@ -1673,7 +1729,7 @@ const MDEFS={
   tarea:{t:'Nueva tarea',h:`<div class="fg"><label class="flbl">Tarea</label><input class="fin" id="f-text" placeholder="Ej: Limpiar el baño"></div><div class="m-row"><div class="fg"><label class="flbl">Responsable</label><select class="fsel" id="f-who"><option value="T">Yo (Tú)</option><option value="E">Mi pareja (Él)</option></select></div><div class="fg"><label class="flbl">Frecuencia</label><select class="fsel" id="f-priority"><option value="diario">Diario</option><option value="semanal">Semanal</option><option value="urgente">Urgente</option><option value="normal">Eventual</option></select></div></div>`},
   compra:{t:'Lista de compras',h:`<div class="fg"><label class="flbl">Artículo</label><input class="fin" id="f-text" placeholder="Ej: Leche, jabón..."></div><div class="m-row"><div class="fg"><label class="flbl">¿Quién compra?</label><select class="fsel" id="f-who"><option value="T">Yo (Tú)</option><option value="E">Mi pareja (Él)</option></select></div><div class="fg"><label class="flbl">Prioridad</label><select class="fsel" id="f-priority"><option value="urgente">Urgente</option><option value="normal">Normal</option></select></div></div>`},
   finanza:{t:'Nuevo movimiento',h:`<div class="fg"><label class="flbl">Descripción</label><input class="fin" id="f-name" placeholder="Ej: Cuenta del gas"></div><div class="m-row"><div class="fg"><label class="flbl">Tipo</label><select class="fsel" id="f-type"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option></select></div><div class="fg"><label class="flbl">Monto ($)</label><input class="fin" id="f-amount" type="number" placeholder="0"></div></div><div class="m-row"><div class="fg"><label class="flbl">Categoría</label><select class="fsel" id="f-category">${catOpts}</select></div><div class="fg"><label class="flbl">Fecha</label><input class="fin" id="f-date" type="date"></div></div>`},
-  recurrente:{t:'Gasto recurrente',h:`<div class="fg"><label class="flbl">Descripción</label><input class="fin" id="f-name" placeholder="Ej: Arriendo, Netflix..."></div><div class="m-row"><div class="fg"><label class="flbl">Tipo</label><select class="fsel" id="f-type"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option></select></div><div class="fg"><label class="flbl">Monto ($)</label><input class="fin" id="f-amount" type="number" placeholder="0"></div></div><div class="fg"><label class="flbl">Categoría</label><select class="fsel" id="f-category">${catOpts}</select></div><div class="rec-note">↻ Se registrará automáticamente el día 1 de cada mes</div>`},
+  recurrente:{t:'Gasto recurrente',h:`<div class="fg"><label class="flbl">Descripción</label><input class="fin" id="f-name" placeholder="Ej: Arriendo, Netflix..."></div><div class="m-row"><div class="fg"><label class="flbl">Tipo</label><select class="fsel" id="f-type"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option></select></div><div class="fg"><label class="flbl">Moneda</label><select class="fsel" id="f-moneda" onchange="toggleUFField()"><option value="CLP">CLP ($)</option><option value="UF">UF</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Monto</label><input class="fin" id="f-amount" type="number" placeholder="0" step="0.01"></div><div class="fg" id="uf-preview-wrap" style="display:none"><label class="flbl">Equivale a</label><div class="fin" id="uf-preview" style="background:var(--bg2);color:var(--ink3);cursor:default">calculando…</div></div></div><div class="fg"><label class="flbl">Categoría</label><select class="fsel" id="f-category">${catOpts}</select></div><div class="rec-note">↻ Se registrará automáticamente el día 1 de cada mes convertido al valor UF vigente</div>`},
   tramite:{t:'Nuevo trámite',h:`<div class="fg"><label class="flbl">Nombre</label><input class="fin" id="f-name" placeholder="Ej: Renovar pasaporte"></div><div class="m-row"><div class="fg"><label class="flbl">Responsable</label><select class="fsel" id="f-who"><option value="T">Yo (Tú)</option><option value="E">Mi pareja (Él)</option></select></div><div class="fg"><label class="flbl">Prioridad</label><select class="fsel" id="f-priority"><option value="urgente">Urgente</option><option value="normal">Normal</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Fecha límite</label><input class="fin" id="f-due" type="date"></div><div class="fg"><label class="flbl">Notas</label><input class="fin" id="f-notes" placeholder="Detalles..."></div></div>`},
   nota:{t:'Nueva nota',h:`<div class="fg"><label class="flbl">Nota</label><textarea class="fin" id="f-text" rows="4" placeholder="Escribe aquí..." style="resize:vertical;min-height:80px"></textarea></div><div class="fg"><label class="flbl">De parte de</label><select class="fsel" id="f-author"><option value="Tú">Yo (Tú)</option><option value="Él">Mi pareja (Él)</option></select></div>`},
   meta:{t:'Nueva meta de ahorro',h:`<div class="m-row"><div class="fg"><label class="flbl">Nombre</label><input class="fin" id="f-name" placeholder="Ej: Vacaciones"></div><div class="fg"><label class="flbl">Ícono</label><select class="fsel" id="f-icon"><option value="🏖️">🏖️ Vacaciones</option><option value="🚗">🚗 Auto</option><option value="🏠">🏠 Casa</option><option value="📱">📱 Tecnología</option><option value="🎓">🎓 Educación</option><option value="💍">💍 Evento especial</option><option value="🎯">🎯 Otro</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Objetivo ($)</label><input class="fin" id="f-objetivo" type="number" placeholder="0"></div><div class="fg"><label class="flbl">Ahorrado ($)</label><input class="fin" id="f-actual" type="number" placeholder="0" value="0"></div></div>`},
@@ -1683,6 +1739,7 @@ const MDEFS={
 };
 
 function openModal(type){
+  if(pascalModals[type]){openPascalModal(type);return;}
   curModal=type;
   const def=MDEFS[type];
   let h=def.h;
@@ -1705,7 +1762,7 @@ async function saveItem(){
   if(curModal==='tarea'){const t=gv('f-text');if(!t){btn.disabled=false;btn.textContent='Guardar';return;}type='tareas';item={id,text:t,done:false,who:gv('f-who'),priority:gv('f-priority')};}
   else if(curModal==='compra'){const t=gv('f-text');if(!t){btn.disabled=false;btn.textContent='Guardar';return;}type='compras';item={id,text:t,done:false,who:gv('f-who'),priority:gv('f-priority')};}
   else if(curModal==='finanza'){const n=gv('f-name'),a=gv('f-amount');if(!n||!a){btn.disabled=false;btn.textContent='Guardar';return;}type='finanzas';item={id,name:n,type:gv('f-type'),amount:parseFloat(a),date:gv('f-date'),category:gv('f-category'),reembolso:gv('f-type')==='gasto'&&gv('f-category')==='Salud'?'pendiente':null};}
-  else if(curModal==='recurrente'){const n=gv('f-name'),a=gv('f-amount');if(!n||!a){btn.disabled=false;btn.textContent='Guardar';return;}type='recurrentes';item={id,name:n,type:gv('f-type'),amount:parseFloat(a),category:gv('f-category')};}
+  else if(curModal==='recurrente'){const n=gv('f-name'),a=gv('f-amount');if(!n||!a){btn.disabled=false;btn.textContent='Guardar';return;}type='recurrentes';const moneda=gv('f-moneda')||'CLP';item={id,name:n,type:gv('f-type'),amount:parseFloat(a),moneda,category:gv('f-category')};}
   else if(curModal==='tramite'){const n=gv('f-name');if(!n){btn.disabled=false;btn.textContent='Guardar';return;}type='tramites';item={id,name:n,status:'pendiente',priority:gv('f-priority'),due:gv('f-due'),who:gv('f-who'),notes:gv('f-notes')};}
   else if(curModal==='nota'){const t=gv('f-text');if(!t){btn.disabled=false;btn.textContent='Guardar';return;}type='notas';item={id,text:t,author:gv('f-author')};}
   else if(curModal==='meta'){const n=gv('f-name'),o=gv('f-objetivo');if(!n||!o){btn.disabled=false;btn.textContent='Guardar';return;}type='metas';item={id,name:n,icon:gv('f-icon'),objetivo:parseFloat(o),actual:parseFloat(gv('f-actual')||0)};}
@@ -1796,16 +1853,23 @@ function closeImport(){
 /* Parse CSV simple */
 function parseCSV(txt){var NL=String.fromCharCode(10),CR=String.fromCharCode(13);return txt.split(NL).map(function(l){return l.replace(CR,"").split(/[;,]/).map(function(c){return c.replace(/^"|"$/g,"").trim();});});}
 
-/* Detectar columnas Santander — soporta varios formatos de exportación */
+/* Detectar columnas Santander — soporta cuenta corriente (cargo/abono separado) y tarjeta */
 function detectSantanderCols(rows){
-  // Buscar fila header
   for(let i=0;i<Math.min(8,rows.length);i++){
-    const row=rows[i].map(c=>c.toLowerCase());
+    const row=rows[i].map(c=>String(c||'').toLowerCase());
     const dateCol=row.findIndex(c=>c.includes('fecha'));
-    const descCol=row.findIndex(c=>c.includes('descripci')||c.includes('detalle')||c.includes('glosa')||c.includes('comercio'));
-    const amtCol=row.findIndex(c=>c.includes('monto')||c.includes('cargo')||c.includes('importe'));
-    if(dateCol>=0&&descCol>=0&&amtCol>=0){
-      return{headerRow:i,dateCol,descCol,amtCol};
+    const descCol=row.findIndex(c=>c.includes('detalle')||c.includes('descripci')||c.includes('glosa')||c.includes('comercio'));
+    if(dateCol<0||descCol<0) continue;
+    // Santander CC: columnas separadas "Monto cargo" y "Monto abono"
+    const cargoCol=row.findIndex(c=>c.includes('cargo'));
+    const abonoCol=row.findIndex(c=>c.includes('abono'));
+    // Santander tarjeta: columna única "Monto" o "Importe"
+    const amtCol=row.findIndex(c=>(c.includes('monto')&&!c.includes('cargo')&&!c.includes('abono'))||c.includes('importe'));
+    if(cargoCol>=0||abonoCol>=0||amtCol>=0){
+      return{headerRow:i,dateCol,descCol,
+             cargoCol:cargoCol>=0?cargoCol:null,
+             abonoCol:abonoCol>=0?abonoCol:null,
+             amtCol:amtCol>=0?amtCol:null};
     }
   }
   return null;
@@ -1827,11 +1891,19 @@ function guessCategory(desc){
   return 'Otro';
 }
 
-/* Normalizar monto — Santander usa formato 1.234.567 */
+/* Normalizar monto — SheetJS entrega números nativos, texto viene con puntos de miles */
 function parseMonto(s){
-  if(!s) return 0;
-  // Quitar $, espacios, puntos de miles, convertir coma decimal
-  let clean=String(s).replace(/[$\s]/g,'').replace(/\./g,'').replace(/,/,'.');
+  if(s===null||s===undefined||s==='') return 0;
+  // Si ya es número (SheetJS lo parsea automáticamente), usar directo
+  if(typeof s==='number') return Math.abs(s);
+  // Si es string con formato chileno: "1.234.567" o "1.234,50"
+  let clean=String(s).trim().replace(/[$\s]/g,'');
+  // Si tiene punto como separador de miles (más de un punto o punto con 3 dígitos al final)
+  if((clean.match(/\./g)||[]).length>1 || /\.\d{3}$/.test(clean)){
+    clean=clean.replace(/\./g,'').replace(/,/,'.');
+  } else {
+    clean=clean.replace(/,/,'.');
+  }
   const n=parseFloat(clean);
   return isNaN(n)?0:Math.abs(n);
 }
@@ -1876,19 +1948,30 @@ async function handleImportFile(input){
       return;
     }
 
-    // Parse movimientos
+    // Parse movimientos — soporte cargo/abono separado (Cuenta Corriente) o columna única
     importData=[];
     for(let i=cols.headerRow+1;i<rows.length;i++){
       const row=rows[i];
       if(!row||!row[cols.dateCol]) continue;
-      const fecha=parseFecha(row[cols.dateCol]);
-      const desc=(row[cols.descCol]||'').trim();
-      const monto=parseMonto(row[cols.amtCol]);
-      if(!fecha||!desc||monto<=0) continue;
+      const fecha=parseFecha(String(row[cols.dateCol]||''));
+      const desc=(String(row[cols.descCol]||'')).trim();
+      if(!fecha||!desc) continue;
+
+      let monto=0, tipo='gasto';
+      if(cols.cargoCol!==null||cols.abonoCol!==null){
+        const cargo=cols.cargoCol!==null?parseMonto(row[cols.cargoCol]):0;
+        const abono=cols.abonoCol!==null?parseMonto(row[cols.abonoCol]):0;
+        if(cargo>0){ monto=cargo; tipo='gasto'; }
+        else if(abono>0){ monto=abono; tipo='ingreso'; }
+      } else {
+        monto=parseMonto(row[cols.amtCol]);
+      }
+      if(monto<=0) continue;
+
       importData.push({
         id:Date.now()+i,
         name:desc,
-        type:'gasto',
+        type:tipo,
         amount:monto,
         date:fecha,
         category:guessCategory(desc),
@@ -1976,6 +2059,226 @@ async function confirmImport(){
     try{ await post({action:'add',type:'finanzas',item}); }catch(e){}
   }
   btn.disabled=false; btn.textContent='Importar movimientos';
+}
+
+/* ── VALOR UF (mindicador.cl) ───────────────────────── */
+async function fetchUF(){
+  try{
+    const r=await fetch('https://mindicador.cl/api/uf');
+    const j=await r.json();
+    window._ufValue=j.serie?.[0]?.valor||38000;
+  }catch(e){ window._ufValue=38000; }
+}
+fetchUF(); // carga al iniciar
+
+function toggleUFField(){
+  const isUF=document.getElementById('f-moneda')?.value==='UF';
+  const wrap=document.getElementById('uf-preview-wrap');
+  if(wrap) wrap.style.display=isUF?'block':'none';
+  if(isUF) updateUFPreview();
+  const amtEl=document.getElementById('f-amount');
+  if(amtEl) amtEl.setAttribute('step', isUF?'0.01':'1');
+  if(isUF && amtEl) amtEl.addEventListener('input', updateUFPreview);
+}
+function updateUFPreview(){
+  const amt=parseFloat(document.getElementById('f-amount')?.value||0);
+  const prev=document.getElementById('uf-preview');
+  if(prev) prev.textContent=amt>0?'≈ '+clp(Math.round(amt*(window._ufValue||38000))):'calculando…';
+}
+
+/* ── PASCAL ───────────────────────────────────────── */
+let pascalFilter='all';
+
+function setPascalFilter(f){
+  pascalFilter=f;
+  ['all','medico','examen','actividad','nota'].forEach(k=>{
+    const btn=document.getElementById('pf-'+k);
+    if(btn){
+      btn.style.background=k===f?'var(--rust)':'';
+      btn.style.color=k===f?'#fff':'';
+      btn.style.borderColor=k===f?'var(--rust)':'';
+    }
+  });
+  rPascal();
+}
+
+function rPascal(){
+  const all=D.pascal||[];
+  const now=new Date();
+  const mes=now.toISOString().slice(0,7);
+
+  // Stats
+  const medicos=all.filter(p=>p.tipo==='medico');
+  const examenes=all.filter(p=>p.tipo==='examen');
+  const actividades=all.filter(p=>p.tipo==='actividad');
+  document.getElementById('ps-medico').textContent=medicos.filter(p=>normDate(p.date)?.startsWith(mes)).length;
+  document.getElementById('ps-activ').textContent=actividades.filter(p=>p.status!=='listo').length;
+  document.getElementById('ps-exam').textContent=examenes.filter(p=>!p.resultado).length;
+  document.getElementById('ps-total').textContent=all.length;
+
+  // Próximos (con fecha futura)
+  const proxEl=document.getElementById('pascal-proximos');
+  const proximos=all.filter(p=>p.date&&new Date(normDate(p.date)+'T12:00')>=now)
+    .sort((a,b)=>new Date(normDate(a.date))-new Date(normDate(b.date))).slice(0,5);
+  if(!proximos.length){ proxEl.innerHTML='<div class="empty">Sin eventos próximos</div>'; }
+  else {
+    proxEl.innerHTML=proximos.map(p=>{
+      const ds=new Date(normDate(p.date)+'T12:00').toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'});
+      const ico={medico:'🏥',examen:'🔬',actividad:'⭐',nota:'📝'}[p.tipo]||'📌';
+      const dias=Math.ceil((new Date(normDate(p.date)+'T12:00')-now)/86400000);
+      const urgBadge=dias<=3?`<span class="badge b-rust" style="font-size:9px">${dias===0?'hoy':dias+'d'}</span>`:`<span style="font-size:10px;color:var(--ink3)">${dias}d</span>`;
+      return`<div class="li" style="gap:10px">
+        <span style="font-size:18px">${ico}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--ink)">${p.title}</div>
+          <div style="font-size:11px;color:var(--ink3)">${ds}${p.lugar?' · '+p.lugar:''}</div>
+        </div>
+        ${urgBadge}
+        <span class="x-btn" onclick="delPascal(${p.id})">×</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Historial filtrado
+  const listEl=document.getElementById('pascal-list');
+  const filtered=pascalFilter==='all'?all:all.filter(p=>p.tipo===pascalFilter);
+  const sorted=[...filtered].sort((a,b)=>{
+    if(!a.date&&!b.date) return 0;
+    if(!a.date) return 1; if(!b.date) return -1;
+    return new Date(normDate(b.date))-new Date(normDate(a.date));
+  });
+  if(!sorted.length){ listEl.innerHTML='<div class="empty">Sin registros</div>'; return; }
+  const ico={medico:'🏥',examen:'🔬',actividad:'⭐',nota:'📝'};
+  listEl.innerHTML=sorted.map(p=>{
+    const ds=p.date?new Date(normDate(p.date)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'}):'sin fecha';
+    const doneBadge=p.status==='listo'?'<span class="badge b-sage" style="font-size:9px">listo</span>':'<span class="badge b-amber" style="font-size:9px">pendiente</span>';
+    return`<div class="li" style="gap:10px;align-items:flex-start">
+      <span style="font-size:20px;margin-top:2px">${ico[p.tipo]||'📌'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--ink)">${p.title}</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:2px">${ds}${p.lugar?' · '+p.lugar:''}${p.medico?' · Dr/a '+p.medico:''}</div>
+        ${p.notas?`<div style="font-size:11px;color:var(--ink2);margin-top:4px;font-style:italic">${p.notas}</div>`:''}
+        ${p.resultado?`<div style="font-size:11px;color:var(--sage);margin-top:4px;font-weight:600">Resultado: ${p.resultado}</div>`:''}
+      </div>
+      ${doneBadge}
+      <span class="x-btn" onclick="delPascal(${p.id})">×</span>
+    </div>`;
+  }).join('');
+}
+
+function delPascal(id){
+  D.pascal=D.pascal.filter(p=>String(p.id)!==String(id));
+  rPascal();
+  post({action:'delete',type:'pascal',id});
+}
+
+/* Modales Pascal */
+const pascalModals={
+  'pascal-medico':{
+    title:'🏥 Hora médica',
+    fields:`
+      <div class="fg"><label class="flbl">Especialidad / Doctor</label><input class="fin" id="pm-title" placeholder="Ej: Pediatra, Dr. García"></div>
+      <div class="m-row">
+        <div class="fg"><label class="flbl">Fecha</label><input class="fin" id="pm-date" type="date"></div>
+        <div class="fg"><label class="flbl">Hora</label><input class="fin" id="pm-hora" type="time"></div>
+      </div>
+      <div class="m-row">
+        <div class="fg"><label class="flbl">Lugar / Clínica</label><input class="fin" id="pm-lugar" placeholder="Ej: Clínica Las Condes"></div>
+        <div class="fg"><label class="flbl">Médico (nombre)</label><input class="fin" id="pm-medico" placeholder="Opcional"></div>
+      </div>
+      <div class="fg"><label class="flbl">Notas</label><input class="fin" id="pm-notas" placeholder="Preparación, documentos necesarios..."></div>`
+  },
+  'pascal-examen':{
+    title:'🔬 Examen / Procedimiento',
+    fields:`
+      <div class="fg"><label class="flbl">Nombre del examen</label><input class="fin" id="pm-title" placeholder="Ej: Hemograma, Rayos X"></div>
+      <div class="m-row">
+        <div class="fg"><label class="flbl">Fecha</label><input class="fin" id="pm-date" type="date"></div>
+        <div class="fg"><label class="flbl">Lugar</label><input class="fin" id="pm-lugar" placeholder="Laboratorio, clínica..."></div>
+      </div>
+      <div class="m-row">
+        <div class="fg"><label class="flbl">Médico solicitante</label><input class="fin" id="pm-medico" placeholder="Opcional"></div>
+        <div class="fg"><label class="flbl">Resultado</label><input class="fin" id="pm-resultado" placeholder="Completar cuando llegue"></div>
+      </div>
+      <div class="fg"><label class="flbl">Notas</label><input class="fin" id="pm-notas" placeholder="Preparación, ayuno, etc..."></div>`
+  },
+  'pascal-actividad':{
+    title:'⭐ Actividad del colegio',
+    fields:`
+      <div class="fg"><label class="flbl">Actividad</label><input class="fin" id="pm-title" placeholder="Ej: Acto patrio, Paseo, Feria ciencias"></div>
+      <div class="m-row">
+        <div class="fg"><label class="flbl">Fecha</label><input class="fin" id="pm-date" type="date"></div>
+        <div class="fg"><label class="flbl">Lugar</label><input class="fin" id="pm-lugar" placeholder="Colegio, salida a terreno..."></div>
+      </div>
+      <div class="fg"><label class="flbl">Notas</label><input class="fin" id="pm-notas" placeholder="Qué necesita llevar, autorización, costo..."></div>`
+  },
+  'pascal-nota':{
+    title:'📝 Nota libre',
+    fields:`
+      <div class="fg"><label class="flbl">Título</label><input class="fin" id="pm-title" placeholder="Ej: Medicamento, observación del colegio..."></div>
+      <div class="fg"><label class="flbl">Fecha</label><input class="fin" id="pm-date" type="date"></div>
+      <div class="fg"><label class="flbl">Notas</label><textarea class="fin" id="pm-notas" rows="3" placeholder="Detalle..."></textarea></div>`
+  }
+};
+
+
+
+function openPascalModal(type){
+  const def=pascalModals[type];
+  curModal=type;
+  const ov=document.getElementById('pascal-modal-ov');
+  document.getElementById('pm-modal-title').textContent=def.title;
+  document.getElementById('pm-modal-body').innerHTML=def.fields;
+  const dateEl=document.getElementById('pm-date');
+  if(dateEl) dateEl.value=new Date().toISOString().slice(0,10);
+  ov.style.display='flex';
+}
+
+function closePascalModal(){
+  document.getElementById('pascal-modal-ov').style.display='none';
+}
+
+async function savePascalItem(){
+  const btn=document.getElementById('pm-save-btn');
+  btn.disabled=true; btn.textContent='Guardando…';
+  const tipo=curModal.replace('pascal-','');
+  const title=(document.getElementById('pm-title')?.value||'').trim();
+  if(!title){btn.disabled=false;btn.textContent='Guardar';return;}
+  const date=document.getElementById('pm-date')?.value||'';
+  const item={
+    id:Date.now(),
+    tipo,
+    title,
+    date,
+    hora:document.getElementById('pm-hora')?.value||'',
+    lugar:document.getElementById('pm-lugar')?.value||'',
+    medico:document.getElementById('pm-medico')?.value||'',
+    resultado:document.getElementById('pm-resultado')?.value||'',
+    notas:document.getElementById('pm-notas')?.value||'',
+    status:'pendiente'
+  };
+  D.pascal.unshift(item);
+  rPascal();
+  closePascalModal();
+  btn.disabled=false; btn.textContent='Guardar';
+
+  /* Si tiene fecha, crear evento en calendario */
+  if(date){
+    const evItem={id:Date.now()+1,title:'Pascal: '+title,date,color:'var(--plum)'};
+    D.eventos.unshift(evItem);
+    rCalendario(); rEventos();
+    post({action:'add',type:'eventos',item:evItem});
+  }
+
+  try{
+    await post({action:'add',type:'pascal',item});
+    toast('Guardado ✓','success');
+    /* Si tiene fecha próxima, notificar */
+    if(date){
+      const dias=Math.ceil((new Date(date+'T12:00')-new Date())/86400000);
+      if(dias>=0&&dias<=7) toast(`Recordatorio en calendario: ${title} en ${dias}d 📅`,'success');
+    }
+  }catch(e){toast('Error al guardar','error');}
 }
 
 function toast(msg,type=''){
