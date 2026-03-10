@@ -757,6 +757,7 @@ header{
           <div class="ct">Movimientos</div>
           <div style="display:flex;gap:6px">
             <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="openModal('recurrente')">↻ recurrente</button>
+            <button class="btn-ghost" style="border-color:var(--sage);color:var(--sage)" onclick="openImportModal()">📥 importar Santander</button>
             <button class="btn-ghost" onclick="openModal('finanza')">+ agregar</button>
           </div>
         </div>
@@ -831,6 +832,35 @@ header{
     </div>
   </div>
 </div><!-- /wrap -->
+
+<!-- MODAL IMPORTAR SANTANDER -->
+<div class="ov" id="import-ov" onclick="if(event.target===this)closeImport()" style="display:none">
+  <div class="modal" style="max-width:600px">
+    <div class="m-title">📥 Importar movimientos Santander</div>
+    <div style="background:var(--sage-bg);border-radius:12px;padding:14px;font-size:12px;color:var(--sage);margin-bottom:16px;line-height:1.7">
+      <b>¿Cómo exportar desde Santander?</b><br>
+      App Santander → Mis productos → Tu tarjeta → Movimientos → Exportar → Excel<br>
+      <span style="color:var(--ink3)">También desde santander.cl → sección movimientos → descargar</span>
+    </div>
+    <div id="import-drop" onclick="document.getElementById('import-file').click()"
+      style="border:2px dashed var(--border2);border-radius:14px;padding:32px;text-align:center;cursor:pointer;transition:.15s;margin-bottom:14px">
+      <div style="font-size:28px;margin-bottom:8px">📂</div>
+      <div style="font-size:13px;font-weight:600;color:var(--ink2)">Haz clic para seleccionar el archivo</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">Excel (.xlsx) o CSV (.csv)</div>
+      <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
+    </div>
+    <div id="import-preview" style="display:none">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Vista previa</div>
+      <div id="import-table" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px"></div>
+      <div id="import-summary" style="font-size:12px;color:var(--ink2);margin-top:10px;padding:10px;background:var(--bg2);border-radius:10px"></div>
+    </div>
+    <div id="import-err" style="font-size:12px;color:var(--rust);margin-top:8px;display:none"></div>
+    <div class="m-actions" style="margin-top:16px">
+      <button class="btn-sec" onclick="closeImport()">Cancelar</button>
+      <button class="btn-prim" id="import-save-btn" onclick="confirmImport()" style="display:none">Importar movimientos</button>
+    </div>
+  </div>
+</div>
 
 <!-- FAB -->
 <button id="fab" onclick="toggleFab()">+</button>
@@ -1001,7 +1031,7 @@ function rFinanzas(){
   const sorted=[...D.finanzas].sort((a,b)=>new Date(b.date)-new Date(a.date));
   el.innerHTML=sorted.map(f=>{
     const isIn=f.type==='ingreso';
-    const ds=f.date?new Date(f.date+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
+    const ds=f.date?new Date(normDate(f.date)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
     return`<div class="fi-row">
       <div>
         <div class="fi-name">${f.name}${f.recurrenteId?'<span class="tag-rec">↻</span>':''}</div>
@@ -1207,7 +1237,7 @@ function rExtras(){
   if(!D.extras?.length){el.innerHTML=empty('Sin pagos extras');return;}
   el.innerHTML=[...D.extras].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8).map(e=>{
     const persona=D.personal.find(p=>String(p.id)===String(e.personId));
-    const ds=e.date?new Date(e.date+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
+    const ds=e.date?new Date(normDate(e.date)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
     return`<div class="fi-row">
       <div><div class="fi-name">${persona?.name||'?'} · ${e.tipo}</div><div class="fi-meta">${e.descripcion||''}${ds?' · '+ds:''}</div></div>
       <div style="display:flex;align-items:center;gap:6px">
@@ -1224,7 +1254,7 @@ function rTramites(){
   if(!D.tramites?.length){el.innerHTML=empty('Sin trámites');return;}
   el.innerHTML=D.tramites.map(t=>{
     const st=t.status||'pendiente';
-    const ds=t.due?new Date(t.due+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
+    const ds=t.due?new Date(normDate(t.due)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
     return`<div class="tri-row">
       <span>${t.priority==='urgente'?'🔴':'🟡'}</span>
       <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--ink2)">${t.name}</div><div style="font-size:11px;color:var(--ink3)">${t.notes||''}${ds?' · '+ds:''}</div></div>
@@ -1277,8 +1307,8 @@ function rResumen(){
     ...(D.tareas||[]).filter(t=>!isDone(t.done)&&t.priority==='urgente').map(t=>({text:t.text,due:''}))
   ];
   urgEl.innerHTML=urgItems.length?urgItems.map(u=>{
-    const dStr=(u.due||'').trim();
-    const d=/^\d{4}-\d{2}-\d{2}$/.test(dStr)?new Date(dStr+'T12:00'):null;
+    const dStr=normDate((u.due||'').trim());
+    const d=dStr?new Date(dStr+'T12:00'):null;
     const days=(d&&!isNaN(d.getTime()))?Math.ceil((d-new Date())/86400000):null;
     const dot=days!==null&&days<=3?'var(--rust)':'var(--amber)';
     return`<div class="urg-item">
@@ -1291,24 +1321,112 @@ function rResumen(){
 
 /* ─────────────── SPOTIFY ─────────────── */
 const ALBUMS=[
-  {t:'The Epic',          a:'Kamasi Washington',   g:'Jazz Contemporáneo',  icon:'🎷', bg:'linear-gradient(135deg,#0c2a0c,#1a3a1a)', sid:'6ZNhxXBBO9kMByaHXWZuJa'},
-  {t:'Dummy',             a:'Portishead',           g:'Trip-Hop',            icon:'🌑', bg:'linear-gradient(135deg,#0d0d2a,#1a1a3a)', sid:'3539EbNgIdEDGBKkUf4wno'},
-  {t:'Mezzanine',         a:'Massive Attack',       g:'Trip-Hop · Downtempo',icon:'⬛', bg:'linear-gradient(135deg,#0a0a0a,#2a2a2a)', sid:'6tMgXPqSMiJgQlnHVFoMJo'},
-  {t:'Kind of Blue',      a:'Miles Davis',          g:'Jazz · Modal',        icon:'🎺', bg:'linear-gradient(135deg,#000d2a,#001a3a)', sid:'1weenld61qoidwYuZ1GESA'},
-  {t:'A Love Supreme',    a:'John Coltrane',        g:'Jazz · Avant-Garde',  icon:'🕊️', bg:'linear-gradient(135deg,#1a0000,#2a0a0a)', sid:'4VdNEFrsQ0OBFKe5XC7MpQ'},
-  {t:'Promises',          a:'Floating Points & Pharoah Sanders', g:'Jazz · Ambient', icon:'🌊', bg:'linear-gradient(135deg,#05162a,#0a2a3a)', sid:'3ShtO5VCYa9FVJ8qVfVSF4'},
-  {t:'Voodoo',            a:"D'Angelo",             g:'Neo Soul · Funk',     icon:'🔥', bg:'linear-gradient(135deg,#1a1000,#2a1a00)', sid:'5LIpxBVClqMYbgkIlYfNeq'},
-  {t:'Black Sands',       a:'Bonobo',               g:'Jazz · Downtempo',    icon:'🏜️', bg:'linear-gradient(135deg,#1a1400,#2a2000)', sid:'4oBMfLjnrVGzYpqYJ7fR5T'},
-  {t:'Protection',        a:'Massive Attack',       g:'Trip-Hop · Soul',     icon:'🌧️', bg:'linear-gradient(135deg,#0d0a1a,#1a1428)', sid:'5fFvCCdxADfkBzKlGJHfNu'},
-  {t:'Aromanticism',      a:'Moses Sumney',         g:'Art Pop · Neo Soul',  icon:'🌸', bg:'linear-gradient(135deg,#1a0800,#2a1000)', sid:'2YcBapj0kx6JkRJpVlKnQ7'},
-  {t:'You Can Be Loved',  a:'Ezra Collective',      g:'Jazz · Neo-Soul',     icon:'💛', bg:'linear-gradient(135deg,#2a0a1a,#1a0828)', sid:'5LsMnMBp3QzPP0LhFFdI5Y'},
-  {t:'In These Times',    a:'Makaya McCraven',      g:'Jazz · Electronic',   icon:'🌀', bg:'linear-gradient(135deg,#001a1a,#002a2a)', sid:'0V3Xt6BDmOVTNfNYpI0SFo'},
-  {t:'Black Focus',       a:'Yussef Kamaal',        g:'Jazz · Afrofuturism', icon:'🎹', bg:'linear-gradient(135deg,#0d0d0a,#1a1a14)', sid:'5kHMGRfZHORA4tnwF6Pb8q'},
-  {t:'Nefertiti',         a:'Miles Davis',          g:'Jazz · Post-Bop',     icon:'🎵', bg:'linear-gradient(135deg,#1a1a00,#2a2a00)', sid:'4LjkNkF2B1WPZ1ARrXAFHg'},
-  {t:'Late Night Tales',  a:'Bonobo',               g:'Downtempo · Jazz',    icon:'🌙', bg:'linear-gradient(135deg,#0a0d0a,#141a14)', sid:'6n3HPE8PeBxTmVABHJNZfR'},
-  {t:'Zombie',            a:'Fela Kuti',            g:'Afrobeat',            icon:'🥁', bg:'linear-gradient(135deg,#2a1400,#3a2000)', sid:'4MpWme5DqOTnVUERxNxkbL'},
-  {t:'Truth Is A Beautiful Thing', a:'London Grammar', g:'Dream Pop',        icon:'🤍', bg:'linear-gradient(135deg,#0d0d1a,#1a1a28)', sid:'5z1sKvMRaVBEkECFI41IKN'},
-  {t:'Shadow Work',       a:'Mammal Hands',         g:'Jazz · Classical',    icon:'🍂', bg:'linear-gradient(135deg,#1a0e0a,#261a14)', sid:'5rCCcUFVJf5YCW4YQFXRLU'},
+  /* Jazz clásico */
+  {t:'Kind of Blue',          a:'Miles Davis',               g:'Jazz · Modal',          icon:'🎺', bg:'linear-gradient(135deg,#000d2a,#001a3a)', sid:'1weenld61qoidwYuZ1GESA'},
+  {t:'A Love Supreme',        a:'John Coltrane',             g:'Jazz · Espiritual',     icon:'🕊️', bg:'linear-gradient(135deg,#1a0000,#2a0a0a)', sid:'4oHF5wHZt1MxjNnBCvgLJ0'},
+  {t:'Nefertiti',             a:'Miles Davis',               g:'Jazz · Post-Bop',       icon:'🎵', bg:'linear-gradient(135deg,#1a1a00,#2a2a00)', sid:'4LjkNkF2B1WPZ1ARrXAFHg'},
+  {t:'Giant Steps',           a:'John Coltrane',             g:'Jazz · Bebop',          icon:'🦅', bg:'linear-gradient(135deg,#0a0a1a,#14142a)', sid:'3T4tPMbTBtPBHWOaEbNBKn'},
+  {t:'Mingus Ah Um',          a:'Charles Mingus',            g:'Jazz · Hard Bop',       icon:'🎸', bg:'linear-gradient(135deg,#1a0a00,#2a1400)', sid:'0J5kBnZ6MkKDfKPGMj2mdX'},
+  {t:'Time Out',              a:'Dave Brubeck Quartet',      g:'Jazz · Cool',           icon:'🕐', bg:'linear-gradient(135deg,#001a1a,#002a28)', sid:'0nTTPqiV1bOCEVBMfqnMHS'},
+  {t:'Speak No Evil',         a:'Wayne Shorter',             g:'Jazz · Hard Bop',       icon:'🌿', bg:'linear-gradient(135deg,#0a1a0a,#142814)', sid:'2FBQmMKDKIgqJUTdBkjVqQ'},
+  {t:'Maiden Voyage',         a:'Herbie Hancock',            g:'Jazz · Modal',          icon:'⛵', bg:'linear-gradient(135deg,#00101a,#001828)', sid:'1z8bPWHRmqBdNpOgqz1LXe'},
+  {t:'Waltz for Debby',       a:'Bill Evans Trio',           g:'Jazz · Cool',           icon:'🌸', bg:'linear-gradient(135deg,#1a1428,#201828)', sid:'1kNABFRbbsKCBGJBE4YNMJ'},
+  {t:'Saxophone Colossus',    a:'Sonny Rollins',             g:'Jazz · Hard Bop',       icon:'🦁', bg:'linear-gradient(135deg,#1a0800,#281000)', sid:'0MFhiQXVeFq7EKhqNO6Obt'},
+  /* Jazz moderno / contemporáneo */
+  {t:'The Epic',              a:'Kamasi Washington',         g:'Jazz Contemporáneo',    icon:'🎷', bg:'linear-gradient(135deg,#0c2a0c,#1a3a1a)', sid:'2j2q2ySuVk43eHB8wI5XQj'},
+  {t:'Promises',              a:'Floating Points & Pharoah Sanders', g:'Jazz · Ambient',icon:'🌊', bg:'linear-gradient(135deg,#05162a,#0a2a3a)', sid:'3ShtO5VCYa9FVJ8qVfVSF4'},
+  {t:'In These Times',        a:'Makaya McCraven',           g:'Jazz · Electrónico',    icon:'🌀', bg:'linear-gradient(135deg,#001a1a,#002a2a)', sid:'0V3Xt6BDmOVTNfNYpI0SFo'},
+  {t:'Black Focus',           a:'Yussef Kamaal',             g:'Jazz · Afrofuturismo',  icon:'🎹', bg:'linear-gradient(135deg,#0d0d0a,#1a1a14)', sid:'5kHMGRfZHORA4tnwF6Pb8q'},
+  {t:'You Can Be Loved',      a:'Ezra Collective',           g:'Jazz · Neo-Soul',       icon:'💛', bg:'linear-gradient(135deg,#2a0a1a,#1a0828)', sid:'5LsMnMBp3QzPP0LhFFdI5Y'},
+  {t:'Shadow Work',           a:'Mammal Hands',              g:'Jazz · Clásico',        icon:'🍂', bg:'linear-gradient(135deg,#1a0e0a,#261a14)', sid:'5rCCcUFVJf5YCW4YQFXRLU'},
+  {t:'We Out Here',           a:'Shabaka & the Ancestors',   g:'Jazz · Afro',           icon:'🌍', bg:'linear-gradient(135deg,#2a1400,#3a2000)', sid:'4eJBYVl4cIWrswP1h4Y5oT'},
+  {t:'Dom Dom Yes Yes',       a:'Robert Glasper',            g:'Jazz · Hip-Hop',        icon:'🔮', bg:'linear-gradient(135deg,#0a0a1a,#141428)', sid:'3JgTP3LdJRSMI3oBIqpx2y'},
+  {t:'Dinner Party',          a:'Dinner Party',              g:'Jazz · Soul',           icon:'🕯️', bg:'linear-gradient(135deg,#1a1000,#2a1800)', sid:'5jM5ZMtfqkdU7ICKvwjxUy'},
+  {t:'Afrocubism',            a:'Afrocubism',                g:'Jazz · Afro-Cubano',    icon:'🥁', bg:'linear-gradient(135deg,#2a1400,#381e00)', sid:'7M3UvfLfbAIEtEXKl0MCiA'},
+  /* Trip-Hop / Downtempo */
+  {t:'Dummy',                 a:'Portishead',                g:'Trip-Hop',              icon:'🌑', bg:'linear-gradient(135deg,#0d0d2a,#1a1a3a)', sid:'3539EbNgIdEDGBKkUf4wno'},
+  {t:'Mezzanine',             a:'Massive Attack',            g:'Trip-Hop · Downtempo',  icon:'⬛', bg:'linear-gradient(135deg,#111,#2a2a2a)',    sid:'6tMgXPqSMiJgQlnHVFoMJo'},
+  {t:'Protection',            a:'Massive Attack',            g:'Trip-Hop · Soul',       icon:'🌧️', bg:'linear-gradient(135deg,#0d0a1a,#1a1428)', sid:'5fFvCCdxADfkBzKlGJHfNu'},
+  {t:'Blue Lines',            a:'Massive Attack',            g:'Trip-Hop · Fundacional',icon:'🔷', bg:'linear-gradient(135deg,#001428,#001e3a)', sid:'0Uc1BIkVDpRu5Bko14RMCE'},
+  {t:'Modus Vivendi',         a:'070 Shake',                 g:'Electrónico · Alternativo', icon:'💜', bg:'linear-gradient(135deg,#14001a,#200028)', sid:'2yMbBpaBEtMtHDYqRSELJB'},
+  {t:'Black Sands',           a:'Bonobo',                    g:'Jazz · Downtempo',      icon:'🏜️', bg:'linear-gradient(135deg,#1a1400,#2a2000)', sid:'4oBMfLjnrVGzYpqYJ7fR5T'},
+  {t:'Late Night Tales',      a:'Bonobo',                    g:'Downtempo · Mix',       icon:'🌙', bg:'linear-gradient(135deg,#0a0d0a,#141a14)', sid:'6n3HPE8PeBxTmVABHJNZfR'},
+  {t:'The North Borders',     a:'Bonobo',                    g:'Electrónico · Soul',    icon:'🌌', bg:'linear-gradient(135deg,#000a1a,#001428)', sid:'4lmFHjblF1WWQXK42aWjcv'},
+  {t:'Go',                    a:'Moby',                      g:'Downtempo · Electrónico',icon:'🎛️', bg:'linear-gradient(135deg,#0a0a0a,#1a1414)', sid:'6oCPPnvmX7CeQCIIXOO6to'},
+  {t:'Endtroducing…',         a:'DJ Shadow',                 g:'Instrumental Hip-Hop',  icon:'🔊', bg:'linear-gradient(135deg,#0a0800,#181200)', sid:'1vCkFCt72AXFVs4WZBdRX0'},
+  /* Neo Soul / R&B */
+  {t:'Voodoo',                a:"D'Angelo",                  g:'Neo Soul · Funk',       icon:'🔥', bg:'linear-gradient(135deg,#1a1000,#2a1a00)', sid:'5LIpxBVClqMYbgkIlYfNeq'},
+  {t:'Black Messiah',         a:"D'Angelo and The Vanguard", g:'Neo Soul · Funk',       icon:'✊', bg:'linear-gradient(135deg,#1a0800,#281000)', sid:'5DtKYSIiyEWi6Jk9I2JJPQ'},
+  {t:'Mama\'s Gun',           a:'Erykah Badu',               g:'Neo Soul',              icon:'🌻', bg:'linear-gradient(135deg,#1a1400,#281e00)', sid:'5KoUMKPHhiVYGVtZWJtlhH'},
+  {t:'Baduizm',               a:'Erykah Badu',               g:'Neo Soul · R&B',        icon:'🌀', bg:'linear-gradient(135deg,#1a0e00,#281600)', sid:'1BZfnBzpEaJD4XHKF4VQMR'},
+  {t:'The Miseducation of Lauryn Hill', a:'Lauryn Hill',     g:'Neo Soul · Hip-Hop',    icon:'👑', bg:'linear-gradient(135deg,#1a1000,#2a1800)', sid:'1BZfnBzpEaJD4XHKF4VQMR'},
+  {t:'Aromanticism',          a:'Moses Sumney',              g:'Art Pop · Neo Soul',    icon:'🌸', bg:'linear-gradient(135deg,#1a0800,#2a1000)', sid:'2YcBapj0kx6JkRJpVlKnQ7'},
+  {t:'græ',                   a:'Moses Sumney',              g:'Art Pop · Experimental',icon:'🩶', bg:'linear-gradient(135deg,#0a0a12,#14141e)', sid:'3fSPNRqAOv9YAJMQV4HQ3H'},
+  {t:'Have You in My Wilderness', a:'Julia Holter',          g:'Art Pop · Ambient',     icon:'🌾', bg:'linear-gradient(135deg,#1a1000,#261800)', sid:'2tGRgQlLvpKm8HBIcgNBdV'},
+  {t:'Everything Is Love',    a:'The Carters',               g:'R&B · Hip-Hop',         icon:'💍', bg:'linear-gradient(135deg,#1a1400,#282000)', sid:'5716x9aGS5FIHwmFzgSWrN'},
+  {t:'Ctrl',                  a:'SZA',                       g:'R&B · Alternativo',     icon:'🌿', bg:'linear-gradient(135deg,#0a1400,#101e00)', sid:'7j1ult4hjf6OFnm7WBEXAb'},
+  /* Afrobeat / World */
+  {t:'Zombie',                a:'Fela Kuti',                 g:'Afrobeat',              icon:'🥁', bg:'linear-gradient(135deg,#2a1400,#3a2000)', sid:'4MpWme5DqOTnVUERxNxkbL'},
+  {t:'Expensive Shit',        a:'Fela Kuti',                 g:'Afrobeat · Funk',       icon:'🎺', bg:'linear-gradient(135deg,#281000,#381800)', sid:'54vL9oRXCxA3jPaVhSgSR9'},
+  {t:'Djesse Vol. 3',         a:'Jacob Collier',             g:'Jazz · Pop · World',    icon:'🌈', bg:'linear-gradient(135deg,#001428,#001e3c)', sid:'6wctALGn75iIZLb9T3a5yA'},
+  {t:'Woman King',            a:'Iron & Wine',               g:'Folk · Indie',          icon:'🌿', bg:'linear-gradient(135deg,#0a1400,#141e08)', sid:'2EMXPDMkFDkHrEgicf3K0M'},
+  {t:'Acoustic Soul',         a:'India.Arie',                g:'Soul · Folk',           icon:'☀️', bg:'linear-gradient(135deg,#1a1000,#2a1800)', sid:'7iHGKFpclhjeMnAbg9LVGY'},
+  {t:'Vampire Weekend',       a:'Vampire Weekend',           g:'Indie Pop · Afrobeat',  icon:'🦇', bg:'linear-gradient(135deg,#001a0a,#002814)', sid:'2ANcb0AEMJfQpqxVgGCYXm'},
+  {t:'Father of the Bride',   a:'Vampire Weekend',           g:'Indie · Folk Pop',      icon:'🌞', bg:'linear-gradient(135deg,#1a1800,#282600)', sid:'1A0MBJcAcNJ6fkBN5XjAO5'},
+  /* Dream Pop / Shoegaze / Indie */
+  {t:'Truth Is A Beautiful Thing', a:'London Grammar',       g:'Dream Pop',             icon:'🤍', bg:'linear-gradient(135deg,#0d0d1a,#1a1a28)', sid:'5z1sKvMRaVBEkECFI41IKN'},
+  {t:'If You Wait',           a:'London Grammar',            g:'Dream Pop · Electrónico',icon:'🌫️', bg:'linear-gradient(135deg,#0a0a1a,#141420)', sid:'3WAspFZKQJfJUfSPBCH3Oe'},
+  {t:'Immunity',              a:'Jon Hopkins',               g:'Electrónico · Ambient', icon:'💎', bg:'linear-gradient(135deg,#000a1a,#001428)', sid:'5qlFCnBDMxqHBbCSuJM33w'},
+  {t:'Music for Psychedelic Therapy', a:'Jon Hopkins',       g:'Ambient · Meditación',  icon:'🔮', bg:'linear-gradient(135deg,#0a0014,#14001e)', sid:'4YnDnxQ5a3Ge4C2P7m9b7W'},
+  {t:'I Am Easy to Find',     a:'The National',              g:'Indie Rock · Art Pop',  icon:'🌿', bg:'linear-gradient(135deg,#0a1400,#141e08)', sid:'0MFhiQXVeFq7EKhqNO6Obt'},
+  {t:'High Violet',           a:'The National',              g:'Indie Rock',            icon:'💜', bg:'linear-gradient(135deg,#14001a,#200024)', sid:'3h69gOVFiZdCFGcDLs4Dvh'},
+  {t:'Punisher',              a:'Phoebe Bridgers',           g:'Indie Folk · Alternativo', icon:'🦴', bg:'linear-gradient(135deg,#0a0a0a,#181418)', sid:'2B3wPeLFZKvTRtWQlVIQyE'},
+  {t:'Stranger in the Alps',  a:'Phoebe Bridgers',           g:'Folk · Indie',          icon:'🏔️', bg:'linear-gradient(135deg,#000a14,#001018)', sid:'7MXS6Oe37jQEw6VAfKKNqX'},
+  {t:'Fetch the Bolt Cutters', a:'Fiona Apple',              g:'Art Rock · Alternativo',icon:'🔑', bg:'linear-gradient(135deg,#1a0a00,#281400)', sid:'2MKRDjfdMoOmkiZCMThW3n'},
+  {t:'When the Pawn…',        a:'Fiona Apple',               g:'Art Pop · Singer-songwriter', icon:'🎭', bg:'linear-gradient(135deg,#14000a,#200010)', sid:'7BjJqNWuAUSvJSnG3Oo80K'},
+  /* Electrónico / Ambient */
+  {t:'Vespertine',            a:'Björk',                     g:'Electrónico · Avant-Garde', icon:'❄️', bg:'linear-gradient(135deg,#00141a,#001e28)', sid:'7GCQFpQ6YYQA9GOb6PXJyT'},
+  {t:'Homogenic',             a:'Björk',                     g:'Electrónico · Art Pop', icon:'🌋', bg:'linear-gradient(135deg,#1a0000,#280a08)', sid:'7LHZlE59hRiJ7VLkckjPn4'},
+  {t:'Selected Ambient Works Vol. II', a:'Aphex Twin',       g:'Ambient · Electrónico', icon:'🌐', bg:'linear-gradient(135deg,#000a0a,#001414)', sid:'7GCQFpQ6YYQA9GOb6PXJyT'},
+  {t:'Music Has the Right to Children', a:'Boards of Canada', g:'Electrónico · Ambient',icon:'🌲', bg:'linear-gradient(135deg,#0a1400,#121e08)', sid:'0lCVjbqHBzHh6VIvx6HfHN'},
+  {t:'In Colour',             a:'Jamie xx',                  g:'Electrónico · Dance',   icon:'🌈', bg:'linear-gradient(135deg,#00001a,#0a0028)', sid:'5TJGZJuGzuADaCwHXkXfkZ'},
+  {t:'Currents',              a:'Tame Impala',               g:'Psych Pop · Electrónico',icon:'🌀', bg:'linear-gradient(135deg,#140028,#1e0038)', sid:'79dL7FLiJFOO0EoehUHQBv'},
+  {t:'Lonerism',              a:'Tame Impala',               g:'Psych Rock · Indie',    icon:'🔭', bg:'linear-gradient(135deg,#1a0028,#280038)', sid:'7fLNZmBe24BXBN5BZmKExE'},
+  {t:'Random Access Memories', a:'Daft Punk',                g:'Electrónico · Disco',   icon:'🤖', bg:'linear-gradient(135deg,#1a0a00,#2a1600)', sid:'4m2880jivSbbyEGAKfITCa'},
+  {t:'Discovery',             a:'Daft Punk',                 g:'Electrónico · French House', icon:'✨', bg:'linear-gradient(135deg,#001428,#001e3a)', sid:'2noRn2Aes5aoNVsU6iWThc'},
+  {t:'Scaring the Hoes',      a:'JPEGMAFIA & Danny Brown',   g:'Experimental Hip-Hop',  icon:'👹', bg:'linear-gradient(135deg,#0a0000,#180808)', sid:'4RA8TmHVpBQRcnj2sMoRnT'},
+  /* Soul / Funk */
+  {t:'There\'s a Riot Goin\' On', a:'Sly & the Family Stone', g:'Funk · Psych Soul',   icon:'✊', bg:'linear-gradient(135deg,#1a0800,#281000)', sid:'7xQEr9oqRf5P28YwYOjJE3'},
+  {t:'Let\'s Get It On',      a:'Marvin Gaye',               g:'Soul · R&B',            icon:'❤️', bg:'linear-gradient(135deg,#1a0000,#280808)', sid:'5cvE6qVcCvlRvzCDHRLUaG'},
+  {t:'What\'s Going On',      a:'Marvin Gaye',               g:'Soul · Funk',           icon:'🕊️', bg:'linear-gradient(135deg,#001a14,#002820)', sid:'2v6ANYPIXhLZKSrh1Mpe6L'},
+  {t:'Head Hunters',          a:'Herbie Hancock',            g:'Jazz Funk · Fusión',    icon:'🦊', bg:'linear-gradient(135deg,#1a1000,#281c00)', sid:'5fmHPkuaALsAj8ZBxAGAXr'},
+  {t:'Innervisions',          a:'Stevie Wonder',             g:'Soul · Funk',           icon:'🌟', bg:'linear-gradient(135deg,#1a1400,#282000)', sid:'0ahvqVwbqVS5pFTJFiqUhU'},
+  {t:'Songs in the Key of Life', a:'Stevie Wonder',          g:'Soul · R&B · Jazz',     icon:'🎹', bg:'linear-gradient(135deg,#001a10,#00281c)', sid:'6OxlBrn2OEhdJAFNxHNqiJ'},
+  /* Hip-Hop */
+  {t:'To Pimp a Butterfly',   a:'Kendrick Lamar',            g:'Hip-Hop · Jazz · Soul', icon:'🦋', bg:'linear-gradient(135deg,#001a00,#002800)', sid:'7ycBtnsMtyVbbwTfJwRjSP'},
+  {t:'DAMN.',                 a:'Kendrick Lamar',            g:'Hip-Hop · Trap',        icon:'🔴', bg:'linear-gradient(135deg,#1a0000,#280000)', sid:'4eLPsYPBmXABThSJ821sqY'},
+  {t:'good kid, m.A.A.d city', a:'Kendrick Lamar',           g:'Hip-Hop · West Coast',  icon:'🌆', bg:'linear-gradient(135deg,#1a1400,#282000)', sid:'6PBZN8cbwkqm1ERj2BGXJ1'},
+  {t:'Madvillainy',           a:'Madvillain',                g:'Hip-Hop · Underground', icon:'🎭', bg:'linear-gradient(135deg,#0a0a0a,#181818)', sid:'19bQiwEKQLinZiqCQezou0'},
+  {t:'MM..FOOD',              a:'MF DOOM',                   g:'Hip-Hop · Underground', icon:'🥫', bg:'linear-gradient(135deg,#1a0a00,#281400)', sid:'4qxIsunMEXFyrmFqXn6WZy'},
+  {t:'All Eyez on Me',        a:'2Pac',                      g:'Hip-Hop · West Coast',  icon:'👁️', bg:'linear-gradient(135deg,#1a1000,#282000)', sid:'1TN6HGN7p98q3HoWqaw05n'},
+  {t:'Illmatic',              a:'Nas',                       g:'Hip-Hop · East Coast',  icon:'🗽', bg:'linear-gradient(135deg,#0a0a1a,#101028)', sid:'3kEtdS2pH5bE39OFVvsdbJ'},
+  {t:'ATLiens',               a:'OutKast',                   g:'Hip-Hop · Alternativo', icon:'👽', bg:'linear-gradient(135deg,#001428,#001e38)', sid:'2PjlaxlMunGOUvcRZYRD9W'},
+  /* Folk / Singer-Songwriter */
+  {t:'Blue',                  a:'Joni Mitchell',             g:'Folk · Singer-Songwriter', icon:'💙', bg:'linear-gradient(135deg,#001428,#001e3a)', sid:'1vz94WpXDVYIEGja8cjFNa'},
+  {t:'Court and Spark',       a:'Joni Mitchell',             g:'Pop · Folk',            icon:'🌷', bg:'linear-gradient(135deg,#0a1400,#141e08)', sid:'0H6CN2nPn1lOdGFjneMBMp'},
+  {t:'Carrie & Lowell',       a:'Sufjan Stevens',            g:'Folk · Chamber Pop',    icon:'🌲', bg:'linear-gradient(135deg,#0a0a14,#10102a)', sid:'4FRiUmTd88EqLfobFSrdsm'},
+  {t:'Illinois',              a:'Sufjan Stevens',            g:'Indie Folk · Orquestal',icon:'🏛️', bg:'linear-gradient(135deg,#00100a,#001814)', sid:'3dJqOVX7XqOj9ZbRKiTJMW'},
+  {t:'For Emma, Forever Ago', a:'Bon Iver',                  g:'Folk · Indie',          icon:'❄️', bg:'linear-gradient(135deg,#0a1428,#101e3a)', sid:'1LBBSdpcjSMnZrHrEAuJ9e'},
+  {t:'22, A Million',         a:'Bon Iver',                  g:'Experimental Folk',     icon:'🔢', bg:'linear-gradient(135deg,#1a1400,#282000)', sid:'3Ni7tMzlipI4OmkMQNPRm2'},
+  {t:'I and Love and You',    a:'The Avett Brothers',        g:'Folk Rock · Americana', icon:'❤️', bg:'linear-gradient(135deg,#1a0800,#281200)', sid:'5IFjWVTnGgRUbFLOJ6YrBP'},
+  /* Pop alternativo */
+  {t:'Pure Heroine',          a:'Lorde',                     g:'Electropop · Indie',    icon:'👸', bg:'linear-gradient(135deg,#0a0a14,#141422)', sid:'0YCGrb4fTyZFtRjOtPrcc2'},
+  {t:'Melodrama',             a:'Lorde',                     g:'Electropop · Art Pop',  icon:'🎭', bg:'linear-gradient(135deg,#1a001a,#280028)', sid:'2B1JpHCnMZrH1IsqL2RUrm'},
+  {t:'Norman Fucking Rockwell!', a:'Lana Del Rey',           g:'Art Pop · Indie',       icon:'🌅', bg:'linear-gradient(135deg,#001428,#001e3a)', sid:'5XpEKORZ4y6OrCZSKZxYeD'},
+  {t:'Blonde',                a:'Frank Ocean',               g:'R&B · Art Pop',         icon:'🌊', bg:'linear-gradient(135deg,#1a1400,#282000)', sid:'3mH6qwIy9crqqovlmvaYJj'},
+  {t:'Channel Orange',        a:'Frank Ocean',               g:'R&B · Soul',            icon:'🍊', bg:'linear-gradient(135deg,#1a0800,#281200)', sid:'392p3shh2OGwHJHKLpKpYX'},
+  {t:'folklore',              a:'Taylor Swift',              g:'Indie Folk · Alt-Country', icon:'🌲', bg:'linear-gradient(135deg,#0a0a14,#141422)', sid:'2fenSS68JI1h4Fo296JkVH'},
+  {t:'Rumours',               a:'Fleetwood Mac',             g:'Soft Rock · Pop',       icon:'🌙', bg:'linear-gradient(135deg,#1a1400,#282000)', sid:'1bt6q3SFi6vboSLBSANq5U'},
 ];
 function rSpotify(){
   const el=document.getElementById('spotify-slot');if(!el)return;
@@ -1322,7 +1440,8 @@ function rSpotify(){
       <div class="sp-title">${a.t}</div>
       <div class="sp-artist">${a.a} · <span style="color:rgba(255,255,255,.3)">${a.g}</span></div>
     </div>
-    <a class="sp-btn" href="https://open.spotify.com/album/${a.sid}" target="_blank">▶ abrir</a>
+    <a class="sp-btn" href="spotify:album:${a.sid}" 
+       onclick="event.preventDefault();window.location='spotify:album:${a.sid}';setTimeout(()=>window.open('https://open.spotify.com/album/${a.sid}','_blank'),800)">▶ abrir</a>
   </div>`;
 }
 
@@ -1655,6 +1774,208 @@ function markReembolso(id, accion){
     toast('¡Listo! Reembolso marcado como pedido ✓','success');
   }
   if(item) post({action:'update',type:'finanzas',id,field:'reembolso',value:item.reembolso});
+}
+
+/* ── IMPORTAR SANTANDER ─────────────────────────────── */
+let importData=[];
+
+function openImportModal(){
+  importData=[];
+  document.getElementById('import-preview').style.display='none';
+  document.getElementById('import-err').style.display='none';
+  document.getElementById('import-save-btn').style.display='none';
+  document.getElementById('import-file').value='';
+  document.getElementById('import-drop').style.borderColor='var(--border2)';
+  document.getElementById('import-ov').style.display='flex';
+}
+function closeImport(){
+  document.getElementById('import-ov').style.display='none';
+  importData=[];
+}
+
+/* Parse CSV simple */
+function parseCSV(txt){var NL=String.fromCharCode(10),CR=String.fromCharCode(13);return txt.split(NL).map(function(l){return l.replace(CR,"").split(/[;,]/).map(function(c){return c.replace(/^"|"$/g,"").trim();});});}
+
+/* Detectar columnas Santander — soporta varios formatos de exportación */
+function detectSantanderCols(rows){
+  // Buscar fila header
+  for(let i=0;i<Math.min(8,rows.length);i++){
+    const row=rows[i].map(c=>c.toLowerCase());
+    const dateCol=row.findIndex(c=>c.includes('fecha'));
+    const descCol=row.findIndex(c=>c.includes('descripci')||c.includes('detalle')||c.includes('glosa')||c.includes('comercio'));
+    const amtCol=row.findIndex(c=>c.includes('monto')||c.includes('cargo')||c.includes('importe'));
+    if(dateCol>=0&&descCol>=0&&amtCol>=0){
+      return{headerRow:i,dateCol,descCol,amtCol};
+    }
+  }
+  return null;
+}
+
+/* Mapeo automático de categorías por descripción */
+function guessCategory(desc){
+  const d=(desc||'').toLowerCase();
+  if(/farmacia|clinica|hospital|medic|dental|salud|isapre|bsalud|cruz.*verde|ahumada|salcobrand/.test(d)) return 'Salud';
+  if(/supermercado|jumbo|lider|unimarc|santa.*isabel|tottus|acuenta|ekono|central.*mayorista/.test(d)) return 'Alimentación';
+  if(/restauran|sushi|pizza|burger|mcdonalds|subway|starbucks|cafe|bar |rappi|uber.*eat|pedidos/.test(d)) return 'Alimentación';
+  if(/copec|shell|petrobras|bencin|parking|automovel|peaje|autopista|metro|transantiago|bip/.test(d)) return 'Transporte';
+  if(/uber|cabify|didi|taxi/.test(d)) return 'Transporte';
+  if(/netflix|spotify|amazon|disney|hbo|youtube|apple.*one|prime/.test(d)) return 'Entretenimiento';
+  if(/falabella|ripley|paris|zara|h&m|tienda|ropa|zapato/.test(d)) return 'Hogar';
+  if(/entel|movistar|claro|vtr|internet|telefon/.test(d)) return 'Servicios';
+  if(/luz|agua|gas |enel|metrogas|aguas/.test(d)) return 'Servicios';
+  if(/nana|jardin|niñ|personal|emplead/.test(d)) return 'Personal del hogar';
+  return 'Otro';
+}
+
+/* Normalizar monto — Santander usa formato 1.234.567 */
+function parseMonto(s){
+  if(!s) return 0;
+  // Quitar $, espacios, puntos de miles, convertir coma decimal
+  let clean=String(s).replace(/[$\s]/g,'').replace(/\./g,'').replace(/,/,'.');
+  const n=parseFloat(clean);
+  return isNaN(n)?0:Math.abs(n);
+}
+
+/* Normalizar fecha DD/MM/YYYY o DD-MM-YYYY → YYYY-MM-DD */
+function parseFecha(s){
+  if(!s) return '';
+  s=String(s).trim();
+  if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(s)) return s;
+  const p=s.split(/[\/-]/);
+  if(p.length===3){
+    if(p[2].length===4) return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+    if(p[0].length===4) return p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0');
+  }
+  return s;
+}
+
+async function handleImportFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const errEl=document.getElementById('import-err');
+  errEl.style.display='none';
+  
+  try{
+    let rows=[];
+    if(file.name.endsWith('.csv')){
+      const txt=await file.text();
+      rows=parseCSV(txt);
+    } else {
+      // Excel - usar SheetJS
+      const buf=await file.arrayBuffer();
+      const XLSX=await loadXLSX();
+      const wb=XLSX.read(buf,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false}).filter(r=>r.some(c=>c));
+    }
+
+    const cols=detectSantanderCols(rows);
+    if(!cols){
+      errEl.textContent='No se reconoció el formato del archivo. Asegúrate de exportar los movimientos desde Santander.';
+      errEl.style.display='block';
+      return;
+    }
+
+    // Parse movimientos
+    importData=[];
+    for(let i=cols.headerRow+1;i<rows.length;i++){
+      const row=rows[i];
+      if(!row||!row[cols.dateCol]) continue;
+      const fecha=parseFecha(row[cols.dateCol]);
+      const desc=(row[cols.descCol]||'').trim();
+      const monto=parseMonto(row[cols.amtCol]);
+      if(!fecha||!desc||monto<=0) continue;
+      importData.push({
+        id:Date.now()+i,
+        name:desc,
+        type:'gasto',
+        amount:monto,
+        date:fecha,
+        category:guessCategory(desc),
+        source:'santander'
+      });
+    }
+
+    if(!importData.length){
+      errEl.textContent='No se encontraron movimientos válidos en el archivo.';
+      errEl.style.display='block';
+      return;
+    }
+
+    // Mostrar preview
+    document.getElementById('import-preview').style.display='block';
+    document.getElementById('import-save-btn').style.display='block';
+    document.getElementById('import-drop').style.borderColor='var(--sage)';
+    
+    const total=importData.reduce((s,m)=>s+m.amount,0);
+    document.getElementById('import-summary').innerHTML=
+      `<b>${importData.length} movimientos</b> detectados · Total: <b>$${total.toLocaleString('es-CL')}</b>`;
+
+    const preview=importData.slice(0,8);
+    document.getElementById('import-table').innerHTML=`
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="background:var(--bg2)">
+          <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Fecha</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Descripción</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Categoría</th>
+          <th style="padding:7px 10px;text-align:right;color:var(--ink3)">Monto</th>
+        </tr></thead>
+        <tbody>
+          ${preview.map((m,i)=>`<tr style="border-top:1px solid var(--border)">
+            <td style="padding:7px 10px;color:var(--ink3)">${m.date}</td>
+            <td style="padding:7px 10px;color:var(--ink2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</td>
+            <td style="padding:7px 10px"><span class="badge b-sage" style="font-size:9px">${m.category}</span></td>
+            <td style="padding:7px 10px;text-align:right;color:var(--rust);font-weight:600">$${m.amount.toLocaleString('es-CL')}</td>
+          </tr>`).join('')}
+          ${importData.length>8?`<tr><td colspan="4" style="padding:8px 10px;text-align:center;color:var(--ink3);font-size:11px">...y ${importData.length-8} más</td></tr>`:''}
+        </tbody>
+      </table>`;
+  }catch(e){
+    errEl.textContent='Error al leer el archivo: '+e.message;
+    errEl.style.display='block';
+  }
+}
+
+/* Cargar SheetJS dinámicamente */
+function loadXLSX(){
+  return new Promise((ok,fail)=>{
+    if(window.XLSX){ok(window.XLSX);return;}
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=()=>ok(window.XLSX);
+    s.onerror=()=>fail(new Error('No se pudo cargar el lector de Excel'));
+    document.head.appendChild(s);
+  });
+}
+
+async function confirmImport(){
+  if(!importData.length) return;
+  const btn=document.getElementById('import-save-btn');
+  btn.disabled=true; btn.textContent='Importando...';
+  
+  // Evitar duplicados — comparar por fecha+descripción+monto
+  const existing=new Set(D.finanzas.map(f=>`${f.date}|${f.name}|${f.amount}`));
+  const nuevos=importData.filter(m=>!existing.has(`${m.date}|${m.name}|${m.amount}`));
+  const dups=importData.length-nuevos.length;
+
+  if(!nuevos.length){
+    toast('Todos los movimientos ya estaban registrados','success');
+    closeImport(); return;
+  }
+
+  // Agregar al panel
+  nuevos.forEach(m=>D.finanzas.unshift(m));
+  renderAll(); setTimeout(()=>renderCharts(),80);
+  closeImport();
+  
+  const msg=`${nuevos.length} movimientos importados${dups>0?` (${dups} duplicados omitidos)`:''}`;
+  toast(msg,'success');
+
+  // Guardar en Sheets
+  for(const item of nuevos){
+    try{ await post({action:'add',type:'finanzas',item}); }catch(e){}
+  }
+  btn.disabled=false; btn.textContent='Importar movimientos';
 }
 
 function toast(msg,type=''){
