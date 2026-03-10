@@ -2718,11 +2718,13 @@
         }))
         ];
         urgEl.innerHTML = urgItems.length ? urgItems.map(u => {
-            const days = u.due ? Math.ceil((new Date(u.due + 'T12:00') - new Date()) / 86400000) : null;
+            const d = u.due ? new Date(u.due + 'T12:00') : null;
+            const days = (d && !isNaN(d)) ? Math.ceil((d - new Date()) / 86400000) : null;
+            const dot = days !== null && days <= 7 ? 'var(--rust)' : 'var(--amber)';
             return `<div class="urg-item">
-      <div class="urg-dot" style="background:${days !== null && days <= 7 ? 'var(--rust)' : 'var(--amber)'}"></div>
+      <div class="urg-dot" style="background:${dot}"></div>
       <div style="flex:1;font-size:13px;color:var(--ink2)">${u.text}</div>
-      ${days !== null ? `<span style="font-size:11px;font-weight:700;color:var(--rust)">${days}d</span>` : ''}
+      ${days !== null ? `<span style="font-size:11px;font-weight:700;color:${dot}">${days}d</span>` : ''}
     </div>`
             ;
         }).join('') : empty('¡Sin urgentes! 🎉');
@@ -2900,10 +2902,35 @@
 
     function isInSandbox() {
         try {
-            return window.location.href === 'about:srcdoc' || window.location.protocol === 'about:';
+            return window.location.protocol === 'about:';
         }
         catch (e) {
             return true;
+        }
+    }
+
+    /* Usamos la API de rss2json con fetch normal (funciona en GitHub Pages con CORS) */
+    async function fetchRSS(feedUrl, medio) {
+        const url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + '&count=6';
+        try {
+            const ctrl = new AbortController();
+            setTimeout(() => ctrl.abort(), 10000);
+            const r = await fetch(url, {
+                signal: ctrl.signal
+            });
+            if (!r.ok)
+                return [];
+            const j = await r.json();
+            if (j.status !== 'ok' || !j.items?.length)
+                return [];
+            return j.items.map(it => ({
+                title: (it.title || '').replace(/<[^>]+>/g, '').trim(),
+                link: it.link || it.guid || '',
+                desc: (it.description || it.content || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 280),
+                medio
+            })).filter(it => it.title && it.link);
+        } catch (e) {
+            return [];
         }
     }
 
@@ -2917,18 +2944,22 @@
         u: 'https://www.theclinic.cl/feed/'
     },
     {
-        m: 'Ex-Ante',
-        u: 'https://www.ex-ante.cl/feed/'
-    },
-    {
         m: 'Desconcierto',
         u: 'https://www.eldesconcierto.cl/feed/'
+    },
+    {
+        m: 'Ex-Ante',
+        u: 'https://www.ex-ante.cl/feed/'
     },
     ];
     const FEEDS_INT = [
     {
         m: 'The Guardian',
         u: 'https://www.theguardian.com/world/rss'
+    },
+    {
+        m: 'Al Jazeera',
+        u: 'https://www.aljazeera.com/xml/rss/all.xml'
     },
     {
         m: 'NYT',
@@ -2938,141 +2969,16 @@
         m: 'El País',
         u: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada'
     },
-    {
-        m: 'Al Jazeera',
-        u: 'https://www.aljazeera.com/xml/rss/all.xml'
-    },
-    {
-        m: 'Bloomberg',
-        u: 'https://feeds.bloomberg.com/politics/news.rss'
-    },
-    {
-        m: 'Le Monde',
-        u: 'https://www.lemonde.fr/rss/une.xml'
-    },
     ];
 
-    let _rssN = 0;
-
-    /* MÉTODO 1: JSONP via rss2json.com */
-    function fetchJSONP(feedUrl) {
-        return new Promise((ok, fail) => {
-            const n = '_rss' + (++_rssN);
-            const t = setTimeout(() => {
-                delete window[n];
-                document.getElementById(n)?.remove();
-                fail('timeout');
-            }, 12000);
-            window[n] = function(data) {
-                clearTimeout(t);
-                delete window[n];
-                document.getElementById(n)?.remove();
-                ok(data);
-            };
-            const s = document.createElement('script');
-            s.id = n;
-            s.src = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + '&count=8&callback=' + n;
-            s.onerror = () => {
-                clearTimeout(t);
-                delete window[n];
-                s.remove();
-                fail('blocked');
-            };
-            document.head.appendChild(s);
-        });
-    }
-
-    /* MÉTODO 2: fetch via allorigins con XML parsing */
-    function parseXML(xml, medio) {
-        try {
-            const doc = new DOMParser().parseFromString(xml, 'text/xml');
-            const items = Array.from(doc.querySelectorAll('item')).slice(0, 6);
-            return items.map(item => {
-                const title = (item.querySelector('title')?.textContent || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim();
-                let link = (item.querySelector('link')?.textContent || '').trim();
-                if (!link)
-                    link = (item.querySelector('guid')?.textContent || '').trim();
-                // RSS link sometimes is empty text node, try next sibling
-                if (!link) {
-                    const le = item.querySelector('link');
-                    if (le && le.nextSibling)
-                        link = (le.nextSibling.textContent || '').trim();
-                }
-                const desc = (item.querySelector('description')?.textContent || '')
-                .replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 280);
-                return title && link ? {
-                    title,
-                    link,
-                    desc,
-                    medio
-                } : null;
-            }).filter(Boolean);
-        } catch (e) {
-            return [];
-        }
-    }
-
-    async function fetchViaProxy(feedUrl, medio) {
-        const proxies = [
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(feedUrl),
-        'https://corsproxy.io/?' + encodeURIComponent(feedUrl),
-        'https://api.allorigins.win/get?url=' + encodeURIComponent(feedUrl),
-        ];
-        for (const proxy of proxies) {
-            try {
-                const ctrl = new AbortController();
-                const t = setTimeout(() => ctrl.abort(), 10000);
-                const r = await fetch(proxy, {
-                    signal: ctrl.signal
-                });
-                clearTimeout(t);
-                if (!r.ok)
-                    continue;
-                let txt = await r.text();
-                // allorigins /get returns JSON with contents field
-                if (txt.startsWith('{')) {
-                    try {
-                        const j = JSON.parse(txt);
-                        if (j.contents)
-                            txt = j.contents;
-                    } catch (e) {}
-                }
-                if (txt.length < 200)
-                    continue;
-                const items = parseXML(txt, medio);
-                if (items.length > 0)
-                    return items;
-            } catch (e) {
-                continue;
-            }
-        }
-        return [];
-    }
-
-    async function fetchFeed(feed) {
-        /* Try JSONP first (works in GitHub Pages, bypasses CORS) */
-        try {
-            const data = await fetchJSONP(feed.u);
-            if (data && data.status === 'ok'&&data.items?.length) {
-                return data.items.slice(0, 6).map(it => ({
-                    title: (it.title || '').replace(/<[^>]+>/g, '').trim(),
-                    link: it.link || it.guid || '',
-                    desc: (it.description || it.content || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 280),
-                    medio: feed.m
-                })).filter(it => it.title && it.link);
-            }
-        } catch (e) {}
-        /* Fallback: fetch via proxy */
-        return fetchViaProxy(feed.u, feed.m);
-    }
-
     async function fetchAll(feeds) {
-        const results = await Promise.allSettled(feeds.map(f => fetchFeed(f)));
+        const results = await Promise.allSettled(feeds.map(f => fetchRSS(f.u, f.m)));
         const all = [];
         results.forEach(r => {
             if (r.status === 'fulfilled')
                 all.push(...(r.value || []));
         });
+        /* shuffle */
         for (let i = all.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [all[i], all[j]] = [all[j], all[i]];
@@ -3080,13 +2986,11 @@
         return all;
     }
 
-    const SANDBOX_MSG = `<div style="text-align:center;padding:28px 16px;color:var(--ink3)">
-  <div style="font-size:28px;margin-bottom:10px">🔒</div>
-  <div style="font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:6px">Solo disponible en GitHub Pages</div>
-  <div style="font-size:12px;line-height:1.6">Las noticias cargan en<br>
-  <a href="https://romielizondoc.github.io/Nuestro-Hogar/" target="_blank" style="color:var(--rust);font-weight:600">romielizondoc.github.io/Nuestro-Hogar</a></div>
+    const SANDBOX_MSG = `<div style="text-align:center;padding:24px 16px;color:var(--ink3)">
+  <div style="font-size:24px;margin-bottom:8px">🔒</div>
+  <div style="font-size:12px;line-height:1.6">Solo disponible en<br>
+  <a href="https://romielizondoc.github.io/Nuestro-Hogar/" target="_blank" style="color:var(--rust);font-weight:600">GitHub Pages</a></div>
 </div>`
-
 
 
 
@@ -3099,6 +3003,14 @@
                 el.innerHTML = SANDBOX_MSG;
         });
     }
+
+    const ERR_MSG = `<div style="text-align:center;padding:20px">
+  <div style="font-size:13px;color:var(--ink3);margin-bottom:10px">No se pudo cargar</div>
+  <button onclick="nCache={cl:null,int:null};loadNews()" style="padding:7px 18px;border-radius:20px;border:none;background:var(--rust);color:#fff;cursor:pointer;font-size:12px;font-weight:600">↻ Reintentar</button>
+</div>`
+
+
+    ;
 
     function triggerNews() {
         if (isInSandbox()) {
@@ -3122,21 +3034,52 @@
         const skel = '<div class="skel" style="height:48px;margin-bottom:8px;border-radius:10px"></div>'.repeat(4);
         document.getElementById('news-cl').innerHTML = skel;
         document.getElementById('news-int').innerHTML = skel;
-        try {
-            const [cl, intl] = await Promise.all([fetchAll(FEEDS_CL), fetchAll(FEEDS_INT)]);
-            nCache.cl = cl.slice(0, 10);
-            nCache.int = intl.slice(0, 10);
-            renderMini('mini-cl', nCache.cl.slice(0, 3));
-            renderMini('mini-int', nCache.int.slice(0, 3));
-            renderNewsPanel('news-cl', nCache.cl);
-            renderNewsPanel('news-int', nCache.int);
-        } catch (e) {
-            const err = '<div class="empty">No se pudo cargar — <button onclick="newsLoading=false;loadNews()" style="color:var(--rust);background:none;border:none;cursor:pointer;font-weight:700;text-decoration:underline">reintentar</button></div>';
+
+        /* Hard timeout — si en 18s no hay nada, mostrar error */
+        let timedOut = false;
+        const hardTimer = setTimeout(() => {
+            timedOut = true;
+            newsLoading = false;
             ['news-cl', 'news-int'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el)
-                    el.innerHTML = err;
+                    el.innerHTML = ERR_MSG;
             });
+            ['mini-cl', 'mini-int'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el)
+                    el.innerHTML = '<div style="font-size:11px;color:var(--ink3);padding:4px">Sin noticias</div>';
+            });
+        }, 18000);
+
+        try {
+            const [cl, intl] = await Promise.all([fetchAll(FEEDS_CL), fetchAll(FEEDS_INT)]);
+            if (timedOut)
+                return;
+            clearTimeout(hardTimer);
+            nCache.cl = cl.slice(0, 10);
+            nCache.int = intl.slice(0, 10);
+            /* Render mini resumen */
+            renderMini('mini-cl', nCache.cl.slice(0, 3));
+            renderMini('mini-int', nCache.int.slice(0, 3));
+            /* Render panel completo */
+            if (nCache.cl.length)
+                renderNewsPanel('news-cl', nCache.cl);
+            else
+                document.getElementById('news-cl').innerHTML = ERR_MSG;
+            if (nCache.int.length)
+                renderNewsPanel('news-int', nCache.int);
+            else
+                document.getElementById('news-int').innerHTML = ERR_MSG;
+        } catch (e) {
+            if (!timedOut) {
+                clearTimeout(hardTimer);
+                ['news-cl', 'news-int'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el)
+                        el.innerHTML = ERR_MSG;
+                });
+            }
         }
         newsLoading = false;
     }
