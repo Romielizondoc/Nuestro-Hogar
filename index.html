@@ -1064,7 +1064,7 @@ function showTab(name,el){
 /* ─────────────── HELPERS ─────────────── */
 const wS=w=>w==='T'?'background:var(--rust);color:#fff':'background:var(--sage);color:#fff';
 const isDone=v=>v===true||v==='true'||v==='TRUE';
-const clp=n=>'$'+Number(n||0).toLocaleString('es-CL');
+const clp=n=>'$'+Math.round(Number(n||0)).toLocaleString('es-CL',{maximumFractionDigits:0});
 function pBadge(p){const m={urgente:['b-rust','urgente'],semanal:['b-plum','semanal'],diario:['b-amber','diario'],normal:['b-sage','eventual']};return m[p]||['b-sage',p||'eventual'];}
 const empty=m=>`<div class="empty">${m}</div>`;
 const mLabel=ym=>{if(!ym)return'';const[y,m]=ym.split('-');return['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][+m-1]+' '+y.slice(2);};
@@ -1202,9 +1202,19 @@ function rProy(){
 /* Normaliza fechas que vienen de Sheets en distintos formatos a YYYY-MM-DD */
 function normDate(s){
   if(!s) return '';
+  // Si es objeto Date nativo
+  if(s instanceof Date) {
+    if(isNaN(s)) return '';
+    return s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0');
+  }
   s=String(s).trim().replace(/^'+/,''); // quitar apóstrofe inicial de Sheets
   if(!s) return '';
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; // ya OK
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; // ya YYYY-MM-DD
+  // Formato "Mon Mar 10 2026 ..." (Date.toString desde Sheets)
+  if(s.includes(' ') && s.length > 10){
+    const d=new Date(s);
+    if(!isNaN(d)) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
   // DD/MM/YYYY o DD-MM-YYYY
   const p=s.split(/[\/\-]/);
   if(p.length===3){
@@ -1212,7 +1222,7 @@ function normDate(s){
     if(a.length===4) return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`;
     if(c.length===4) return `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
   }
-  return ''; // si no se pudo parsear, retornar vacío para evitar Invalid Date
+  return ''; // no se pudo parsear → vacío para evitar Invalid Date
 }
 
 function rCalendario(){
