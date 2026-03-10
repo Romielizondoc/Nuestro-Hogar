@@ -2909,31 +2909,6 @@
         }
     }
 
-    /* Usamos la API de rss2json con fetch normal (funciona en GitHub Pages con CORS) */
-    async function fetchRSS(feedUrl, medio) {
-        const url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + '&count=6';
-        try {
-            const ctrl = new AbortController();
-            setTimeout(() => ctrl.abort(), 10000);
-            const r = await fetch(url, {
-                signal: ctrl.signal
-            });
-            if (!r.ok)
-                return [];
-            const j = await r.json();
-            if (j.status !== 'ok' || !j.items?.length)
-                return [];
-            return j.items.map(it => ({
-                title: (it.title || '').replace(/<[^>]+>/g, '').trim(),
-                link: it.link || it.guid || '',
-                desc: (it.description || it.content || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 280),
-                medio
-            })).filter(it => it.title && it.link);
-        } catch (e) {
-            return [];
-        }
-    }
-
     const FEEDS_CL = [
     {
         m: 'CIPER',
@@ -2946,10 +2921,6 @@
     {
         m: 'Desconcierto',
         u: 'https://www.eldesconcierto.cl/feed/'
-    },
-    {
-        m: 'Ex-Ante',
-        u: 'https://www.ex-ante.cl/feed/'
     },
     ];
     const FEEDS_INT = [
@@ -2965,24 +2936,53 @@
         m: 'NYT',
         u: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml'
     },
-    {
-        m: 'El País',
-        u: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada'
-    },
     ];
 
-    async function fetchAll(feeds) {
-        const results = await Promise.allSettled(feeds.map(f => fetchRSS(f.u, f.m)));
-        const all = [];
-        results.forEach(r => {
-            if (r.status === 'fulfilled')
-                all.push(...(r.value || []));
-        });
-        /* shuffle */
-        for (let i = all.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [all[i], all[j]] = [all[j], all[i]];
+    async function fetchRSS(feedUrl, medio) {
+        const url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + '&count=5';
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 7000);
+        try {
+            const r = await fetch(url, {
+                signal: ctrl.signal
+            });
+            clearTimeout(t);
+            if (!r.ok)
+                return [];
+            const j = await r.json();
+            if (j.status !== 'ok' || !j.items?.length)
+                return [];
+            return j.items.map(it => ({
+                title: (it.title || '').replace(/<[^>]+>/g, '').trim(),
+                link: it.link || it.guid || '',
+                desc: (it.description || it.content || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 240),
+                medio
+            })).filter(it => it.title && it.link);
+        } catch (e) {
+            clearTimeout(t);
+            return [];
         }
+    }
+
+    /* Progresivo: muestra resultados apenas llega cada feed */
+    async function fetchProgressive(feeds, panelId, miniId) {
+        const all = [];
+        const promises = feeds.map(f =>
+        fetchRSS(f.u, f.m).then(items => {
+            if (!items.length)
+                return;
+            all.push(...items);
+            /* shuffle parcial y mostrar lo que hay */
+            const tmp = [...all];
+            for (let i = tmp.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [tmp[i], tmp[j]] = [tmp[j], tmp[i]];
+            }
+            renderNewsPanel(panelId, tmp.slice(0, 10));
+            renderMini(miniId, tmp.slice(0, 3));
+        })
+        );
+        await Promise.allSettled(promises);
         return all;
     }
 
@@ -2996,14 +2996,6 @@
 
     ;
 
-    function showSandboxMsg() {
-        ['news-cl', 'news-int', 'mini-cl', 'mini-int'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el)
-                el.innerHTML = SANDBOX_MSG;
-        });
-    }
-
     const ERR_MSG = `<div style="text-align:center;padding:20px">
   <div style="font-size:13px;color:var(--ink3);margin-bottom:10px">No se pudo cargar</div>
   <button onclick="nCache={cl:null,int:null};loadNews()" style="padding:7px 18px;border-radius:20px;border:none;background:var(--rust);color:#fff;cursor:pointer;font-size:12px;font-weight:600">↻ Reintentar</button>
@@ -3011,6 +3003,14 @@
 
 
     ;
+
+    function showSandboxMsg() {
+        ['news-cl', 'news-int', 'mini-cl', 'mini-int'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el)
+                el.innerHTML = SANDBOX_MSG;
+        });
+    }
 
     function triggerNews() {
         if (isInSandbox()) {
@@ -3020,6 +3020,8 @@
         if (nCache.cl && nCache.int) {
             renderNewsPanel('news-cl', nCache.cl);
             renderNewsPanel('news-int', nCache.int);
+            renderMini('mini-cl', nCache.cl.slice(0, 3));
+            renderMini('mini-int', nCache.int.slice(0, 3));
         } else {
             loadNews();
         }
@@ -3030,56 +3032,37 @@
             showSandboxMsg();
             return;
         }
+        if (newsLoading)
+            return;
         newsLoading = true;
-        const skel = '<div class="skel" style="height:48px;margin-bottom:8px;border-radius:10px"></div>'.repeat(4);
+
+        const skel = '<div class="skel" style="height:44px;margin-bottom:8px;border-radius:10px"></div>'.repeat(3);
         document.getElementById('news-cl').innerHTML = skel;
         document.getElementById('news-int').innerHTML = skel;
 
-        /* Hard timeout — si en 18s no hay nada, mostrar error */
-        let timedOut = false;
-        const hardTimer = setTimeout(() => {
-            timedOut = true;
+        /* Timeout de seguridad — 12s máximo, luego muestra lo que haya o error */
+        const safetyTimer = setTimeout(() => {
             newsLoading = false;
-            ['news-cl', 'news-int'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el)
-                    el.innerHTML = ERR_MSG;
-            });
-            ['mini-cl', 'mini-int'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el)
-                    el.innerHTML = '<div style="font-size:11px;color:var(--ink3);padding:4px">Sin noticias</div>';
-            });
-        }, 18000);
+            if (!nCache.cl?.length)
+                document.getElementById('news-cl').innerHTML = ERR_MSG;
+            if (!nCache.int?.length)
+                document.getElementById('news-int').innerHTML = ERR_MSG;
+        }, 12000);
 
         try {
-            const [cl, intl] = await Promise.all([fetchAll(FEEDS_CL), fetchAll(FEEDS_INT)]);
-            if (timedOut)
-                return;
-            clearTimeout(hardTimer);
+            const [cl, intl] = await Promise.all([
+            fetchProgressive(FEEDS_CL, 'news-cl', 'mini-cl'),
+            fetchProgressive(FEEDS_INT, 'news-int', 'mini-int'),
+            ]);
+            clearTimeout(safetyTimer);
             nCache.cl = cl.slice(0, 10);
             nCache.int = intl.slice(0, 10);
-            /* Render mini resumen */
-            renderMini('mini-cl', nCache.cl.slice(0, 3));
-            renderMini('mini-int', nCache.int.slice(0, 3));
-            /* Render panel completo */
-            if (nCache.cl.length)
-                renderNewsPanel('news-cl', nCache.cl);
-            else
+            if (!nCache.cl.length)
                 document.getElementById('news-cl').innerHTML = ERR_MSG;
-            if (nCache.int.length)
-                renderNewsPanel('news-int', nCache.int);
-            else
+            if (!nCache.int.length)
                 document.getElementById('news-int').innerHTML = ERR_MSG;
         } catch (e) {
-            if (!timedOut) {
-                clearTimeout(hardTimer);
-                ['news-cl', 'news-int'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el)
-                        el.innerHTML = ERR_MSG;
-                });
-            }
+            clearTimeout(safetyTimer);
         }
         newsLoading = false;
     }
