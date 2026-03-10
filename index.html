@@ -2075,7 +2075,8 @@
         const btn = document.getElementById('sync-btn');
         btn.classList.add('syncing');
         const types = ['tareas', 'compras', 'finanzas', 'tramites', 'notas', 'metas', 'eventos', 'personal', 'extras', 'recurrentes'];
-        for (const t of types) {
+        /* Paralelo: todas las hojas al mismo tiempo, mucho mas rapido */
+        await Promise.allSettled(types.map(async t => {
             try {
                 const r = await jsonp({
                     type: t
@@ -2083,13 +2084,12 @@
                 if(r?.ok)
                     D[t] = r.data || [];
             } catch (e) {}
-        }
+        }));
         applyRecurrentes();
         renderAll();
         setTimeout(() => renderCharts(), 120);
         btn.classList.remove('syncing');
         toast('Actualizado ✓', 'success');
-        // Cargar noticias mini siempre
         loadNews();
     }
 
@@ -2718,13 +2718,14 @@
         }))
         ];
         urgEl.innerHTML = urgItems.length ? urgItems.map(u => {
-            const d = u.due ? new Date(u.due + 'T12:00') : null;
-            const days = (d && !isNaN(d)) ? Math.ceil((d - new Date()) / 86400000) : null;
-            const dot = days !== null && days <= 7 ? 'var(--rust)' : 'var(--amber)';
+            const dStr = (u.due || '').trim();
+            const d = /^\d{4}-\d{2}-\d{2}$/.test(dStr) ? new Date(dStr + 'T12:00') : null;
+            const days = (d && !isNaN(d.getTime())) ? Math.ceil((d - new Date()) / 86400000) : null;
+            const dot = days !== null && days <= 3 ? 'var(--rust)' : 'var(--amber)';
             return `<div class="urg-item">
       <div class="urg-dot" style="background:${dot}"></div>
       <div style="flex:1;font-size:13px;color:var(--ink2)">${u.text}</div>
-      ${days !== null ? `<span style="font-size:11px;font-weight:700;color:${dot}">${days}d</span>` : ''}
+      ${(days !== null && !isNaN(days)) ? `<span style="font-size:11px;font-weight:700;color:${dot}">${days}d</span>` : ''}
     </div>`
             ;
         }).join('') : empty('¡Sin urgentes! 🎉');
@@ -2938,41 +2939,76 @@
     },
     ];
 
-    async function fetchRSS(feedUrl, medio) {
-        const url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + '&count=5';
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 7000);
+    function parseXMLItems(txt, medio) {
         try {
-            const r = await fetch(url, {
-                signal: ctrl.signal
-            });
-            clearTimeout(t);
-            if (!r.ok)
-                return [];
-            const j = await r.json();
-            if (j.status !== 'ok' || !j.items?.length)
-                return [];
-            return j.items.map(it => ({
-                title: (it.title || '').replace(/<[^>]+>/g, '').trim(),
-                link: it.link || it.guid || '',
-                desc: (it.description || it.content || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 240),
-                medio
-            })).filter(it => it.title && it.link);
+            const doc = new DOMParser().parseFromString(txt, 'text/xml');
+            return Array.from(doc.querySelectorAll('item')).slice(0, 5).map(el => {
+                const title = (el.querySelector('title')?.textContent || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim();
+                const link = (el.querySelector('link')?.textContent||el.querySelector('guid')?.textContent || '').trim();
+                const desc = (el.querySelector('description')?.textContent || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, '').trim().slice(0, 240);
+                return title && link ? {
+                    title,
+                    link,
+                    desc,
+                    medio
+                } : null;
+            }).filter(Boolean);
         } catch (e) {
-            clearTimeout(t);
             return [];
         }
     }
 
-    /* Progresivo: muestra resultados apenas llega cada feed */
-    async function fetchProgressive(feeds, panelId, miniId) {
+    async function fetchRSS(feedUrl, medio) {
+        /* Try 1: rss2json API (returns JSON, no XML parsing) */
+        try {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 7000);
+            const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + '&count=5', {
+                signal: ctrl.signal
+            });
+            clearTimeout(t);
+            if (r.ok) {
+                const j = await r.json();
+                if (j.status === 'ok'&&j.items?.length) {
+                    return j.items.map(it => ({
+                        title: (it.title || '').replace(/<[^>]+>/g, '').trim(),
+                        link: it.link || it.guid || '',
+                        desc: (it.description || it.content || '').replace(/<[^>]+>/g, '').trim().slice(0, 240),
+                        medio
+                    })).filter(it => it.title && it.link);
+                }
+            }
+        } catch (e) {}
+
+        /* Try 2: allorigins raw XML */
+        try {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 7000);
+            const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(feedUrl), {
+                signal: ctrl.signal
+            });
+            clearTimeout(t);
+            if (r.ok) {
+                const txt = await r.text();
+                if (txt.length > 500) {
+                    const items = parseXMLItems(txt, medio);
+                    if (items.length)
+                        return items;
+                }
+            }
+        } catch (e) {}
+
+        return [];
+    }
+
+    /* Carga progresiva: muestra cada feed apenas llega */
+    async function loadFeedsProgressive(feeds, panelId, miniId) {
         const all = [];
-        const promises = feeds.map(f =>
+        await Promise.allSettled(feeds.map(f =>
         fetchRSS(f.u, f.m).then(items => {
             if (!items.length)
                 return;
-            all.push(...items);
-            /* shuffle parcial y mostrar lo que hay */
+            items.forEach(n => all.push(n));
             const tmp = [...all];
             for (let i = tmp.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -2981,40 +3017,33 @@
             renderNewsPanel(panelId, tmp.slice(0, 10));
             renderMini(miniId, tmp.slice(0, 3));
         })
-        );
-        await Promise.allSettled(promises);
+        ));
         return all;
     }
 
-    const SANDBOX_MSG = `<div style="text-align:center;padding:24px 16px;color:var(--ink3)">
-  <div style="font-size:24px;margin-bottom:8px">🔒</div>
-  <div style="font-size:12px;line-height:1.6">Solo disponible en<br>
-  <a href="https://romielizondoc.github.io/Nuestro-Hogar/" target="_blank" style="color:var(--rust);font-weight:600">GitHub Pages</a></div>
-</div>`
-
-
-
-    ;
-
-    const ERR_MSG = `<div style="text-align:center;padding:20px">
-  <div style="font-size:13px;color:var(--ink3);margin-bottom:10px">No se pudo cargar</div>
-  <button onclick="nCache={cl:null,int:null};loadNews()" style="padding:7px 18px;border-radius:20px;border:none;background:var(--rust);color:#fff;cursor:pointer;font-size:12px;font-weight:600">↻ Reintentar</button>
+    const SANDBOX_MSG = `<div style="text-align:center;padding:20px;color:var(--ink3)">
+  <div style="font-size:22px;margin-bottom:8px">🔒</div>
+  <div style="font-size:12px">Solo disponible en <a href="https://romielizondoc.github.io/Nuestro-Hogar/" target="_blank" style="color:var(--rust);font-weight:600">GitHub Pages</a></div>
 </div>`
 
 
     ;
 
-    function showSandboxMsg() {
-        ['news-cl', 'news-int', 'mini-cl', 'mini-int'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el)
-                el.innerHTML = SANDBOX_MSG;
-        });
-    }
+    const ERR_MSG = `<div style="text-align:center;padding:16px">
+  <div style="font-size:12px;color:var(--ink3);margin-bottom:8px">No se pudo cargar</div>
+  <button onclick="nCache={cl:null,int:null};loadNews()" style="padding:6px 16px;border-radius:20px;border:none;background:var(--rust);color:#fff;cursor:pointer;font-size:11px;font-weight:600">↻ Reintentar</button>
+</div>`
+
+
+    ;
 
     function triggerNews() {
         if (isInSandbox()) {
-            showSandboxMsg();
+            ['news-cl', 'news-int', 'mini-cl', 'mini-int'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el)
+                    el.innerHTML = SANDBOX_MSG;
+            });
             return;
         }
         if (nCache.cl && nCache.int) {
@@ -3029,32 +3058,41 @@
 
     async function loadNews() {
         if (isInSandbox()) {
-            showSandboxMsg();
+            ['news-cl', 'news-int', 'mini-cl', 'mini-int'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el)
+                    el.innerHTML = SANDBOX_MSG;
+            });
             return;
         }
         if (newsLoading)
             return;
         newsLoading = true;
 
-        const skel = '<div class="skel" style="height:44px;margin-bottom:8px;border-radius:10px"></div>'.repeat(3);
+        const skel = '<div class="skel" style="height:40px;margin-bottom:8px;border-radius:10px"></div>'.repeat(3);
         document.getElementById('news-cl').innerHTML = skel;
         document.getElementById('news-int').innerHTML = skel;
 
-        /* Timeout de seguridad — 12s máximo, luego muestra lo que haya o error */
-        const safetyTimer = setTimeout(() => {
+        /* Safety net: si en 15s no cargó nada, mostrar error */
+        const safety = setTimeout(() => {
             newsLoading = false;
             if (!nCache.cl?.length)
                 document.getElementById('news-cl').innerHTML = ERR_MSG;
             if (!nCache.int?.length)
                 document.getElementById('news-int').innerHTML = ERR_MSG;
-        }, 12000);
+            ['mini-cl', 'mini-int'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.querySelector('.skel'))
+                    el.innerHTML = '<div style="font-size:11px;color:var(--ink3);padding:4px">Sin noticias disponibles</div>';
+            });
+        }, 15000);
 
         try {
             const [cl, intl] = await Promise.all([
-            fetchProgressive(FEEDS_CL, 'news-cl', 'mini-cl'),
-            fetchProgressive(FEEDS_INT, 'news-int', 'mini-int'),
+            loadFeedsProgressive(FEEDS_CL, 'news-cl', 'mini-cl'),
+            loadFeedsProgressive(FEEDS_INT, 'news-int', 'mini-int'),
             ]);
-            clearTimeout(safetyTimer);
+            clearTimeout(safety);
             nCache.cl = cl.slice(0, 10);
             nCache.int = intl.slice(0, 10);
             if (!nCache.cl.length)
@@ -3062,7 +3100,9 @@
             if (!nCache.int.length)
                 document.getElementById('news-int').innerHTML = ERR_MSG;
         } catch (e) {
-            clearTimeout(safetyTimer);
+            clearTimeout(safety);
+            document.getElementById('news-cl').innerHTML = ERR_MSG;
+            document.getElementById('news-int').innerHTML = ERR_MSG;
         }
         newsLoading = false;
     }
