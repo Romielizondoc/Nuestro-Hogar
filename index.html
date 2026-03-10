@@ -296,7 +296,7 @@ function checkPwd(){const v=document.getElementById('pwd-input').value;if(v===PW
 
 async function syncAll(){const btn=document.getElementById('sync-btn');btn.classList.add('syncing');const types=['tareas','compras','finanzas','tramites','notas','metas','eventos','personal','extras'];for(const t of types){try{const r=await jsonp({type:t});if(r?.ok)data[t]=r.data||[];}catch(e){}}renderAll();btn.classList.remove('syncing');toast('Datos actualizados ✓','success');}
 
-function showTab(name,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));el.classList.add('active');document.getElementById('panel-'+name).classList.add('active');renderAll();}
+function showTab(name,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));el.classList.add('active');document.getElementById('panel-'+name).classList.add('active');renderAll();if(name==='resumen')setTimeout(()=>renderChart('chart-resumen'),200);if(name==='finanzas')setTimeout(()=>renderChart('chart-fin'),200);if(name==='metas')setTimeout(()=>renderProyChart(),200);}
 
 function whoStyle(w){return w==='T'?'background:var(--terracota);color:white':'background:var(--sage);color:white';}
 function isDone(v){return v===true||v==='true'||v==='TRUE';}
