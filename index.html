@@ -1022,8 +1022,15 @@ async function syncAll(){
         /* Normalizar fechas al cargar para evitar Invalid Date */
         D[t]=(r.data||[]).map(item=>{
           const copy={...item};
-          if(copy.date) copy.date=normDate(String(copy.date));
-          if(copy.due)  copy.due=normDate(String(copy.due));
+          /* Normalizar TODOS los campos con fecha posible */
+          ['date','due','fecha'].forEach(k=>{
+            if(copy[k]!==undefined && copy[k]!==null && copy[k]!==''){
+              const raw=copy[k];
+              const norm=normDateRaw(raw);
+              copy[k]=norm||String(raw); // si no se pudo normalizar, guardar raw
+              if(!norm) console.warn('[DATE] No pudo normalizar campo',k,'=',JSON.stringify(raw),'en tipo',t);
+            }
+          });
           return copy;
         });
       }
@@ -1200,30 +1207,42 @@ function rProy(){
 }
 
 /* Normaliza fechas que vienen de Sheets en distintos formatos a YYYY-MM-DD */
-function normDate(s){
-  if(!s) return '';
-  // Si es objeto Date nativo
-  if(s instanceof Date) {
-    if(isNaN(s)) return '';
-    return s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0');
+/* Convierte CUALQUIER formato de fecha a YYYY-MM-DD */
+function normDateRaw(v){
+  if(!v && v!==0) return '';
+  // Número (timestamp ms o serial Excel)
+  if(typeof v==='number'){
+    const d=v>100000?new Date(v):new Date(Math.round((v-25569)*86400*1000));
+    if(isNaN(d)) return '';
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
-  s=String(s).trim().replace(/^'+/,''); // quitar apóstrofe inicial de Sheets
-  if(!s) return '';
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; // ya YYYY-MM-DD
-  // Formato "Mon Mar 10 2026 ..." (Date.toString desde Sheets)
-  if(s.includes(' ') && s.length > 10){
-    const d=new Date(s);
-    if(!isNaN(d)) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  // Objeto Date
+  if(v instanceof Date){
+    if(isNaN(v)) return '';
+    return v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0');
   }
+  // String — limpiar apóstrofes y espacios
+  let s=String(v).trim().replace(/^[' ]+/,'').replace(/[' ]+$/,'');
+  if(!s||s==='null'||s==='undefined') return '';
+  // Ya YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // ISO con hora: 2026-03-10T00:00:00... 
+  if(/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0,10);
   // DD/MM/YYYY o DD-MM-YYYY
-  const p=s.split(/[\/\-]/);
-  if(p.length===3){
-    const [a,b,c]=p;
-    if(a.length===4) return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`;
-    if(c.length===4) return `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
+  const parts=s.split(/[\/\-\.]/);
+  if(parts.length===3){
+    const [a,b,c]=parts.map(x=>x.trim());
+    if(a.length===4 && +b<=12 && +c<=31) return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`;
+    if(c.length===4 && +b<=12 && +a<=31) return `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
+    if(c.length===2 && +b<=12 && +a<=31) return `20${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
   }
-  return ''; // no se pudo parsear → vacío para evitar Invalid Date
+  // Último recurso: intentar parsear como fecha
+  const d=new Date(s);
+  if(!isNaN(d)) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return '';
 }
+
+function normDate(s){ return normDateRaw(s); }
 
 function rCalendario(){
   const now=new Date();
@@ -1791,6 +1810,9 @@ async function saveItem(){
   else if(curModal==='personal'){const n=gv('f-name');if(!n){btn.disabled=false;btn.textContent='Guardar';return;}type='personal';item={id,name:n,rol:gv('f-rol'),sueldo:parseFloat(gv('f-sueldo')||0),diapago:gv('f-diapago')};}
   else if(curModal==='extra'){const m=gv('f-monto');if(!m){btn.disabled=false;btn.textContent='Guardar';return;}type='extras';item={id,personId:gv('f-person'),tipo:gv('f-tipo'),descripcion:gv('f-desc'),monto:parseFloat(m),date:gv('f-date'),pagado:false};}
   if(!item){btn.disabled=false;btn.textContent='Guardar';return;}
+  /* Normalizar fechas antes de guardar */
+  if(item.date) item.date=normDateRaw(item.date)||item.date;
+  if(item.due)  item.due=normDateRaw(item.due)||item.due;
   D[type].unshift(item);
   renderAll();setTimeout(()=>renderCharts(),80);
   closeModal();btn.disabled=false;btn.textContent='Guardar';
