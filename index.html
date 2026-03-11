@@ -708,7 +708,21 @@ header{
     </div>
 
     <div class="g2 gap">
-      <div class="card card-warm"><div class="ch"><div class="ct ct-sm">Gastos por categoría</div></div><div id="wrap-donut-r" class="chart-box"></div></div>
+      <div class="card card-warm">
+        <div class="ch"><div class="ct ct-sm">Gastos por categoría</div></div>
+        <div id="wrap-donut-r" class="chart-box"></div>
+        <!-- Mini hormiga dentro del gráfico -->
+        <div id="hormiga-mini" style="margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:10px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+            <span style="font-size:11px;font-weight:700;color:var(--ink)">🛒 Compras hormiga esta semana</span>
+            <span id="hormiga-mini-val" style="font-size:12px;font-weight:700;color:var(--rust)">—</span>
+          </div>
+          <div style="background:var(--border);border-radius:6px;height:6px;overflow:hidden">
+            <div id="hormiga-mini-bar" style="height:100%;border-radius:6px;transition:.5s;width:0%;background:var(--sage)"></div>
+          </div>
+          <div style="font-size:10px;color:var(--ink3);margin-top:3px" id="hormiga-mini-lbl"></div>
+        </div>
+      </div>
       <div class="card card-warm"><div class="ch"><div class="ct ct-sm">Tendencia mensual</div></div><div id="wrap-trend" class="trend-box"></div></div>
     </div>
 
@@ -752,6 +766,36 @@ header{
       <div class="stat-card sc-rust"><div class="sc-pill pill-rust">Egresos</div><div class="sc-lbl">Total</div><div class="sc-val" id="f-egr">—</div></div>
       <div class="stat-card sc-amber"><div class="sc-pill pill-amber">Balance</div><div class="sc-lbl">Resultado</div><div class="sc-val" id="f-bal">—</div></div>
     </div>
+
+    <!-- TERMÓMETRO HORMIGA -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">🛒 Compras hormiga esta semana</span>
+          <span id="termo-badge" style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700"></span>
+        </div>
+        <div style="background:var(--border);border-radius:8px;height:9px;overflow:hidden;margin-bottom:5px">
+          <div id="termo-bar" style="height:100%;border-radius:8px;transition:.5s;width:0%;background:var(--sage)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span id="termo-val" style="font-size:12px;font-weight:700;color:var(--ink)">—</span>
+          <span id="termo-meta-lbl" style="font-size:11px;color:var(--ink3)">define tu meta →</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Meta semanal</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:12px;color:var(--ink3)">$</span>
+            <input id="termo-input" type="number" placeholder="15000"
+              style="width:85px;padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;background:var(--bg);color:var(--ink);text-align:right"
+              onchange="saveTermoMeta(this.value)">
+          </div>
+          <div id="termo-mes" style="font-size:10px;color:var(--ink3);margin-top:3px;text-align:right"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="g2">
       <div class="card">
         <div class="ch">
@@ -1037,6 +1081,7 @@ async function syncAll(){
     }catch(e){}
   }));
   applyRecurrentes();
+  rTermometro();
   renderAll();
   setTimeout(()=>renderCharts(),120);
   btn.classList.remove('syncing');
@@ -1079,6 +1124,7 @@ const mLabel=ym=>{if(!ym)return'';const[y,m]=ym.split('-');return['Ene','Feb','M
 /* ─────────────── RENDER ALL ─────────────── */
 function renderAll(){
   rTareas();rCompras();rFinanzas();rTramites();rNotas();rMetas();rCalendario();rEventos();rPersonal();rExtras();rResumen();rSpotify();rPascal();
+  rTermometro();
 }
 
 /* checklist */
@@ -1762,7 +1808,7 @@ async function setStatus(id,val){
 }
 
 /* ─────────────── MODALS ─────────────── */
-const CATS=['Hogar','Alimentación','Servicios','Salud','Trabajo','Transporte','Entretenimiento','Personal del hogar','Otro'];
+const CATS=['Hogar','Alimentación','Servicios','Salud','Trabajo','Transporte','Uber/Rappi','Almacén','Entretenimiento','Personal del hogar','Otro'];
 const catOpts=CATS.map(c=>`<option>${c}</option>`).join('');
 
 const MDEFS={
@@ -1923,9 +1969,11 @@ function guessCategory(desc){
   const d=(desc||'').toLowerCase();
   if(/farmacia|clinica|hospital|medic|dental|salud|isapre|bsalud|cruz.*verde|ahumada|salcobrand/.test(d)) return 'Salud';
   if(/supermercado|jumbo|lider|unimarc|santa.*isabel|tottus|acuenta|ekono|central.*mayorista/.test(d)) return 'Alimentación';
-  if(/restauran|sushi|pizza|burger|mcdonalds|subway|starbucks|cafe|bar |rappi|uber.*eat|pedidos/.test(d)) return 'Alimentación';
+  if(/do.a clarita|roberto campos|origenes|almac[eé]n|minimarket|bodega|abarro/.test(d)) return 'Almacén';
+  if(/uber|rappi|pedidos.*ya|ifood/.test(d)) return 'Uber/Rappi';
+  if(/restauran|sushi|pizza|burger|mcdonalds|subway|starbucks|cafe|bar |uber.*eat/.test(d)) return 'Alimentación';
   if(/copec|shell|petrobras|bencin|parking|automovel|peaje|autopista|metro|transantiago|bip/.test(d)) return 'Transporte';
-  if(/uber|cabify|didi|taxi/.test(d)) return 'Transporte';
+  if(/cabify|didi|taxi/.test(d)) return 'Transporte';
   if(/netflix|spotify|amazon|disney|hbo|youtube|apple.*one|prime/.test(d)) return 'Entretenimiento';
   if(/falabella|ripley|paris|zara|h&m|tienda|ropa|zapato/.test(d)) return 'Hogar';
   if(/entel|movistar|claro|vtr|internet|telefon/.test(d)) return 'Servicios';
@@ -2342,6 +2390,93 @@ async function savePascalItem(){
       if(dias>=0&&dias<=7) toast(`Recordatorio en calendario: ${title} en ${dias}d 📅`,'success');
     }
   }catch(e){toast('Error al guardar','error');}
+}
+
+/* ══ TERMÓMETRO HORMIGA ════════════════════════════════ */
+const HORMIGA_CATS=['Almacén','Uber/Rappi'];
+
+function saveTermoMeta(v){
+  if(v) localStorage.setItem('termo-meta', String(v));
+  rTermometro();
+}
+
+function calcHormiga(){
+  const now=new Date();
+  const lunes=new Date(now);
+  lunes.setDate(now.getDate()-((now.getDay()+6)%7));
+  lunes.setHours(0,0,0,0);
+  const mesStr=now.toISOString().slice(0,7);
+  let sem=0, mes=0;
+  (D.finanzas||[]).forEach(f=>{
+    if(f.type!=='gasto') return;
+    if(!HORMIGA_CATS.includes(f.category)) return;
+    const amt=Number(f.amount||0);
+    if((f.date||'').startsWith(mesStr)) mes+=amt;
+    const d=f.date?new Date(f.date+'T12:00'):null;
+    if(d&&!isNaN(d)&&d>=lunes) sem+=amt;
+  });
+  return {sem, mes};
+}
+
+function rTermometro(){
+  // Cargar valor guardado en input
+  const meta=Number(localStorage.getItem('termo-meta')||0);
+  const inp=document.getElementById('termo-input');
+  if(inp&&meta&&!inp.value) inp.value=meta;
+
+  const {sem, mes}=calcHormiga();
+  const pct=meta>0?Math.min(100,Math.round(sem/meta*100)):0;
+  const color=pct>=100?'var(--rust)':pct>=75?'var(--amber)':'var(--sage)';
+
+  // Termómetro en Finanzas
+  const bar=document.getElementById('termo-bar');
+  const badge=document.getElementById('termo-badge');
+  const val=document.getElementById('termo-val');
+  const metaLbl=document.getElementById('termo-meta-lbl');
+  const mesEl=document.getElementById('termo-mes');
+
+  if(bar){
+    bar.style.width=pct+'%';
+    bar.style.background=color;
+  }
+  if(val) val.textContent=clp(sem)+' en almacén / delivery';
+  if(mesEl) mesEl.textContent='Este mes: '+clp(mes);
+  if(meta>0){
+    if(metaLbl) metaLbl.textContent='meta: '+clp(meta)+'/sem · '+pct+'% usado';
+    if(badge){
+      if(pct>=100){
+        badge.textContent='⚠ Límite superado';
+        badge.style.cssText='font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;background:var(--rust);color:#fff';
+      } else if(pct>=75){
+        badge.textContent=pct+'% usado';
+        badge.style.cssText='font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;background:#fef3c7;color:#92400e';
+      } else {
+        badge.textContent=pct+'% usado';
+        badge.style.cssText='font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;background:var(--sage-bg);color:var(--sage)';
+      }
+    }
+  } else {
+    if(metaLbl) metaLbl.textContent='define tu meta →';
+    if(badge) badge.textContent='';
+  }
+
+  // Mini hormiga en Resumen
+  const miniCard=document.getElementById('hormiga-mini');
+  const miniVal=document.getElementById('hormiga-mini-val');
+  const miniBar=document.getElementById('hormiga-mini-bar');
+  const miniLbl=document.getElementById('hormiga-mini-lbl');
+  if(miniCard&&sem>0){
+    miniCard.style.display='block';
+    if(miniVal) miniVal.textContent=clp(sem);
+    if(miniVal) miniVal.style.color=color;
+    if(miniBar){miniBar.style.width=pct+'%';miniBar.style.background=color;}
+    if(miniLbl){
+      if(meta>0) miniLbl.textContent=pct+'% de tu meta semanal ('+clp(meta)+')';
+      else miniLbl.textContent='Este mes: '+clp(mes)+' total';
+    }
+  } else if(miniCard){
+    miniCard.style.display='none';
+  }
 }
 
 function toast(msg,type=''){
