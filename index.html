@@ -720,6 +720,31 @@ header{
 @media(max-width:900px){.menu-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){.menu-grid{grid-template-columns:1fr 1fr}.comp-precios{grid-template-columns:1fr 1fr}}
 
+
+/* ===== RECORDATORIOS ===== */
+.rec-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:12px;
+  background:var(--bg2);border:1px solid var(--border);
+  margin-bottom:7px;transition:.15s;
+}
+.rec-item.vencido{border-color:var(--rust);background:var(--rust-bg);}
+.rec-item.hoy{border-color:var(--amber);background:var(--amber-bg);}
+.rec-icon{font-size:20px;flex-shrink:0;}
+.rec-body{flex:1;min-width:0;}
+.rec-nombre{font-size:13px;font-weight:600;color:var(--ink);}
+.rec-meta{font-size:11px;color:var(--ink3);margin-top:2px;}
+.rec-freq{
+  font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  padding:2px 8px;border-radius:20px;flex-shrink:0;
+}
+.rec-popup{
+  position:fixed;top:76px;right:24px;z-index:4000;
+  background:var(--card);border:1px solid var(--border);border-radius:18px;
+  padding:18px 20px;max-width:310px;width:92vw;
+  box-shadow:var(--sh3);animation:slideup .25s ease;
+}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:1000px){.g4{grid-template-columns:repeat(2,1fr)}.news-wrap{grid-template-columns:1fr}}
 @media(max-width:700px){
@@ -865,7 +890,10 @@ header{
     <div class="card gap">
       <div class="ch">
         <div class="ct">📦 Inventario del hogar</div>
-        <button class="btn-ghost" onclick="openInvModal()">+ agregar ítem</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn-ghost" onclick="syncInvToCompras()" title="Pasar stock bajo a Lista de Compras">🛒 sync compras</button>
+          <button class="btn-ghost" onclick="openInvModal()">+ agregar</button>
+        </div>
       </div>
       <div id="list-inventario">
         <div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">
@@ -997,7 +1025,14 @@ header{
 
   <!-- TRAMITES -->
   <div class="panel" id="panel-tramites">
-    <div class="card"><div class="ch"><div class="ct">📋 Trámites</div><button class="btn-ghost" onclick="openModal('tramite')">+ agregar</button></div><div id="list-tramites"><div class="skel" style="height:40px"></div></div></div>
+    <div class="card gap"><div class="ch"><div class="ct">📋 Trámites</div><button class="btn-ghost" onclick="openModal('tramite')">+ agregar</button></div><div id="list-tramites"><div class="skel" style="height:40px"></div></div></div>
+    <div class="card" style="margin-top:16px">
+      <div class="ch">
+        <div class="ct">🔔 Recordatorios recurrentes</div>
+        <button class="btn-ghost" onclick="openRecModal()">+ agregar</button>
+      </div>
+      <div id="list-recordatorios"><div class="skel" style="height:40px"></div></div>
+    </div>
   </div>
 
   <!-- NOTAS -->
@@ -1110,6 +1145,66 @@ header{
   </div>
 </div>
 
+
+
+<!-- MODAL RECORDATORIO -->
+<div class="ov" id="rec-modal-ov" onclick="if(event.target===this)closeRecModal()">
+  <div class="modal">
+    <div class="m-title">🔔 Nuevo recordatorio</div>
+    <div class="fg">
+      <label class="flbl">Nombre</label>
+      <input class="fin" id="rec-nombre" placeholder="Ej: Revisar inventario, Pagar sueldo...">
+    </div>
+    <div class="m-row">
+      <div class="fg">
+        <label class="flbl">Ícono</label>
+        <select class="fsel" id="rec-icon">
+          <option value="🔔">🔔 General</option>
+          <option value="📦">📦 Inventario</option>
+          <option value="💰">💰 Finanzas</option>
+          <option value="🧹">🧹 Limpieza</option>
+          <option value="👩‍🍳">👩‍🍳 Personal hogar</option>
+          <option value="🏥">🏥 Salud</option>
+          <option value="📋">📋 Trámite</option>
+          <option value="🎯">🎯 Meta</option>
+          <option value="🛒">🛒 Compras</option>
+          <option value="⚙️">⚙️ Mantenimiento</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="flbl">Frecuencia</label>
+        <select class="fsel" id="rec-freq" onchange="toggleRecDia()">
+          <option value="diario">Diario</option>
+          <option value="semanal" selected>Semanal</option>
+          <option value="mensual">Mensual</option>
+          <option value="dias">Cada X días</option>
+        </select>
+      </div>
+    </div>
+    <div class="m-row">
+      <div class="fg" id="rec-dia-wrap" style="display:none">
+        <label class="flbl">Cada cuántos días</label>
+        <input class="fin" id="rec-dias" type="number" placeholder="7" min="1" max="365">
+      </div>
+      <div class="fg" id="rec-diames-wrap" style="display:none">
+        <label class="flbl">Día del mes</label>
+        <input class="fin" id="rec-diames" type="number" placeholder="1" min="1" max="31">
+      </div>
+      <div class="fg">
+        <label class="flbl">Primera vez (próximo aviso)</label>
+        <input class="fin" id="rec-desde" type="date">
+      </div>
+    </div>
+    <div class="fg">
+      <label class="flbl">Nota (opcional)</label>
+      <input class="fin" id="rec-nota" placeholder="Detalles adicionales...">
+    </div>
+    <div class="m-actions">
+      <button class="btn-sec" onclick="closeRecModal()">Cancelar</button>
+      <button class="btn-prim" onclick="saveRec()">Guardar</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL INVENTARIO -->
 <div class="ov" id="inv-ov" onclick="if(event.target===this)document.getElementById('inv-ov').classList.remove('open')" >
@@ -1303,9 +1398,7 @@ async function syncAll(){
   toast('Actualizado ✓','success');
   loadNews();
   setTimeout(()=>{
-    const items=(D.compras||[]).filter(c=>!isDone(c.done));
-    if(items.length) toast('🏷️ Revisando ofertas para tu lista...','');
-    setTimeout(checkOfertasCompras, 800);
+    // ofertas se verifican al entrar a pestaña Hogar
   }, 1500);
 }
 
@@ -2740,7 +2833,7 @@ function rTermometro(){
 
 /* ══ HOGAR — INVENTARIO, MENÚ, COMPARADOR, OFERTAS ═══════════════════════ */
 
-/* Override showTab to handle hogar panel init */
+/* Override showTab to handle hogar + recordatorios popup */
 const _origShowTab = window.showTab;
 window.showTab = function(name, el){
   _origShowTab(name, el);
@@ -2748,6 +2841,24 @@ window.showTab = function(name, el){
     rInventario();
     rComparadorList();
     if(_menuCache) renderMenu(_menuCache);
+    // Recordatorios popup (once per day)
+    setTimeout(checkRecordatoriosPopup, 300);
+    // Stock bajo toast
+    setTimeout(()=>{
+      const low=INV.filter(i=>i.qty<=i.min);
+      if(low.length) toast(`⚠ ${low.length} ítem${low.length>1?'s':''} con stock bajo — pulsa 🛒 sync para agregar a compras`,'');
+    }, 600);
+    // Ofertas (once per day, only from Hogar)
+    setTimeout(()=>{
+      const items=(D.compras||[]).filter(c=>!isDone(c.done));
+      if(items.length){
+        toast('🏷️ Revisando ofertas para tu lista...','');
+        setTimeout(checkOfertasCompras, 800);
+      }
+    }, 1200);
+  }
+  if(name==='tramites'){
+    rRecordatorios();
   }
 };
 
@@ -2843,6 +2954,67 @@ function rInventario(){
   el.innerHTML=html;
 }
 
+/* ── INVENTARIO → LISTA DE COMPRAS (auto-sync) ──────────────────────────── */
+function syncInvToCompras(){
+  const low = INV.filter(i => i.qty <= i.min);
+  if(!low.length){ toast('✓ Todo bien — no hay stock bajo','success'); return; }
+
+  let added=0, updated=0;
+  low.forEach(item=>{
+    const hoy = new Date().toISOString().slice(0,10);
+    // Calculate urgency: if qty is 0 → urgente, else normal
+    const urgente = item.qty === 0;
+    const prioridad = urgente ? 'alta' : 'media';
+    const tag = urgente ? '🔴 URGENTE' : '🟡 Bajo';
+    const texto = `${item.nombre} (${tag} — quedan ${item.qty} ${item.unidad})`;
+
+    // Check if already in compras list (match by nombre)
+    const existing = (D.compras||[]).find(c =>
+      !isDone(c.done) && c._invId && String(c._invId)===String(item.id)
+    );
+
+    if(existing){
+      // Update urgency + qty info
+      existing.text = texto;
+      existing.priority = prioridad;
+      updated++;
+    } else {
+      // Add new compra item
+      if(!D.compras) D.compras=[];
+      D.compras.push({
+        id: Date.now() + Math.random(),
+        text: texto,
+        done: false,
+        who: '',
+        priority: prioridad,
+        tipo: 'Supermercado',
+        precioRef: 0,
+        _invId: item.id,  // link to inventory item
+        _autoAdded: true,
+      });
+      added++;
+    }
+  });
+
+  // Remove auto-added compras whose inventory is now OK
+  if(D.compras){
+    D.compras = D.compras.filter(c => {
+      if(!c._autoAdded) return true;
+      // Keep if still low stock
+      const inv = INV.find(i => String(i.id)===String(c._invId));
+      return inv && inv.qty <= inv.min;
+    });
+  }
+
+  saveData('compras', D.compras||[], ()=>{
+    rComprasList?.();
+    const msg = added>0 ? `${added} ítem${added>1?'s':''} agregado${added>1?'s':''} a Compras` : '';
+    const msg2 = updated>0 ? `${updated} actualizado${updated>1?'s':''}` : '';
+    toast(`🛒 ${[msg,msg2].filter(Boolean).join(' · ')}`, 'success');
+  });
+}
+
+
 /* ── MENÚ SEMANAL CON IA ────────────────────────────────────────────────── */
 let _menuCache = null;
 try{ _menuCache=JSON.parse(localStorage.getItem('hogar-menu')||'null'); }catch(e){}
@@ -2856,7 +3028,9 @@ function renderMenu(menu){
   const saved=localStorage.getItem('hogar-menu-fecha');
   const lbl=document.getElementById('menu-fecha-lbl');
   if(lbl&&saved) lbl.textContent='Generado el '+saved;
-  el.innerHTML=`<div class="menu-grid">${menu.map((dia,i)=>`
+  el.innerHTML=`<div class="menu-grid">${menu.map((dia,i)=>{
+    const tienePapa=dia.almuerzo_papa&&dia.almuerzo_papa.trim();
+    return `
     <div class="menu-dia">
       <div class="menu-dia-hdr">${DIAS_EMOJI[i]} ${dia.dia||DIAS_SEMANA[i]}</div>
       <div class="menu-meal">
@@ -2866,6 +3040,10 @@ function renderMenu(menu){
       <div class="menu-meal">
         <div class="menu-meal-lbl">🍽️ Almuerzo</div>
         <div class="menu-meal-txt">${dia.almuerzo||'—'}</div>
+        ${tienePapa?`<div style="margin-top:5px;padding:5px 8px;border-radius:7px;background:var(--bg2);border-left:3px solid var(--amber)">
+          <span style="font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px">Papá 🧔</span>
+          <div style="font-size:11px;color:var(--ink2);margin-top:2px">${dia.almuerzo_papa}</div>
+        </div>`:''}
       </div>
       <div class="menu-meal">
         <div class="menu-meal-lbl">🌙 Cena</div>
@@ -2875,7 +3053,8 @@ function renderMenu(menu){
         <div class="menu-meal-lbl">🎒 Colación Pascal</div>
         <div class="menu-meal-txt">${dia.colacion||'—'}</div>
       </div>
-    </div>`).join('')}
+    </div>`;
+  }).join('')}
   </div>`;
 }
 
@@ -2886,29 +3065,30 @@ async function generarMenuIA(){
   el.innerHTML=`<div style="padding:8px">${skel}<div style="text-align:center;font-size:12px;color:var(--ink3);margin-top:8px">Generando menú con IA… ✨</div></div>`;
 
   const invItems=INV.map(i=>`${i.nombre} (${i.qty} ${i.unidad})`).join(', ')||'inventario vacío';
-  const prompt=`Eres un nutricionista y chef chileno. Genera un menú semanal completo para una familia chilena de 3 personas: 2 adultos + Pascal (niño de 4-5 años que va al jardín).
+  const prompt=`Eres un nutricionista y chef chileno. Genera un menú semanal para una familia chilena de 3 personas: 2 adultos + Pascal (niño de 4-5 años, jardín). El padre NO come productos del mar.
 
 INVENTARIO DISPONIBLE: ${invItems}
 
-REGLAS IMPORTANTES:
-- Desayuno: simple y nutritivo para 3 personas (adultos + Pascal)
-- Almuerzo: completo con proteína + carbohidrato + verdura, para 3 personas
-- Cena: más liviana, para 3 personas (incluye Pascal)
-- Colación Pascal: SALUDABLE y VARIADA para llevar al jardín cada día (ej: "½ manzana + mantequilla de maní", "zanahoria + hummus", "plátano + nueces", etc.)
-- Usa ingredientes del inventario cuando sea posible
-- Si falta algo para una receta, indícalo entre paréntesis: "(falta: X)"
-- Porciones para 3 personas adulto/niño
-- Precios razonables, cocina cotidiana chilena
-- Recetas VARIADAS, no repetir proteínas seguidas
+REGLAS OBLIGATORIAS:
+1. PESCADO/MARISCOS exactamente 2 días en el almuerzo (ej: salmón, reineta, merluza, atún, camarones)
+2. LEGUMBRES exactamente 1 día en el almuerzo (ej: lentejas, garbanzos, porotos, lentejas)
+3. Para los 2 días de pescado: incluir campo "almuerzo_papa" con alternativa SIN mariscos que use los mismos acompañamientos (ej: si es "arroz con salmón al limón + ensalada", el almuerzo_papa sería "arroz con pechuga al limón + ensalada" — misma base, distinta proteína)
+4. Los otros 5 días NO necesitan almuerzo_papa (campo vacío "")
+5. Desayuno: simple y nutritivo para todos
+6. Cena: liviana, todos comen lo mismo
+7. Colación Pascal: saludable y variada para llevar al jardín
+8. Usa ingredientes del inventario cuando sea posible
+9. Si falta algo indica entre paréntesis: (falta: X)
+10. Cocina cotidiana chilena, porciones para 3 personas
 
-Responde SOLAMENTE con JSON puro, sin texto adicional, sin backticks:
-{"menu":[{"dia":"Lunes","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Martes","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Miércoles","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Jueves","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Viernes","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Sábado","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Domingo","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."}]}`;
+Responde SOLAMENTE JSON puro sin texto ni backticks:
+{"menu":[{"dia":"Lunes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Martes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Miércoles","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Jueves","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Viernes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Sábado","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Domingo","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."}]}`;
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:prompt}]})
     });
     const data=await resp.json();
     const txt=(data.content||[]).find(b=>b.type==='text')?.text||'';
@@ -2924,25 +3104,11 @@ Responde SOLAMENTE con JSON puro, sin texto adicional, sin backticks:
   }catch(e){
     el.innerHTML=`<div style="text-align:center;padding:20px">
       <div style="font-size:12px;color:var(--rust);margin-bottom:10px">Error al generar el menú</div>
-      <button onclick="generarMenuIA()" style="padding:7px 18px;border-radius:20px;border:none;background:var(--rust);color:#fff;cursor:pointer;font-size:12px">↻ Reintentar</button>
+      <button class="btn-prim" onclick="generarMenuIA()">Reintentar</button>
     </div>`;
-    console.error(e);
   }
 }
 
-/* ── COMPARADOR DE PRECIOS ──────────────────────────────────────────────── */
-let COMPS=[];
-try{COMPS=JSON.parse(localStorage.getItem('hogar-comps')||'[]');}catch(e){}
-function saveCOMPS(){localStorage.setItem('hogar-comps',JSON.stringify(COMPS));}
-
-function openComparadorModal(){
-  document.getElementById('comp-query').value='';
-  document.getElementById('comp-result').style.display='none';
-  document.getElementById('comp-err').style.display='none';
-  document.getElementById('comp-loader').style.display='none';
-  document.getElementById('comp-ov').classList.add('open');
-  setTimeout(()=>document.getElementById('comp-query')?.focus(),80);
-}
 
 async function buscarPrecios(){
   const q=(document.getElementById('comp-query')?.value||'').trim();
@@ -2966,7 +3132,7 @@ Responde SOLAMENTE con JSON puro sin backticks:
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,messages:[{role:'user',content:prompt}]})
     });
     const data=await resp.json();
@@ -3081,7 +3247,7 @@ Solo incluye artículos donde realmente haya algo conveniente. Si ninguno tiene 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1200,
@@ -3156,6 +3322,220 @@ function cerrarOferta(keys, btn){
 
 /* ── Llamar checkOfertas al cargar ──────────────────────────────────────── */
 /* Will be called after syncAll */
+
+
+
+/* ══ RECORDATORIOS RECURRENTES ══════════════════════════════════════════════ */
+
+const REC_DEFAULTS = [
+  {id:1,nombre:'Revisar inventario',icon:'📦',freq:'semanal',dias:7,nota:'Revisar qué falta y actualizar cantidades',proxAviso:null,ultimoHecho:null},
+  {id:2,nombre:'Revisar metas de ahorro',icon:'🎯',freq:'mensual',dias:30,nota:'Ver avance y ajustar si es necesario',proxAviso:null,ultimoHecho:null},
+  {id:3,nombre:'Pagar sueldo personal del hogar',icon:'👩‍🍳',freq:'mensual',dias:30,nota:'Revisar sueldo + extras pendientes',proxAviso:null,ultimoHecho:null},
+];
+
+let RECS = [];
+function loadRECS(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('hogar-recs')||'null');
+    if(saved && saved.length > 0){
+      RECS = saved;
+    } else {
+      // First time — load defaults with proxAviso = today
+      const hoy = new Date().toISOString().slice(0,10);
+      RECS = REC_DEFAULTS.map(r=>({...r, proxAviso: hoy}));
+      saveRECS();
+    }
+  }catch(e){ RECS = []; }
+}
+function saveRECS(){ localStorage.setItem('hogar-recs', JSON.stringify(RECS)); }
+loadRECS();
+
+/* ── Calcular próximo aviso dado frecuencia ─────────────────────────────── */
+function calcProxAviso(rec, desde){
+  const d = new Date(desde + 'T12:00');
+  if(rec.freq === 'diario') d.setDate(d.getDate() + 1);
+  else if(rec.freq === 'semanal') d.setDate(d.getDate() + 7);
+  else if(rec.freq === 'mensual') d.setMonth(d.getMonth() + 1);
+  else if(rec.freq === 'dias') d.setDate(d.getDate() + (rec.dias||7));
+  return d.toISOString().slice(0,10);
+}
+
+/* ── Estado de un recordatorio ──────────────────────────────────────────── */
+function recEstado(rec){
+  if(!rec.proxAviso) return 'ok';
+  const hoy = new Date().toISOString().slice(0,10);
+  if(rec.proxAviso < hoy) return 'vencido';
+  if(rec.proxAviso === hoy) return 'hoy';
+  return 'ok';
+}
+
+function recDiasRestantes(rec){
+  if(!rec.proxAviso) return null;
+  const hoy = new Date();
+  const prox = new Date(rec.proxAviso + 'T12:00');
+  return Math.ceil((prox - hoy) / 86400000);
+}
+
+/* ── Marcar como hecho ──────────────────────────────────────────────────── */
+function marcarRecHecho(id){
+  const rec = RECS.find(r=>String(r.id)===String(id));
+  if(!rec) return;
+  const hoy = new Date().toISOString().slice(0,10);
+  rec.ultimoHecho = hoy;
+  rec.proxAviso = calcProxAviso(rec, hoy);
+  saveRECS();
+  rRecordatorios();
+  toast('✓ Recordatorio marcado — próximo: ' + new Date(rec.proxAviso+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}), 'success');
+}
+
+function delRec(id){
+  RECS = RECS.filter(r=>String(r.id)!==String(id));
+  saveRECS();
+  rRecordatorios();
+  toast('Eliminado','success');
+}
+
+/* ── Render lista ───────────────────────────────────────────────────────── */
+function rRecordatorios(){
+  const el = document.getElementById('list-recordatorios');
+  if(!el) return;
+  if(!RECS.length){
+    el.innerHTML = '<div class="empty">Sin recordatorios — agrega uno arriba</div>';
+    return;
+  }
+
+  // Sort: vencidos primero, luego hoy, luego por fecha
+  const sorted = [...RECS].sort((a,b)=>{
+    const ea = recEstado(a), eb = recEstado(b);
+    const order = {vencido:0, hoy:1, ok:2};
+    if(order[ea] !== order[eb]) return order[ea] - order[eb];
+    return (a.proxAviso||'') < (b.proxAviso||'') ? -1 : 1;
+  });
+
+  const freqLabel = {diario:'Diario', semanal:'Semanal', mensual:'Mensual', dias:'Cada '+'{n}'+' días'};
+  const freqColor = {diario:'pill-rust', semanal:'pill-sage', mensual:'pill-amber', dias:'pill-plum'};
+
+  el.innerHTML = sorted.map(rec=>{
+    const estado = recEstado(rec);
+    const dias = recDiasRestantes(rec);
+    const label = rec.freq==='dias' ? `Cada ${rec.dias||7} días` : (freqLabel[rec.freq]||rec.freq);
+    const color = freqColor[rec.freq]||'pill-sage';
+
+    let diasTxt = '';
+    if(estado==='vencido') diasTxt = `<span style="color:var(--rust);font-weight:700">Vencido hace ${Math.abs(dias||0)}d</span>`;
+    else if(estado==='hoy') diasTxt = `<span style="color:var(--amber);font-weight:700">¡Hoy!</span>`;
+    else if(dias!==null) diasTxt = `<span style="color:var(--ink3)">En ${dias}d</span>`;
+
+    const proxFmt = rec.proxAviso ? new Date(rec.proxAviso+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}) : '—';
+
+    return `<div class="rec-item ${estado==='vencido'?'vencido':estado==='hoy'?'hoy':''}">
+      <span class="rec-icon">${rec.icon||'🔔'}</span>
+      <div class="rec-body">
+        <div class="rec-nombre">${rec.nombre}</div>
+        <div class="rec-meta">${rec.nota||''} · próximo: ${proxFmt} · ${diasTxt}</div>
+      </div>
+      <span class="sc-pill ${color} rec-freq">${label}</span>
+      <button onclick="marcarRecHecho(${rec.id})" title="Marcar como hecho"
+        style="background:var(--sage);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:'Inter'">
+        ✓
+      </button>
+      <span class="x-btn" onclick="delRec(${rec.id})">×</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── Popup al abrir si hay vencidos / hoy ───────────────────────────────── */
+function checkRecordatoriosPopup(){
+  const pendientes = RECS.filter(r=> {
+    const e = recEstado(r);
+    return e === 'vencido' || e === 'hoy';
+  });
+  if(!pendientes.length) return;
+
+  // Show once per day
+  const hoyKey='recs-shown-'+new Date().toISOString().slice(0,10);
+  if(localStorage.getItem(hoyKey)) return;
+  localStorage.setItem(hoyKey,'1');
+
+  const popup = document.createElement('div');
+  popup.className = 'rec-popup';
+  popup.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:22px">🔔</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--ink)">Recordatorios pendientes</div>
+        <div style="font-size:11px;color:var(--ink3)">Puedes verlos en Trámites</div>
+      </div>
+      <span class="x-btn" onclick="this.closest('.rec-popup').remove()">×</span>
+    </div>
+    <div style="max-height:260px;overflow-y:auto">
+      ${pendientes.map(r=>{
+        const estado = recEstado(r);
+        return `<div style="padding:9px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">${r.icon||'🔔'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--ink)">${r.nombre}</div>
+            ${r.nota?`<div style="font-size:11px;color:var(--ink3);margin-top:1px">${r.nota}</div>`:''}
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${estado==='vencido'?'var(--rust)':'var(--amber)'};flex-shrink:0">${estado==='hoy'?'Hoy':'Vencido'}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="this.closest('.rec-popup').remove()"
+        style="flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;color:var(--ink3);font-size:12px;cursor:pointer;font-family:'Inter'">
+        Después
+      </button>
+      <button onclick="marcarTodosHoy(${JSON.stringify(pendientes.map(r=>r.id))});this.closest('.rec-popup').remove()"
+        style="flex:1;padding:9px;border-radius:10px;border:none;background:var(--sage);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter'">
+        ✓ Sí, ya lo hice todo
+      </button>
+    </div>`;
+  document.body.appendChild(popup);
+}
+
+function marcarTodosHoy(ids){
+  ids.forEach(id => marcarRecHecho(id));
+  toast(`✓ ${ids.length} recordatorios marcados como listos`,'success');
+}
+
+/* ── Modal agregar recordatorio ─────────────────────────────────────────── */
+function openRecModal(){
+  document.getElementById('rec-modal-ov').classList.add('open');
+  document.getElementById('rec-desde').value = new Date().toISOString().slice(0,10);
+  toggleRecDia();
+  setTimeout(()=>document.getElementById('rec-nombre')?.focus(),80);
+}
+function closeRecModal(){ document.getElementById('rec-modal-ov').classList.remove('open'); }
+
+function toggleRecDia(){
+  const freq = document.getElementById('rec-freq')?.value;
+  document.getElementById('rec-dia-wrap').style.display = freq==='dias'?'block':'none';
+  document.getElementById('rec-diames-wrap').style.display = freq==='mensual'?'block':'none';
+}
+
+function saveRec(){
+  const nombre = (document.getElementById('rec-nombre')?.value||'').trim();
+  if(!nombre) return;
+  const freq = document.getElementById('rec-freq')?.value||'semanal';
+  const desde = document.getElementById('rec-desde')?.value || new Date().toISOString().slice(0,10);
+  const rec = {
+    id: Date.now(),
+    nombre,
+    icon: document.getElementById('rec-icon')?.value||'🔔',
+    freq,
+    dias: freq==='dias' ? parseInt(document.getElementById('rec-dias')?.value||7) : null,
+    diaMes: freq==='mensual' ? parseInt(document.getElementById('rec-diames')?.value||1) : null,
+    nota: document.getElementById('rec-nota')?.value||'',
+    proxAviso: desde,
+    ultimoHecho: null,
+  };
+  RECS.push(rec);
+  saveRECS();
+  closeRecModal();
+  rRecordatorios();
+  toast('Recordatorio guardado ✓','success');
+}
 
 
 
