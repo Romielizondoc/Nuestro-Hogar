@@ -641,6 +641,85 @@ header{
 }
 .sp-btn:hover{transform:scale(1.04);}
 
+
+/* ===== HOGAR — FILTER CHIPS ===== */
+.hbtn-filter{
+  padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);
+  background:transparent;cursor:pointer;font-family:'Inter',sans-serif;
+  font-size:11px;font-weight:500;color:var(--ink3);transition:.12s;
+}
+.hbtn-filter:hover{border-color:var(--rust);color:var(--rust);}
+.hbtn-filter.on{background:var(--rust);border-color:var(--rust);color:#fff;}
+
+/* ===== INVENTARIO ===== */
+.inv-section{margin-bottom:16px;}
+.inv-section-lbl{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--ink3);padding:4px 0 8px;border-bottom:1px solid var(--border);margin-bottom:4px;
+}
+.inv-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.inv-row:last-child{border-bottom:none;}
+.inv-low-badge{font-size:9px;padding:1px 6px;border-radius:20px;background:var(--rust-bg);color:var(--rust);font-weight:700;flex-shrink:0;}
+.inv-qty{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.iqbtn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;
+  color:var(--ink2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:.1s;line-height:1;font-family:'Inter';}
+.iqbtn:hover{background:var(--rust);border-color:var(--rust);color:#fff;}
+.iqnum{font-size:13px;font-weight:700;color:var(--ink);min-width:26px;text-align:center;}
+.iqnum.low{color:var(--rust);}
+
+/* ===== MENÚ SEMANAL ===== */
+.menu-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;overflow-x:auto;}
+.menu-dia{
+  background:var(--bg2);border-radius:12px;padding:12px 10px;
+  border:1px solid var(--border);min-width:120px;
+}
+.menu-dia-hdr{
+  font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--rust);margin-bottom:10px;text-align:center;
+}
+.menu-meal{margin-bottom:9px;}
+.menu-meal-lbl{font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink3);margin-bottom:2px;}
+.menu-meal-txt{font-size:11px;color:var(--ink2);line-height:1.4;}
+.menu-colacion{background:var(--plum-bg);border-radius:8px;padding:6px 8px;margin-top:6px;}
+.menu-colacion .menu-meal-lbl{color:var(--plum);}
+.menu-colacion .menu-meal-txt{color:var(--plum);font-weight:500;}
+
+/* ===== COMPARADOR ===== */
+.comp-entry{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:14px;margin-bottom:8px;
+}
+.comp-entry-nombre{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.comp-precios{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.comp-tienda{text-align:center;padding:8px 4px;border-radius:10px;background:var(--card);border:1px solid var(--border);}
+.comp-tienda.mejor{background:var(--sage-bg);border-color:var(--sage);}
+.comp-tienda-nombre{font-size:9px;font-weight:700;color:var(--ink3);margin-bottom:3px;}
+.comp-tienda.mejor .comp-tienda-nombre{color:var(--sage);}
+.comp-tienda-precio{font-size:13px;font-weight:700;color:var(--ink);}
+.comp-tienda.mejor .comp-tienda-precio{color:var(--sage);}
+
+/* ===== OFERTA POPUP ===== */
+.oferta-popup{
+  position:fixed;top:76px;right:24px;z-index:4000;
+  background:var(--card);border:1px solid var(--border);border-radius:18px;
+  padding:18px 20px;max-width:300px;width:92vw;
+  box-shadow:var(--sh3);animation:slideup .25s ease;
+}
+.oferta-popup-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+
+/* ===== MINI HORMIGA RESUMEN ===== */
+.mini-hormiga{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:9px 12px;margin-top:12px;
+}
+.mini-hormiga-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:4px;overflow:hidden;}
+.mini-hormiga-bar{height:100%;border-radius:4px;transition:.5s;}
+
+@media(max-width:900px){.menu-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.menu-grid{grid-template-columns:1fr 1fr}.comp-precios{grid-template-columns:1fr 1fr}}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:1000px){.g4{grid-template-columns:repeat(2,1fr)}.news-wrap{grid-template-columns:1fr}}
 @media(max-width:700px){
@@ -687,15 +766,15 @@ header{
   <!-- TABS -->
   <div class="tabs-row">
     <button class="tab on"  onclick="showTab('resumen',this)">🏠 Inicio</button>
-    <button class="tab"     onclick="showTab('tareas',this)">✔ Tareas</button>
+    <button class="tab"     onclick="showTab('hogar',this)">🏠 Hogar</button>
     <button class="tab"     onclick="showTab('finanzas',this)">💰 Finanzas</button>
     <button class="tab"     onclick="showTab('metas',this)">🎯 Metas</button>
     <button class="tab"     onclick="showTab('calendario',this)">📅 Calendario</button>
     <button class="tab"     onclick="showTab('personal',this)">🌿 Personal</button>
     <button class="tab"     onclick="showTab('tramites',this)">📋 Trámites</button>
     <button class="tab"     onclick="showTab('notas',this)">📌 Notas</button>
-    <button class="tab" id="tab-noticias" onclick="showTab('noticias',this);setTimeout(triggerNews,50)">📰 Noticias</button>
     <button class="tab" id="tab-pascal" onclick="showTab('pascal',this)">🧒 Pascal</button>
+    <button class="tab" id="tab-noticias" onclick="showTab('noticias',this);setTimeout(triggerNews,50)">📰 Noticias</button>
   </div>
 
   <!-- RESUMEN -->
@@ -708,19 +787,17 @@ header{
     </div>
 
     <div class="g2 gap">
-      <div class="card card-warm">
-        <div class="ch"><div class="ct ct-sm">Gastos por categoría</div></div>
-        <div id="wrap-donut-r" class="chart-box"></div>
-        <!-- Mini hormiga dentro del gráfico -->
-        <div id="hormiga-mini" style="margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:10px;display:none">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-            <span style="font-size:11px;font-weight:700;color:var(--ink)">🛒 Compras hormiga esta semana</span>
-            <span id="hormiga-mini-val" style="font-size:12px;font-weight:700;color:var(--rust)">—</span>
+      <div class="card card-warm"><div class="ch"><div class="ct ct-sm">Gastos por categoría</div></div><div id="wrap-donut-r" class="chart-box"></div>
+        <!-- Mini hormiga discreta -->
+        <div id="hormiga-mini" class="mini-hormiga" style="display:none">
+          <span style="font-size:14px">🛒</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:600;color:var(--ink)">Hormiga sem: <span id="hormiga-mini-val" style="color:var(--rust)">—</span></div>
+            <div class="mini-hormiga-bar-wrap" style="margin-top:4px">
+              <div id="hormiga-mini-bar" class="mini-hormiga-bar"></div>
+            </div>
           </div>
-          <div style="background:var(--border);border-radius:6px;height:6px;overflow:hidden">
-            <div id="hormiga-mini-bar" style="height:100%;border-radius:6px;transition:.5s;width:0%;background:var(--sage)"></div>
-          </div>
-          <div style="font-size:10px;color:var(--ink3);margin-top:3px" id="hormiga-mini-lbl"></div>
+          <span id="hormiga-mini-lbl" style="font-size:10px;color:var(--ink3);white-space:nowrap;flex-shrink:0"></span>
         </div>
       </div>
       <div class="card card-warm"><div class="ch"><div class="ct ct-sm">Tendencia mensual</div></div><div id="wrap-trend" class="trend-box"></div></div>
@@ -751,12 +828,83 @@ header{
     <div id="spotify-slot"></div>
   </div>
 
-  <!-- TAREAS -->
-  <div class="panel" id="panel-tareas">
-    <div class="g2">
-      <div class="card"><div class="ch"><div class="ct">🏠 Quehaceres</div><button class="btn-ghost" onclick="openModal('tarea')">+ agregar</button></div><div id="list-tareas"><div class="skel" style="height:40px"></div></div></div>
-      <div class="card"><div class="ch"><div class="ct">🛒 Compras</div><button class="btn-ghost" onclick="openModal('compra')">+ agregar</button></div><div id="list-compras"><div class="skel" style="height:40px"></div></div></div>
+  <!-- HOGAR -->
+  <div class="panel" id="panel-hogar">
+
+    <!-- Row 1: Quehaceres + Lista de compras -->
+    <div class="g2 gap">
+      <!-- QUEHACERES -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">🧹 Quehaceres</div>
+          <button class="btn-ghost" onclick="openModal('tarea')">+ agregar</button>
+        </div>
+        <div id="list-tareas"><div class="skel" style="height:40px"></div></div>
+      </div>
+      <!-- LISTA DE COMPRAS -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">🛒 Lista de compras</div>
+          <button class="btn-ghost" onclick="openModal('compra')">+ agregar</button>
+        </div>
+        <!-- Filtro por tipo -->
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="hbtn-filter on" id="cf-all"     onclick="setCFilter('all')">Todas</button>
+          <button class="hbtn-filter"   id="cf-super"    onclick="setCFilter('Supermercado')">🛒 Super</button>
+          <button class="hbtn-filter"   id="cf-vest"     onclick="setCFilter('Vestimenta')">👗 Ropa</button>
+          <button class="hbtn-filter"   id="cf-mueb"     onclick="setCFilter('Muebles')">🪑 Muebles</button>
+          <button class="hbtn-filter"   id="cf-tec"      onclick="setCFilter('Tecnología')">💻 Tecno</button>
+          <button class="hbtn-filter"   id="cf-farm"     onclick="setCFilter('Farmacia')">💊 Farmacia</button>
+          <button class="hbtn-filter"   id="cf-otro"     onclick="setCFilter('Otros')">📦 Otros</button>
+        </div>
+        <div id="list-compras"><div class="skel" style="height:40px"></div></div>
+      </div>
     </div>
+
+    <!-- Row 2: Inventario -->
+    <div class="card gap">
+      <div class="ch">
+        <div class="ct">📦 Inventario del hogar</div>
+        <button class="btn-ghost" onclick="openInvModal()">+ agregar ítem</button>
+      </div>
+      <div id="list-inventario">
+        <div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">
+          Registra lo que tienes en casa — aceite, arroz, shampoo...<br>
+          <span style="font-size:11px">La IA lo usará para sugerir recetas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Menú semanal -->
+    <div class="card gap">
+      <div class="ch">
+        <div class="ct">🍽️ Menú semanal</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span id="menu-fecha-lbl" style="font-size:10px;color:var(--ink3)"></span>
+          <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="generarMenuIA()">✨ Generar con IA</button>
+        </div>
+      </div>
+      <div id="menu-semanal-wrap">
+        <div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">
+          Presiona <b style="color:var(--plum)">Generar con IA</b> para armar el menú de la semana<br>
+          <span style="font-size:11px">Desayuno · Almuerzo · Cena · Colación Pascal 🎒</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: Comparador de precios -->
+    <div class="card gap">
+      <div class="ch">
+        <div class="ct">💰 Comparador de precios</div>
+        <button class="btn-ghost" onclick="openComparadorModal()">+ buscar artículo</button>
+      </div>
+      <div id="list-comparador">
+        <div style="text-align:center;padding:16px;color:var(--ink3);font-size:12px">
+          Busca cualquier artículo y la IA compara precios en Jumbo, Líder, Unimarc y Walmart
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- FINANZAS -->
@@ -768,7 +916,7 @@ header{
     </div>
 
     <!-- TERMÓMETRO HORMIGA -->
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
       <div style="flex:1;min-width:200px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
           <span style="font-size:13px;font-weight:700;color:var(--ink)">🛒 Compras hormiga esta semana</span>
@@ -781,17 +929,17 @@ header{
           <span id="termo-val" style="font-size:12px;font-weight:700;color:var(--ink)">—</span>
           <span id="termo-meta-lbl" style="font-size:11px;color:var(--ink3)">define tu meta →</span>
         </div>
+        <div id="termo-mes" style="font-size:10px;color:var(--ink3);margin-top:3px"></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         <div style="text-align:right">
-          <div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Meta semanal</div>
+          <div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Meta semanal (Almacén + Uber/Rappi)</div>
           <div style="display:flex;align-items:center;gap:4px">
             <span style="font-size:12px;color:var(--ink3)">$</span>
             <input id="termo-input" type="number" placeholder="15000"
               style="width:85px;padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;background:var(--bg);color:var(--ink);text-align:right"
               onchange="saveTermoMeta(this.value)">
           </div>
-          <div id="termo-mes" style="font-size:10px;color:var(--ink3);margin-top:3px;text-align:right"></div>
         </div>
       </div>
     </div>
@@ -962,6 +1110,74 @@ header{
   </div>
 </div>
 
+
+<!-- MODAL INVENTARIO -->
+<div class="ov" id="inv-ov" onclick="if(event.target===this)document.getElementById('inv-ov').classList.remove('open')" >
+  <div class="modal">
+    <div class="m-title">📦 Agregar al inventario</div>
+    <div class="fg"><label class="flbl">Nombre</label><input class="fin" id="inv-nombre" placeholder="Ej: Arroz, Leche, Shampoo"></div>
+    <div class="m-row">
+      <div class="fg"><label class="flbl">Categoría</label>
+        <select class="fsel" id="inv-cat">
+          <option>🥦 Verduras y frutas</option>
+          <option>🥩 Carnes y pescados</option>
+          <option>🥛 Lácteos y huevos</option>
+          <option>🌾 Granos, pastas y arroz</option>
+          <option>🥫 Conservas y salsas</option>
+          <option>🧂 Condimentos y aceites</option>
+          <option>🥐 Panadería</option>
+          <option>🧴 Limpieza</option>
+          <option>💊 Farmacia y salud</option>
+          <option>📦 Otros</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl">Unidad</label>
+        <select class="fsel" id="inv-unidad">
+          <option value="un">unidades</option>
+          <option value="kg">kg</option>
+          <option value="g">gramos</option>
+          <option value="L">litros</option>
+          <option value="ml">ml</option>
+          <option value="paq">paquetes</option>
+          <option value="bolsa">bolsas</option>
+        </select>
+      </div>
+    </div>
+    <div class="m-row">
+      <div class="fg"><label class="flbl">Cantidad actual</label><input class="fin" id="inv-qty" type="number" placeholder="1" min="0" step="0.1"></div>
+      <div class="fg"><label class="flbl">Alerta cuando queden menos de</label><input class="fin" id="inv-min" type="number" placeholder="1" min="0" step="0.1"></div>
+    </div>
+    <div class="m-actions">
+      <button class="btn-sec" onclick="document.getElementById('inv-ov').classList.remove('open')">Cancelar</button>
+      <button class="btn-prim" onclick="saveInvItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMPARADOR -->
+<div class="ov" id="comp-ov" onclick="if(event.target===this)document.getElementById('comp-ov').classList.remove('open')">
+  <div class="modal" style="max-width:560px">
+    <div class="m-title">💰 Comparar precios</div>
+    <div class="fg"><label class="flbl">Artículo a buscar</label>
+      <input class="fin" id="comp-query" placeholder="Ej: Aceite de oliva 500ml, Pañales talla M, Smart TV 55">
+    </div>
+    <div style="background:var(--sage-bg);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--sage);margin-bottom:16px">
+      💡 La IA estimará precios referenciales en Jumbo, Líder, Unimarc y Walmart (precios Chile, aproximados)
+    </div>
+    <div id="comp-loader" style="display:none">
+      <div class="skel" style="height:50px;margin-bottom:8px;border-radius:10px"></div>
+      <div class="skel" style="height:50px;margin-bottom:8px;border-radius:10px"></div>
+      <div class="skel" style="height:50px;border-radius:10px"></div>
+    </div>
+    <div id="comp-result" style="display:none"></div>
+    <div id="comp-err" style="font-size:12px;color:var(--rust);display:none"></div>
+    <div class="m-actions" style="margin-top:16px">
+      <button class="btn-sec" onclick="document.getElementById('comp-ov').classList.remove('open')">Cerrar</button>
+      <button class="btn-prim" id="comp-btn" onclick="buscarPrecios()">🔍 Buscar precios</button>
+    </div>
+  </div>
+</div>
+
 <!-- FAB -->
 <button id="fab" onclick="toggleFab()">+</button>
 <div id="fab-menu">
@@ -1081,12 +1297,16 @@ async function syncAll(){
     }catch(e){}
   }));
   applyRecurrentes();
-  rTermometro();
   renderAll();
   setTimeout(()=>renderCharts(),120);
   btn.classList.remove('syncing');
   toast('Actualizado ✓','success');
   loadNews();
+  setTimeout(()=>{
+    const items=(D.compras||[]).filter(c=>!isDone(c.done));
+    if(items.length) toast('🏷️ Revisando ofertas para tu lista...','');
+    setTimeout(checkOfertasCompras, 800);
+  }, 1500);
 }
 
 /* ─────────────── RECURRENTES ─────────────── */
@@ -1125,6 +1345,8 @@ const mLabel=ym=>{if(!ym)return'';const[y,m]=ym.split('-');return['Ene','Feb','M
 function renderAll(){
   rTareas();rCompras();rFinanzas();rTramites();rNotas();rMetas();rCalendario();rEventos();rPersonal();rExtras();rResumen();rSpotify();rPascal();
   rTermometro();
+  rInventario();
+  rComparadorList();
 }
 
 /* checklist */
@@ -1142,7 +1364,37 @@ function rCheckList(arr,id,type){
   }).join('');
 }
 function rTareas(){rCheckList(D.tareas,'list-tareas','tareas');}
-function rCompras(){rCheckList(D.compras,'list-compras','compras');}
+
+let _compraFilter='all';
+function setCFilter(f){
+  _compraFilter=f;
+  document.querySelectorAll('.hbtn-filter').forEach(b=>b.classList.remove('on'));
+  const map={'all':'cf-all','Supermercado':'cf-super','Vestimenta':'cf-vest','Muebles':'cf-mueb','Tecnología':'cf-tec','Farmacia':'cf-farm','Otros':'cf-otro'};
+  if(map[f])document.getElementById(map[f])?.classList.add('on');
+  rCompras();
+}
+function rCompras(){
+  const el=document.getElementById('list-compras');
+  if(!el) return;
+  let arr=D.compras||[];
+  if(_compraFilter!=='all') arr=arr.filter(c=>(c.tipo||'Supermercado')===_compraFilter);
+  if(!arr.length){el.innerHTML=empty('Sin items en esta categoría');return;}
+  const tipoCls={'Supermercado':'b-sage','Vestimenta':'b-plum','Muebles':'b-amber','Tecnología':'b-rust','Farmacia':'b-rust','Otros':'b-sage'};
+  el.innerHTML=arr.map(it=>{
+    const [cls,lbl]=pBadge(it.priority);const done=isDone(it.done);
+    const tipo=it.tipo||'Supermercado';
+    const tCls=tipoCls[tipo]||'b-sage';
+    return`<div class="li">
+      <div class="ck ${done?'done':''}" onclick="toggleDone('compras',${it.id})"></div>
+      <div class="lt ${done?'done':''}">${it.text}${it.precioRef?` <span style="font-size:10px;color:var(--ink3)">(~${clp(it.precioRef)})</span>`:''}
+      </div>
+      <span class="badge ${tCls}" style="font-size:9px">${tipo}</span>
+      <span class="badge ${cls}">${lbl}</span>
+      <div class="av-sm" style="${wS(it.who)}">${it.who}</div>
+      <span class="x-btn" onclick="del('compras',${it.id})">×</span>
+    </div>`;
+  }).join('');
+}
 
 /* finanzas */
 function rFinanzas(){
@@ -1347,7 +1599,7 @@ function rEventos(){
 function rPersonal(){
   const el=document.getElementById('list-personal');
   if(!D.personal?.length){el.innerHTML=empty('Agrega las personas que te ayudan en casa');return;}
-  const icons={nana:'👩‍🍳',jardinero:'🌿',ninjera:'👶',otro:'👤'};
+  const icons={nana:'👩‍🍳',jardinero:'🌿',ninera:'👶',otro:'👤'};
   el.innerHTML='<div class="g2">'+D.personal.map(p=>{
     const exP=(D.extras||[]).filter(e=>String(e.personId)===String(p.id));
     const totExt=exP.reduce((s,e)=>s+Number(e.monto),0);
@@ -1813,14 +2065,14 @@ const catOpts=CATS.map(c=>`<option>${c}</option>`).join('');
 
 const MDEFS={
   tarea:{t:'Nueva tarea',h:`<div class="fg"><label class="flbl">Tarea</label><input class="fin" id="f-text" placeholder="Ej: Limpiar el baño"></div><div class="m-row"><div class="fg"><label class="flbl">Responsable</label><select class="fsel" id="f-who"><option value="T">Yo (Tú)</option><option value="E">Mi pareja (Él)</option></select></div><div class="fg"><label class="flbl">Frecuencia</label><select class="fsel" id="f-priority"><option value="diario">Diario</option><option value="semanal">Semanal</option><option value="urgente">Urgente</option><option value="normal">Eventual</option></select></div></div>`},
-  compra:{t:'Lista de compras',h:`<div class="fg"><label class="flbl">Artículo</label><input class="fin" id="f-text" placeholder="Ej: Leche, jabón..."></div><div class="m-row"><div class="fg"><label class="flbl">¿Quién compra?</label><select class="fsel" id="f-who"><option value="T">Yo (Tú)</option><option value="E">Mi pareja (Él)</option></select></div><div class="fg"><label class="flbl">Prioridad</label><select class="fsel" id="f-priority"><option value="urgente">Urgente</option><option value="normal">Normal</option></select></div></div>`},
+  compra:{t:'Agregar a la lista',h:`<div class="fg"><label class="flbl">Artículo</label><input class="fin" id="f-text" placeholder="Ej: Leche, jabón, jeans..."></div><div class="m-row"><div class="fg"><label class="flbl">Tipo</label><select class="fsel" id="f-tipo"><option value="Supermercado">🛒 Supermercado</option><option value="Vestimenta">👗 Vestimenta</option><option value="Muebles">🪑 Muebles</option><option value="Tecnología">💻 Tecnología</option><option value="Farmacia">💊 Farmacia</option><option value="Otros">📦 Otros</option></select></div><div class="fg"><label class="flbl">¿Quién compra?</label><select class="fsel" id="f-who"><option value="T">Yo (Tú)</option><option value="E">Mi pareja (Él)</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Prioridad</label><select class="fsel" id="f-priority"><option value="urgente">Urgente</option><option value="normal">Normal</option></select></div><div class="fg"><label class="flbl">Precio ref. ($)</label><input class="fin" id="f-precio" type="number" placeholder="Opcional"></div></div>`},
   finanza:{t:'Nuevo movimiento',h:`<div class="fg"><label class="flbl">Descripción</label><input class="fin" id="f-name" placeholder="Ej: Cuenta del gas"></div><div class="m-row"><div class="fg"><label class="flbl">Tipo</label><select class="fsel" id="f-type"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option></select></div><div class="fg"><label class="flbl">Monto ($)</label><input class="fin" id="f-amount" type="number" placeholder="0"></div></div><div class="m-row"><div class="fg"><label class="flbl">Categoría</label><select class="fsel" id="f-category">${catOpts}</select></div><div class="fg"><label class="flbl">Fecha</label><input class="fin" id="f-date" type="date"></div></div>`},
   recurrente:{t:'Gasto recurrente',h:`<div class="fg"><label class="flbl">Descripción</label><input class="fin" id="f-name" placeholder="Ej: Arriendo, Netflix..."></div><div class="m-row"><div class="fg"><label class="flbl">Tipo</label><select class="fsel" id="f-type"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option></select></div><div class="fg"><label class="flbl">Moneda</label><select class="fsel" id="f-moneda" onchange="toggleUFField()"><option value="CLP">CLP ($)</option><option value="UF">UF</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Monto</label><input class="fin" id="f-amount" type="number" placeholder="0" step="0.01"></div><div class="fg" id="uf-preview-wrap" style="display:none"><label class="flbl">Equivale a</label><div class="fin" id="uf-preview" style="background:var(--bg2);color:var(--ink3);cursor:default">calculando…</div></div></div><div class="fg"><label class="flbl">Categoría</label><select class="fsel" id="f-category">${catOpts}</select></div><div class="rec-note">↻ Se registrará automáticamente el día 1 de cada mes convertido al valor UF vigente</div>`},
   tramite:{t:'Nuevo trámite',h:`<div class="fg"><label class="flbl">Nombre</label><input class="fin" id="f-name" placeholder="Ej: Renovar pasaporte"></div><div class="m-row"><div class="fg"><label class="flbl">Responsable</label><select class="fsel" id="f-who"><option value="T">Yo (Tú)</option><option value="E">Mi pareja (Él)</option></select></div><div class="fg"><label class="flbl">Prioridad</label><select class="fsel" id="f-priority"><option value="urgente">Urgente</option><option value="normal">Normal</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Fecha límite</label><input class="fin" id="f-due" type="date"></div><div class="fg"><label class="flbl">Notas</label><input class="fin" id="f-notes" placeholder="Detalles..."></div></div>`},
   nota:{t:'Nueva nota',h:`<div class="fg"><label class="flbl">Nota</label><textarea class="fin" id="f-text" rows="4" placeholder="Escribe aquí..." style="resize:vertical;min-height:80px"></textarea></div><div class="fg"><label class="flbl">De parte de</label><select class="fsel" id="f-author"><option value="Tú">Yo (Tú)</option><option value="Él">Mi pareja (Él)</option></select></div>`},
   meta:{t:'Nueva meta de ahorro',h:`<div class="m-row"><div class="fg"><label class="flbl">Nombre</label><input class="fin" id="f-name" placeholder="Ej: Vacaciones"></div><div class="fg"><label class="flbl">Ícono</label><select class="fsel" id="f-icon"><option value="🏖️">🏖️ Vacaciones</option><option value="🚗">🚗 Auto</option><option value="🏠">🏠 Casa</option><option value="📱">📱 Tecnología</option><option value="🎓">🎓 Educación</option><option value="💍">💍 Evento especial</option><option value="🎯">🎯 Otro</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Objetivo ($)</label><input class="fin" id="f-objetivo" type="number" placeholder="0"></div><div class="fg"><label class="flbl">Ahorrado ($)</label><input class="fin" id="f-actual" type="number" placeholder="0" value="0"></div></div>`},
   evento:{t:'Nuevo evento',h:`<div class="fg"><label class="flbl">Título</label><input class="fin" id="f-title" placeholder="Ej: Cita médica, Aniversario..."></div><div class="m-row"><div class="fg"><label class="flbl">Fecha</label><input class="fin" id="f-date" type="date"></div><div class="fg"><label class="flbl">Color</label><select class="fsel" id="f-color"><option value="#3d6b52">🟢 Verde</option><option value="#b85c2c">🟠 Naranja</option><option value="#9c6a1a">🟡 Ámbar</option><option value="#5e3a7a">🟣 Violeta</option><option value="#2563eb">🔵 Azul</option></select></div></div><div class="fg"><label class="flbl">Notas</label><input class="fin" id="f-notes" placeholder="Detalles opcionales..."></div>`},
-  personal:{t:'Agregar persona',h:`<div class="m-row"><div class="fg"><label class="flbl">Nombre</label><input class="fin" id="f-name" placeholder="Ej: María"></div><div class="fg"><label class="flbl">Rol</label><select class="fsel" id="f-rol"><option value="nana">👩‍🍳 Empleada/Nana</option><option value="jardinero">🌿 Jardinero</option><option value="ninjera">👶 Niñera</option><option value="otro">👤 Otro</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Sueldo mensual ($)</label><input class="fin" id="f-sueldo" type="number" placeholder="0"></div><div class="fg"><label class="flbl">Día de pago</label><input class="fin" id="f-diapago" type="number" placeholder="Ej: 30" min="1" max="31"></div></div>`},
+  personal:{t:'Agregar persona',h:`<div class="m-row"><div class="fg"><label class="flbl">Nombre</label><input class="fin" id="f-name" placeholder="Ej: María"></div><div class="fg"><label class="flbl">Rol</label><select class="fsel" id="f-rol"><option value="nana">👩‍🍳 Empleada/Nana</option><option value="jardinero">🌿 Jardinero</option><option value="ninera">👶 Niñera</option><option value="otro">👤 Otro</option></select></div></div><div class="m-row"><div class="fg"><label class="flbl">Sueldo mensual ($)</label><input class="fin" id="f-sueldo" type="number" placeholder="0"></div><div class="fg"><label class="flbl">Día de pago</label><input class="fin" id="f-diapago" type="number" placeholder="Ej: 30" min="1" max="31"></div></div>`},
   extra:{t:'Pago extra',h:`<div class="m-row"><div class="fg"><label class="flbl">Persona</label><select class="fsel" id="f-person">POPT</select></div><div class="fg"><label class="flbl">Tipo</label><select class="fsel" id="f-tipo"><option value="Hora extra">Hora extra</option><option value="Babysitting">Babysitting</option><option value="Día adicional">Día adicional</option><option value="Bono">Bono</option><option value="Otro">Otro</option></select></div></div><div class="fg"><label class="flbl">Descripción</label><input class="fin" id="f-desc" placeholder="Ej: Cuidó el sábado"></div><div class="m-row"><div class="fg"><label class="flbl">Monto ($)</label><input class="fin" id="f-monto" type="number" placeholder="0"></div><div class="fg"><label class="flbl">Fecha</label><input class="fin" id="f-date" type="date"></div></div>`},
 };
 
@@ -1846,7 +2098,7 @@ async function saveItem(){
   btn.disabled=true;btn.textContent='Guardando…';
   const id=Date.now();let item=null,type=null;
   if(curModal==='tarea'){const t=gv('f-text');if(!t){btn.disabled=false;btn.textContent='Guardar';return;}type='tareas';item={id,text:t,done:false,who:gv('f-who'),priority:gv('f-priority')};}
-  else if(curModal==='compra'){const t=gv('f-text');if(!t){btn.disabled=false;btn.textContent='Guardar';return;}type='compras';item={id,text:t,done:false,who:gv('f-who'),priority:gv('f-priority')};}
+  else if(curModal==='compra'){const t=gv('f-text');if(!t){btn.disabled=false;btn.textContent='Guardar';return;}type='compras';item={id,text:t,done:false,who:gv('f-who'),priority:gv('f-priority'),tipo:gv('f-tipo')||'Supermercado',precioRef:parseFloat(gv('f-precio'))||null};}
   else if(curModal==='finanza'){const n=gv('f-name'),a=gv('f-amount');if(!n||!a){btn.disabled=false;btn.textContent='Guardar';return;}type='finanzas';item={id,name:n,type:gv('f-type'),amount:parseFloat(a),date:gv('f-date'),category:gv('f-category'),reembolso:gv('f-type')==='gasto'&&gv('f-category')==='Salud'?'pendiente':null};}
   else if(curModal==='recurrente'){const n=gv('f-name'),a=gv('f-amount');if(!n||!a){btn.disabled=false;btn.textContent='Guardar';return;}type='recurrentes';const moneda=gv('f-moneda')||'CLP';item={id,name:n,type:gv('f-type'),amount:parseFloat(a),moneda,category:gv('f-category')};}
   else if(curModal==='tramite'){const n=gv('f-name');if(!n){btn.disabled=false;btn.textContent='Guardar';return;}type='tramites';item={id,name:n,status:'pendiente',priority:gv('f-priority'),due:gv('f-due'),who:gv('f-who'),notes:gv('f-notes')};}
@@ -1967,13 +2219,16 @@ function detectSantanderCols(rows){
 /* Mapeo automático de categorías por descripción */
 function guessCategory(desc){
   const d=(desc||'').toLowerCase();
+  // Almacén — PRIMERO para que Doña Clarita/Orígenes/Roberto Campos no caigan en Otro
+  if(/do.a clarita|roberto campos|origenes|almac[eé]n|minimarket|bodega|abarrot/.test(d)) return 'Almacén';
+  // Uber/Rappi — delivery y apps
+  if(/uber.*eats|ubereats|rappi|pedidos.*ya|ifood/.test(d)) return 'Uber/Rappi';
+  // Uber transporte (sin "eats") va a Transporte
+  if(/uber|cabify|didi|taxi/.test(d)) return 'Transporte';
   if(/farmacia|clinica|hospital|medic|dental|salud|isapre|bsalud|cruz.*verde|ahumada|salcobrand/.test(d)) return 'Salud';
   if(/supermercado|jumbo|lider|unimarc|santa.*isabel|tottus|acuenta|ekono|central.*mayorista/.test(d)) return 'Alimentación';
-  if(/do.a clarita|roberto campos|origenes|almac[eé]n|minimarket|bodega|abarro/.test(d)) return 'Almacén';
-  if(/uber|rappi|pedidos.*ya|ifood/.test(d)) return 'Uber/Rappi';
-  if(/restauran|sushi|pizza|burger|mcdonalds|subway|starbucks|cafe|bar |uber.*eat/.test(d)) return 'Alimentación';
-  if(/copec|shell|petrobras|bencin|parking|automovel|peaje|autopista|metro|transantiago|bip/.test(d)) return 'Transporte';
-  if(/cabify|didi|taxi/.test(d)) return 'Transporte';
+  if(/restauran|sushi|pizza|burger|mcdonalds|subway|starbucks|cafe|bar |rappi/.test(d)) return 'Alimentación';
+  if(/copec|shell|petrobras|bencin|parking|peaje|autopista|metro|transantiago|bip/.test(d)) return 'Transporte';
   if(/netflix|spotify|amazon|disney|hbo|youtube|apple.*one|prime/.test(d)) return 'Entretenimiento';
   if(/falabella|ripley|paris|zara|h&m|tienda|ropa|zapato/.test(d)) return 'Hogar';
   if(/entel|movistar|claro|vtr|internet|telefon/.test(d)) return 'Servicios';
@@ -2392,6 +2647,14 @@ async function savePascalItem(){
   }catch(e){toast('Error al guardar','error');}
 }
 
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className=type;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+
 /* ══ TERMÓMETRO HORMIGA ════════════════════════════════ */
 const HORMIGA_CATS=['Almacén','Uber/Rappi'];
 
@@ -2419,7 +2682,6 @@ function calcHormiga(){
 }
 
 function rTermometro(){
-  // Cargar valor guardado en input
   const meta=Number(localStorage.getItem('termo-meta')||0);
   const inp=document.getElementById('termo-input');
   if(inp&&meta&&!inp.value) inp.value=meta;
@@ -2428,18 +2690,15 @@ function rTermometro(){
   const pct=meta>0?Math.min(100,Math.round(sem/meta*100)):0;
   const color=pct>=100?'var(--rust)':pct>=75?'var(--amber)':'var(--sage)';
 
-  // Termómetro en Finanzas
+  /* Termómetro en Finanzas */
   const bar=document.getElementById('termo-bar');
   const badge=document.getElementById('termo-badge');
   const val=document.getElementById('termo-val');
   const metaLbl=document.getElementById('termo-meta-lbl');
   const mesEl=document.getElementById('termo-mes');
 
-  if(bar){
-    bar.style.width=pct+'%';
-    bar.style.background=color;
-  }
-  if(val) val.textContent=clp(sem)+' en almacén / delivery';
+  if(bar){ bar.style.width=pct+'%'; bar.style.background=color; }
+  if(val) val.textContent=clp(sem)+' · Almacén + Uber/Rappi';
   if(mesEl) mesEl.textContent='Este mes: '+clp(mes);
   if(meta>0){
     if(metaLbl) metaLbl.textContent='meta: '+clp(meta)+'/sem · '+pct+'% usado';
@@ -2460,31 +2719,445 @@ function rTermometro(){
     if(badge) badge.textContent='';
   }
 
-  // Mini hormiga en Resumen
+  /* Mini hormiga en Inicio (barra discreta debajo del donut) */
   const miniCard=document.getElementById('hormiga-mini');
   const miniVal=document.getElementById('hormiga-mini-val');
   const miniBar=document.getElementById('hormiga-mini-bar');
   const miniLbl=document.getElementById('hormiga-mini-lbl');
-  if(miniCard&&sem>0){
-    miniCard.style.display='block';
-    if(miniVal) miniVal.textContent=clp(sem);
-    if(miniVal) miniVal.style.color=color;
-    if(miniBar){miniBar.style.width=pct+'%';miniBar.style.background=color;}
+  if(!miniCard) return;
+  if(sem>0){
+    miniCard.style.display='flex';
+    if(miniVal){ miniVal.textContent=clp(sem); miniVal.style.color=color; }
+    if(miniBar){ miniBar.style.width=pct+'%'; miniBar.style.background=color; }
     if(miniLbl){
-      if(meta>0) miniLbl.textContent=pct+'% de tu meta semanal ('+clp(meta)+')';
-      else miniLbl.textContent='Este mes: '+clp(mes)+' total';
+      if(meta>0) miniLbl.textContent=pct+'% de meta ('+clp(meta)+'/sem)';
+      else miniLbl.textContent='Este mes: '+clp(mes);
     }
-  } else if(miniCard){
+  } else {
     miniCard.style.display='none';
   }
 }
 
-function toast(msg,type=''){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.className=type;
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),2800);
+/* ══ HOGAR — INVENTARIO, MENÚ, COMPARADOR, OFERTAS ═══════════════════════ */
+
+/* Override showTab to handle hogar panel init */
+const _origShowTab = window.showTab;
+window.showTab = function(name, el){
+  _origShowTab(name, el);
+  if(name==='hogar'){
+    rInventario();
+    rComparadorList();
+    if(_menuCache) renderMenu(_menuCache);
+  }
+};
+
+/* ── INVENTARIO ─────────────────────────────────────────────────────────── */
+let INV = [];
+function loadINV(){ try{INV=JSON.parse(localStorage.getItem('hogar-inv')||'[]');}catch(e){INV=[];} }
+function saveINV(){ localStorage.setItem('hogar-inv',JSON.stringify(INV)); }
+loadINV();
+
+function openInvModal(){
+  document.getElementById('inv-nombre').value='';
+  document.getElementById('inv-qty').value='1';
+  document.getElementById('inv-min').value='1';
+  document.getElementById('inv-ov').classList.add('open');
+  setTimeout(()=>document.getElementById('inv-nombre').focus(),80);
 }
+
+function saveInvItem(){
+  const nombre=(document.getElementById('inv-nombre')?.value||'').trim();
+  if(!nombre) return;
+  const item={
+    id:Date.now(),
+    nombre,
+    cat:document.getElementById('inv-cat')?.value||'📦 Otros',
+    unidad:document.getElementById('inv-unidad')?.value||'un',
+    qty:parseFloat(document.getElementById('inv-qty')?.value||1),
+    min:parseFloat(document.getElementById('inv-min')?.value||1),
+  };
+  INV.unshift(item);
+  saveINV();
+  document.getElementById('inv-ov').classList.remove('open');
+  rInventario();
+  toast('Ítem guardado ✓','success');
+}
+
+function adjInv(id, delta){
+  const it=INV.find(i=>String(i.id)===String(id));
+  if(!it) return;
+  it.qty=Math.max(0, parseFloat((it.qty+delta).toFixed(2)));
+  saveINV();
+  rInventario();
+}
+
+function delInv(id){
+  INV=INV.filter(i=>String(i.id)!==String(id));
+  saveINV();
+  rInventario();
+  toast('Eliminado','success');
+}
+
+function rInventario(){
+  const el=document.getElementById('list-inventario');
+  if(!el) return;
+  if(!INV.length){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">Registra lo que tienes en casa<br><span style="font-size:11px">La IA lo usará para sugerir recetas</span></div>';
+    return;
+  }
+  // Group by category
+  const cats={};
+  INV.forEach(i=>{const c=i.cat||'📦 Otros';if(!cats[c])cats[c]=[];cats[c].push(i);});
+  let html='<div class="g2">';
+  // Show low-stock alert first
+  const low=INV.filter(i=>i.qty<=i.min);
+  if(low.length){
+    html+=`<div style="grid-column:1/-1;background:var(--rust-bg);border:1px solid var(--rust-bg2);border-radius:10px;padding:10px 14px;margin-bottom:4px">
+      <span style="font-size:11px;font-weight:700;color:var(--rust)">⚠ Stock bajo: </span>
+      <span style="font-size:11px;color:var(--rust)">${low.map(i=>i.nombre).join(', ')}</span>
+    </div>`;
+  }
+  html+='</div>';
+  html+='<div>';
+  Object.entries(cats).forEach(([cat,items])=>{
+    html+=`<div class="inv-section">
+      <div class="inv-section-lbl">${cat}</div>
+      ${items.map(i=>{
+        const low=i.qty<=i.min;
+        return`<div class="inv-row">
+          <div style="flex:1">
+            <span style="font-size:13px;font-weight:500;color:${low?'var(--rust)':'var(--ink2)'}">${i.nombre}</span>
+          </div>
+          ${low?`<span class="inv-low-badge">⚠ bajo</span>`:''}
+          <div class="inv-qty">
+            <button class="iqbtn" onclick="adjInv(${i.id},-1)">−</button>
+            <span class="iqnum ${low?'low':''}">${i.qty} ${i.unidad}</span>
+            <button class="iqbtn" onclick="adjInv(${i.id},+1)">+</button>
+          </div>
+          <span class="x-btn" onclick="delInv(${i.id})">×</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+/* ── MENÚ SEMANAL CON IA ────────────────────────────────────────────────── */
+let _menuCache = null;
+try{ _menuCache=JSON.parse(localStorage.getItem('hogar-menu')||'null'); }catch(e){}
+
+const DIAS_SEMANA=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const DIAS_EMOJI=['🌅','🌤','🌈','🌻','⭐','🌊','🌟'];
+
+function renderMenu(menu){
+  const el=document.getElementById('menu-semanal-wrap');
+  if(!el||!menu?.length) return;
+  const saved=localStorage.getItem('hogar-menu-fecha');
+  const lbl=document.getElementById('menu-fecha-lbl');
+  if(lbl&&saved) lbl.textContent='Generado el '+saved;
+  el.innerHTML=`<div class="menu-grid">${menu.map((dia,i)=>`
+    <div class="menu-dia">
+      <div class="menu-dia-hdr">${DIAS_EMOJI[i]} ${dia.dia||DIAS_SEMANA[i]}</div>
+      <div class="menu-meal">
+        <div class="menu-meal-lbl">☀️ Desayuno</div>
+        <div class="menu-meal-txt">${dia.desayuno||'—'}</div>
+      </div>
+      <div class="menu-meal">
+        <div class="menu-meal-lbl">🍽️ Almuerzo</div>
+        <div class="menu-meal-txt">${dia.almuerzo||'—'}</div>
+      </div>
+      <div class="menu-meal">
+        <div class="menu-meal-lbl">🌙 Cena</div>
+        <div class="menu-meal-txt">${dia.cena||'—'}</div>
+      </div>
+      <div class="menu-colacion">
+        <div class="menu-meal-lbl">🎒 Colación Pascal</div>
+        <div class="menu-meal-txt">${dia.colacion||'—'}</div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+async function generarMenuIA(){
+  const el=document.getElementById('menu-semanal-wrap');
+  if(!el) return;
+  const skel='<div class="skel" style="height:60px;margin-bottom:8px;border-radius:10px"></div>'.repeat(3);
+  el.innerHTML=`<div style="padding:8px">${skel}<div style="text-align:center;font-size:12px;color:var(--ink3);margin-top:8px">Generando menú con IA… ✨</div></div>`;
+
+  const invItems=INV.map(i=>`${i.nombre} (${i.qty} ${i.unidad})`).join(', ')||'inventario vacío';
+  const prompt=`Eres un nutricionista y chef chileno. Genera un menú semanal completo para una familia chilena de 3 personas: 2 adultos + Pascal (niño de 4-5 años que va al jardín).
+
+INVENTARIO DISPONIBLE: ${invItems}
+
+REGLAS IMPORTANTES:
+- Desayuno: simple y nutritivo para 3 personas (adultos + Pascal)
+- Almuerzo: completo con proteína + carbohidrato + verdura, para 3 personas
+- Cena: más liviana, para 3 personas (incluye Pascal)
+- Colación Pascal: SALUDABLE y VARIADA para llevar al jardín cada día (ej: "½ manzana + mantequilla de maní", "zanahoria + hummus", "plátano + nueces", etc.)
+- Usa ingredientes del inventario cuando sea posible
+- Si falta algo para una receta, indícalo entre paréntesis: "(falta: X)"
+- Porciones para 3 personas adulto/niño
+- Precios razonables, cocina cotidiana chilena
+- Recetas VARIADAS, no repetir proteínas seguidas
+
+Responde SOLAMENTE con JSON puro, sin texto adicional, sin backticks:
+{"menu":[{"dia":"Lunes","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Martes","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Miércoles","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Jueves","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Viernes","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Sábado","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."},{"dia":"Domingo","desayuno":"...","almuerzo":"...","cena":"...","colacion":"..."}]}`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await resp.json();
+    const txt=(data.content||[]).find(b=>b.type==='text')?.text||'';
+    const clean=txt.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    if(!parsed.menu?.length) throw new Error('Sin datos');
+    _menuCache=parsed.menu;
+    localStorage.setItem('hogar-menu',JSON.stringify(_menuCache));
+    const hoy=new Date().toLocaleDateString('es-CL',{day:'numeric',month:'long'});
+    localStorage.setItem('hogar-menu-fecha',hoy);
+    renderMenu(_menuCache);
+    toast('Menú generado ✓','success');
+  }catch(e){
+    el.innerHTML=`<div style="text-align:center;padding:20px">
+      <div style="font-size:12px;color:var(--rust);margin-bottom:10px">Error al generar el menú</div>
+      <button onclick="generarMenuIA()" style="padding:7px 18px;border-radius:20px;border:none;background:var(--rust);color:#fff;cursor:pointer;font-size:12px">↻ Reintentar</button>
+    </div>`;
+    console.error(e);
+  }
+}
+
+/* ── COMPARADOR DE PRECIOS ──────────────────────────────────────────────── */
+let COMPS=[];
+try{COMPS=JSON.parse(localStorage.getItem('hogar-comps')||'[]');}catch(e){}
+function saveCOMPS(){localStorage.setItem('hogar-comps',JSON.stringify(COMPS));}
+
+function openComparadorModal(){
+  document.getElementById('comp-query').value='';
+  document.getElementById('comp-result').style.display='none';
+  document.getElementById('comp-err').style.display='none';
+  document.getElementById('comp-loader').style.display='none';
+  document.getElementById('comp-ov').classList.add('open');
+  setTimeout(()=>document.getElementById('comp-query')?.focus(),80);
+}
+
+async function buscarPrecios(){
+  const q=(document.getElementById('comp-query')?.value||'').trim();
+  if(!q) return;
+  const btn=document.getElementById('comp-btn');
+  btn.disabled=true; btn.textContent='Buscando…';
+  document.getElementById('comp-loader').style.display='block';
+  document.getElementById('comp-result').style.display='none';
+  document.getElementById('comp-err').style.display='none';
+
+  const prompt=`Eres un experto en precios de supermercados chilenos. El usuario quiere comparar precios de: "${q}"
+
+Busca el precio APROXIMADO de este artículo en pesos chilenos (CLP) en cada supermercado para el año 2024-2025.
+Si es un producto de supermercado, da precios de la presentación más común (1 kg, 1 litro, unidad, etc.).
+Si es un artículo no alimenticio (TV, ropa, etc.), estima un rango de precio típico chileno.
+
+Responde SOLAMENTE con JSON puro sin backticks:
+{"articulo":"nombre exacto buscado","presentacion":"ej: 1 kg, 1 L, unidad","precios":[{"tienda":"Jumbo","precio":0,"url":"https://www.jumbo.cl/search?q=QUERY"},{"tienda":"Líder","precio":0,"url":"https://www.lider.cl/supermercado/search?Ntt=QUERY"},{"tienda":"Unimarc","precio":0,"url":"https://www.unimarc.cl/buscar?q=QUERY"},{"tienda":"Walmart","precio":0,"url":"https://www.walmart.cl/search?q=QUERY"}],"nota":"consejo breve de dónde conviene comprar"}`
+    .replace(/QUERY/g, encodeURIComponent(q));
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await resp.json();
+    const txt=(data.content||[]).find(b=>b.type==='text')?.text||'';
+    const parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());
+
+    // Save
+    const entry={id:Date.now(),articulo:parsed.articulo,presentacion:parsed.presentacion,precios:parsed.precios,nota:parsed.nota,fecha:new Date().toLocaleDateString('es-CL')};
+    COMPS.unshift(entry);
+    if(COMPS.length>15)COMPS=COMPS.slice(0,15);
+    saveCOMPS();
+    rComparadorList();
+
+    // Show in modal
+    const minP=Math.min(...parsed.precios.map(p=>p.precio));
+    document.getElementById('comp-loader').style.display='none';
+    document.getElementById('comp-result').style.display='block';
+    document.getElementById('comp-result').innerHTML=`
+      <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px">${parsed.articulo}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:12px">${parsed.presentacion||''}</div>
+      <div class="comp-precios">
+        ${parsed.precios.map(p=>`
+          <div class="comp-tienda ${p.precio===minP?'mejor':''}">
+            <div class="comp-tienda-nombre">${p.tienda}${p.precio===minP?' ✓':''}</div>
+            <div class="comp-tienda-precio">${clp(p.precio)}</div>
+            <a href="${p.url}" target="_blank" style="font-size:9px;color:var(--rust);text-decoration:none">ver →</a>
+          </div>`).join('')}
+      </div>
+      ${parsed.nota?`<div style="font-size:11px;color:var(--ink3);margin-top:10px;font-style:italic">💡 ${parsed.nota}</div>`:''}`;
+    toast('Precios encontrados ✓','success');
+  }catch(e){
+    document.getElementById('comp-loader').style.display='none';
+    document.getElementById('comp-err').style.display='block';
+    document.getElementById('comp-err').textContent='No se pudo obtener precios. Intenta de nuevo.';
+  }
+  btn.disabled=false; btn.textContent='🔍 Buscar precios';
+}
+
+function rComparadorList(){
+  const el=document.getElementById('list-comparador');
+  if(!el) return;
+  if(!COMPS.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--ink3);font-size:12px">Busca cualquier artículo para comparar precios</div>';
+    return;
+  }
+  el.innerHTML=COMPS.slice(0,6).map(entry=>{
+    const minP=Math.min(...(entry.precios||[]).map(p=>p.precio));
+    const mejor=(entry.precios||[]).find(p=>p.precio===minP);
+    return`<div class="comp-entry">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="comp-entry-nombre">${entry.articulo}</div>
+        <span class="x-btn" onclick="delComp(${entry.id})">×</span>
+      </div>
+      <div class="comp-precios">
+        ${(entry.precios||[]).map(p=>`
+          <div class="comp-tienda ${p.precio===minP?'mejor':''}">
+            <div class="comp-tienda-nombre">${p.tienda}</div>
+            <div class="comp-tienda-precio">${clp(p.precio)}</div>
+          </div>`).join('')}
+      </div>
+      ${entry.nota?`<div style="font-size:10px;color:var(--ink3);margin-top:6px;font-style:italic">💡 ${entry.nota}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function delComp(id){
+  COMPS=COMPS.filter(c=>String(c.id)!==String(id));
+  saveCOMPS();
+  rComparadorList();
+}
+
+/* ── ALERTAS DE OFERTA ──────────────────────────────────────────────────── */
+let ALERTAS_VISTAS=[];
+try{ALERTAS_VISTAS=JSON.parse(localStorage.getItem('hogar-alertas-vistas')||'[]');}catch(e){}
+
+function checkOfertasCompras(){
+  // Only run once per day
+  const hoy=new Date().toDateString();
+  const lastCheck=localStorage.getItem('hogar-oferta-check');
+  if(lastCheck===hoy) return;
+
+  const items=(D.compras||[]).filter(c=>!isDone(c.done));
+  if(!items.length) return;
+
+  // Mark as checked today
+  localStorage.setItem('hogar-oferta-check', hoy);
+
+  buscarOfertasOnline(items);
+}
+
+async function buscarOfertasOnline(items){
+  const nombres=items.slice(0,12).map(c=>c.text).join(', ');
+  const hoy=new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  
+  const prompt=`Hoy es ${hoy} en Chile. El usuario tiene esta lista de compras pendiente: ${nombres}
+
+Tu tarea: Para CADA artículo, busca si hay una oferta o precio conveniente HOY en los supermercados chilenos (Jumbo, Líder, Unimarc, Walmart, SMU). 
+
+Considera:
+- Ofertas semanales típicas de supermercados chilenos
+- Días de descuento (martes/miércoles suelen tener ofertas)
+- Precios convenientes del momento
+- Si no sabes si hay oferta específica hoy, indica el supermercado donde suele ser más barato ese artículo
+
+Responde SOLAMENTE con JSON puro sin backticks ni texto adicional:
+{"fecha":"${hoy}","ofertas":[
+  {"articulo":"nombre del artículo","tienda":"Jumbo","precio":0,"descuento":"ej: 30% off o 2x1","url":"https://www.jumbo.cl/search?q=ARTICULO","confianza":"alta/media/baja","nota":"por qué conviene"}
+]}
+
+Solo incluye artículos donde realmente haya algo conveniente. Si ninguno tiene oferta relevante, devuelve {"fecha":"${hoy}","ofertas":[]}`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1200,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await resp.json();
+    // Extract text from response (may have tool_use blocks)
+    const txt=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    if(!txt) return;
+    const clean=txt.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    if(parsed.ofertas?.length){
+      // Filter out ones already seen
+      const nuevas=parsed.ofertas.filter(o=>{
+        const key='oferta_'+o.articulo+hoy;
+        return !ALERTAS_VISTAS.includes(key);
+      });
+      if(nuevas.length) showOfertasPopup(nuevas, true);
+    }
+  }catch(e){
+    console.log('Oferta check:', e.message);
+  }
+}
+
+
+function showOfertasPopup(alertas, esOnline=false){
+  const popup=document.createElement('div');
+  popup.className='oferta-popup';
+  const hoy=new Date().toDateString();
+  // Build keys for "ya vista"
+  const keys=alertas.map(a=>esOnline?('oferta_'+a.articulo+new Date().toLocaleDateString('es-CL')):String(a.id));
+  popup.innerHTML=`
+    <div class="oferta-popup-hdr">
+      <span style="font-size:22px">🏷️</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--ink)">¡Ofertas en tu lista hoy!</div>
+        <div style="font-size:11px;color:var(--ink3)">${esOnline?'Encontradas online ahora':'Precios por debajo de tu referencia'}</div>
+      </div>
+      <span class="x-btn" onclick="this.closest('.oferta-popup').remove()">×</span>
+    </div>
+    <div style="max-height:280px;overflow-y:auto">
+    ${alertas.map(a=>`
+      <div style="padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink2)">${a.articulo}</div>
+            ${a.precio>0?`<div style="font-size:13px;font-weight:700;color:var(--sage);margin-top:2px">${clp(a.precio)} <span style="color:var(--ink3);font-size:10px;font-weight:400">en ${a.tienda}</span></div>`:''}
+            ${a.descuento?`<div style="font-size:11px;color:var(--rust);font-weight:600">${a.descuento}</div>`:''}
+            ${a.nota?`<div style="font-size:10px;color:var(--ink3);margin-top:2px;font-style:italic">${a.nota}</div>`:''}
+          </div>
+          ${a.url?`<a href="${a.url}" target="_blank" style="flex-shrink:0;font-size:11px;color:var(--rust);font-weight:600;text-decoration:none;border:1px solid var(--rust);border-radius:20px;padding:3px 10px;white-space:nowrap">ver →</a>`:''}
+        </div>
+      </div>`).join('')}
+    </div>
+    <button onclick="cerrarOferta(${JSON.stringify(keys)},this)"
+      style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:none;background:var(--sage);color:#fff;font-size:12px;font-weight:700;cursor:pointer">
+      ✓ Entendido, no mostrar de nuevo hoy
+    </button>`;
+  document.body.appendChild(popup);
+}
+
+function cerrarOferta(keys, btn){
+  const popup=btn.closest('.oferta-popup');
+  if(popup) popup.remove();
+  keys.forEach(k=>{if(!ALERTAS_VISTAS.includes(String(k)))ALERTAS_VISTAS.push(String(k));});
+  localStorage.setItem('hogar-alertas-vistas',JSON.stringify(ALERTAS_VISTAS));
+}
+
+/* rTermometro: definida en sección TERMÓMETRO HORMIGA */
+
+/* ── Llamar checkOfertas al cargar ──────────────────────────────────────── */
+/* Will be called after syncAll */
+
+
 
 /* ─────────────── INIT ─────────────── */
 document.getElementById('hDate').textContent=(()=>{
@@ -2494,6 +3167,7 @@ document.getElementById('hDate').textContent=(()=>{
 if(sessionStorage.getItem('auth')==='1'){
   document.getElementById('pwd-screen').classList.add('hidden');
   syncAll();
+  if(_menuCache) renderMenu(_menuCache);
 } else {
   setTimeout(()=>document.getElementById('pwd-in').focus(),300);
 }
