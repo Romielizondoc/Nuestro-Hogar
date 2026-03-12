@@ -1521,7 +1521,12 @@ function rFinanzas(){
 /* charts */
 function catData(){
   const c={};
-  D.finanzas.filter(f=>f.type==='gasto').forEach(f=>{c[f.category||'Otro']=(c[f.category||'Otro']||0)+Number(f.amount);});
+  D.finanzas.filter(f=>f.type==='gasto').forEach(f=>{
+    const cat = f.category||'Otro';
+    // Almacén + Uber/Rappi → agrupados como "🛒 Gasto hormiga" en el gráfico
+    const label = HORMIGA_CATS.includes(cat) ? '🛒 Gasto hormiga' : cat;
+    c[label]=(c[label]||0)+Number(f.amount);
+  });
   return c;
 }
 function renderCharts(){rDonut('wrap-donut-r');rDonut('wrap-donut-f');rTrend();rProy();}
@@ -3110,6 +3115,11 @@ Responde SOLAMENTE JSON puro sin texto ni backticks:
 }
 
 
+/* ── COMPARADOR: estado ─────────────────────────────────────────────────── */
+let COMPS = [];
+try{ COMPS = JSON.parse(localStorage.getItem('hogar-comps')||'[]'); }catch(e){ COMPS=[]; }
+function saveCOMPS(){ localStorage.setItem('hogar-comps', JSON.stringify(COMPS)); }
+
 async function buscarPrecios(){
   const q=(document.getElementById('comp-query')?.value||'').trim();
   if(!q) return;
@@ -3546,8 +3556,12 @@ document.getElementById('hDate').textContent=(()=>{
 })();
 if(sessionStorage.getItem('auth')==='1'){
   document.getElementById('pwd-screen').classList.add('hidden');
-  syncAll();
+  // Render localStorage-based sections immediately (don't wait for server)
+  rInventario();
+  rComparadorList();
+  rRecordatorios();
   if(_menuCache) renderMenu(_menuCache);
+  syncAll();
 } else {
   setTimeout(()=>document.getElementById('pwd-in').focus(),300);
 }
