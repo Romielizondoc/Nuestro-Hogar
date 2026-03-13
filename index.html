@@ -1299,7 +1299,7 @@ header{
 <script>
 /* ─────────────── CONFIG ─────────────── */
 const GAS = 'https://script.google.com/macros/s/AKfycbwn0kzfnv6c0lSekbOhlT9B56aIS2nPD_6Jlagh4BmU1Rg05J4GvgJX7nr44FGc2DhZ/exec';
-const PWD = 'Casa1230';
+// Contraseña y API key viven en Apps Script — no en este archivo
 
 /* ─────────────── STATE ─────────────── */
 let D = {tareas:[],compras:[],finanzas:[],tramites:[],notas:[],metas:[],eventos:[],personal:[],extras:[],recurrentes:[],pascal:[]};
@@ -1352,15 +1352,29 @@ function post(body){
 }
 
 /* ─────────────── AUTH ─────────────── */
-function auth(){
-  if(document.getElementById('pwd-in').value===PWD){
-    sessionStorage.setItem('auth','1');
-    document.getElementById('pwd-screen').classList.add('hidden');
-    syncAll();
-  } else {
-    document.getElementById('pwd-err').textContent='Contraseña incorrecta';
-    document.getElementById('pwd-in').value='';
-    document.getElementById('pwd-in').focus();
+async function auth(){
+  const pwd = document.getElementById('pwd-in').value;
+  const btn = document.querySelector('.pwd-go');
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    const r = await jsonp({type:'auth', pwd});
+    if(r?.auth){
+      sessionStorage.setItem('auth','1');
+      document.getElementById('pwd-screen').classList.add('hidden');
+      rInventario(); rComparadorList(); rRecordatorios();
+      if(_menuCache) renderMenu(_menuCache);
+      syncAll();
+    } else {
+      document.getElementById('pwd-err').textContent='Contraseña incorrecta';
+      document.getElementById('pwd-in').value='';
+      document.getElementById('pwd-in').focus();
+    }
+  } catch(e) {
+    document.getElementById('pwd-err').textContent='Error de conexión — intenta de nuevo';
+  } finally {
+    btn.textContent='Entrar →';
+    btn.disabled=false;
   }
 }
 
@@ -2964,59 +2978,43 @@ function syncInvToCompras(){
   const low = INV.filter(i => i.qty <= i.min);
   if(!low.length){ toast('✓ Todo bien — no hay stock bajo','success'); return; }
 
+  if(!D.compras) D.compras=[];
   let added=0, updated=0;
+
   low.forEach(item=>{
-    const hoy = new Date().toISOString().slice(0,10);
-    // Calculate urgency: if qty is 0 → urgente, else normal
     const urgente = item.qty === 0;
     const prioridad = urgente ? 'alta' : 'media';
     const tag = urgente ? '🔴 URGENTE' : '🟡 Bajo';
     const texto = `${item.nombre} (${tag} — quedan ${item.qty} ${item.unidad})`;
-
-    // Check if already in compras list (match by nombre)
-    const existing = (D.compras||[]).find(c =>
-      !isDone(c.done) && c._invId && String(c._invId)===String(item.id)
-    );
-
+    const existing = D.compras.find(c => !isDone(c.done) && c._invId && String(c._invId)===String(item.id));
     if(existing){
-      // Update urgency + qty info
       existing.text = texto;
       existing.priority = prioridad;
       updated++;
     } else {
-      // Add new compra item
-      if(!D.compras) D.compras=[];
       D.compras.push({
         id: Date.now() + Math.random(),
-        text: texto,
-        done: false,
-        who: '',
-        priority: prioridad,
-        tipo: 'Supermercado',
-        precioRef: 0,
-        _invId: item.id,  // link to inventory item
-        _autoAdded: true,
+        text: texto, done: false, who: '',
+        priority: prioridad, tipo: 'Supermercado', precioRef: 0,
+        _invId: item.id, _autoAdded: true,
       });
       added++;
     }
   });
 
-  // Remove auto-added compras whose inventory is now OK
-  if(D.compras){
-    D.compras = D.compras.filter(c => {
-      if(!c._autoAdded) return true;
-      // Keep if still low stock
-      const inv = INV.find(i => String(i.id)===String(c._invId));
-      return inv && inv.qty <= inv.min;
-    });
-  }
-
-  saveData('compras', D.compras||[], ()=>{
-    rComprasList?.();
-    const msg = added>0 ? `${added} ítem${added>1?'s':''} agregado${added>1?'s':''} a Compras` : '';
-    const msg2 = updated>0 ? `${updated} actualizado${updated>1?'s':''}` : '';
-    toast(`🛒 ${[msg,msg2].filter(Boolean).join(' · ')}`, 'success');
+  // Remove auto-added items that are no longer low
+  D.compras = D.compras.filter(c => {
+    if(!c._autoAdded) return true;
+    const inv = INV.find(i => String(i.id)===String(c._invId));
+    return inv && inv.qty <= inv.min;
   });
+
+  rCompras();
+  const msg = [
+    added>0 ? `${added} agregado${added>1?'s':''}` : '',
+    updated>0 ? `${updated} actualizado${updated>1?'s':''}` : ''
+  ].filter(Boolean).join(' · ');
+  toast(`🛒 ${msg || 'Lista actualizada'}`, 'success');
 }
 
 
@@ -3090,12 +3088,13 @@ Responde SOLAMENTE JSON puro sin texto ni backticks:
 {"menu":[{"dia":"Lunes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Martes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Miércoles","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Jueves","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Viernes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Sábado","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Domingo","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."}]}`;
 
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch(GAS,{
       method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:prompt}]})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'anthropic',model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:prompt}]})
     });
     const data=await resp.json();
+    if(!data.ok) throw new Error(data.error||'Error del servidor');
     const txt=(data.content||[]).find(b=>b.type==='text')?.text||'';
     const clean=txt.replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(clean);
@@ -3107,8 +3106,9 @@ Responde SOLAMENTE JSON puro sin texto ni backticks:
     renderMenu(_menuCache);
     toast('Menú generado ✓','success');
   }catch(e){
+    console.error('generarMenuIA error:', e);
     el.innerHTML=`<div style="text-align:center;padding:20px">
-      <div style="font-size:12px;color:var(--rust);margin-bottom:10px">Error al generar el menú</div>
+      <div style="font-size:12px;color:var(--rust);margin-bottom:10px">Error: ${e.message}</div>
       <button class="btn-prim" onclick="generarMenuIA()">Reintentar</button>
     </div>`;
   }
@@ -3140,10 +3140,10 @@ Responde SOLAMENTE con JSON puro sin backticks:
     .replace(/QUERY/g, encodeURIComponent(q));
 
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch(GAS,{
       method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,messages:[{role:'user',content:prompt}]})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'anthropic',model:'claude-sonnet-4-20250514',max_tokens:700,messages:[{role:'user',content:prompt}]})
     });
     const data=await resp.json();
     const txt=(data.content||[]).find(b=>b.type==='text')?.text||'';
@@ -3174,9 +3174,10 @@ Responde SOLAMENTE con JSON puro sin backticks:
       ${parsed.nota?`<div style="font-size:11px;color:var(--ink3);margin-top:10px;font-style:italic">💡 ${parsed.nota}</div>`:''}`;
     toast('Precios encontrados ✓','success');
   }catch(e){
+    console.error('buscarPrecios error:', e);
     document.getElementById('comp-loader').style.display='none';
     document.getElementById('comp-err').style.display='block';
-    document.getElementById('comp-err').textContent='No se pudo obtener precios. Intenta de nuevo.';
+    document.getElementById('comp-err').textContent='Error: '+e.message+' — revisa la consola';
   }
   btn.disabled=false; btn.textContent='🔍 Buscar precios';
 }
@@ -3255,10 +3256,11 @@ Responde SOLAMENTE con JSON puro sin backticks ni texto adicional:
 Solo incluye artículos donde realmente haya algo conveniente. Si ninguno tiene oferta relevante, devuelve {"fecha":"${hoy}","ofertas":[]}`;
 
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch(GAS,{
       method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
+        action:'anthropic',
         model:'claude-sonnet-4-20250514',
         max_tokens:1200,
         tools:[{type:'web_search_20250305',name:'web_search'}],
