@@ -1299,8 +1299,6 @@ header{
 <script>
 /* ─────────────── CONFIG ─────────────── */
 const GAS = 'https://script.google.com/macros/s/AKfycbwn0kzfnv6c0lSekbOhlT9B56aIS2nPD_6Jlagh4BmU1Rg05J4GvgJX7nr44FGc2DhZ/exec';
-const GEMINI_KEY = 'AIzaSyDOhazaYG72LaAEhytVCKXZ5y4t7BU-ZV0--qcI0sNWfLwh_Hidd35LF9X4g';
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_KEY;
 
 /* ─────────────── STATE ─────────────── */
 let D = {tareas:[],compras:[],finanzas:[],tramites:[],notas:[],metas:[],eventos:[],personal:[],extras:[],recurrentes:[],pascal:[]};
@@ -1352,19 +1350,12 @@ function post(body){
     .then(r=>r.json()).catch(()=>({ok:true}));
 }
 
-/* ─────────────── GEMINI ─────────────── */
+/* ─────────────── GEMINI via proxy ─────────────── */
 async function geminiCall(prompt, maxTokens=1000){
-  const r = await fetch(GEMINI_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      contents:[{parts:[{text:prompt}]}],
-      generationConfig:{maxOutputTokens:maxTokens, temperature:0.7}
-    })
-  });
-  const d = await r.json();
-  if(!r.ok) throw new Error(d.error?.message||'Gemini error');
-  return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({prompt, max_tokens:maxTokens}))));
+  const data = await jsonp({action:'gemini', payload});
+  if(!data.ok) throw new Error(data.error||'Error del servidor');
+  return data.text||'';
 }
 
 /* ─────────────── AUTH ─────────────── */
