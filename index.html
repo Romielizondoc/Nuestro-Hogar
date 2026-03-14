@@ -1298,7 +1298,7 @@ header{
 
 <script>
 /* ─────────────── CONFIG ─────────────── */
-const GAS = 'https://script.google.com/macros/s/AKfycbxIHuvYEjOW32HjxoQS6LMzm_aU9Ito27SSkSrlq0kIWiViP28aPwu_6VEAsDZfY2zY/exec';
+const GAS = 'https://script.google.com/macros/s/AKfycbwn0kzfnv6c0lSekbOhlT9B56aIS2nPD_6Jlagh4BmU1Rg05J4GvgJX7nr44FGc2DhZ/exec';
 // Contraseña y API key viven en Apps Script — no en este archivo
 
 /* ─────────────── STATE ─────────────── */
@@ -3088,12 +3088,8 @@ Responde SOLAMENTE JSON puro sin texto ni backticks:
 {"menu":[{"dia":"Lunes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Martes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Miércoles","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Jueves","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Viernes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Sábado","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Domingo","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."}]}`;
 
   try{
-    const resp=await fetch(GAS,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'anthropic',model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:prompt}]})
-    });
-    const data=await resp.json();
+    const payload=btoa(unescape(encodeURIComponent(JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,messages:[{role:'user',content:prompt}]}))));
+    const data=await jsonp({action:'anthropic',payload});
     if(!data.ok) throw new Error(data.error||'Error del servidor');
     const txt=(data.content||[]).find(b=>b.type==='text')?.text||'';
     const clean=txt.replace(/```json|```/g,'').trim();
@@ -3140,12 +3136,8 @@ Responde SOLAMENTE con JSON puro sin backticks:
     .replace(/QUERY/g, encodeURIComponent(q));
 
   try{
-    const resp=await fetch(GAS,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'anthropic',model:'claude-sonnet-4-20250514',max_tokens:700,messages:[{role:'user',content:prompt}]})
-    });
-    const data=await resp.json();
+    const payload=btoa(unescape(encodeURIComponent(JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,messages:[{role:'user',content:prompt}]}))));
+    const data=await jsonp({action:'anthropic',payload});
     const txt=(data.content||[]).find(b=>b.type==='text')?.text||'';
     const parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());
 
@@ -3256,17 +3248,8 @@ Responde SOLAMENTE con JSON puro sin backticks ni texto adicional:
 Solo incluye artículos donde realmente haya algo conveniente. Si ninguno tiene oferta relevante, devuelve {"fecha":"${hoy}","ofertas":[]}`;
 
   try{
-    const resp=await fetch(GAS,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        action:'anthropic',
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1200,
-        tools:[{type:'web_search_20250305',name:'web_search'}],
-        messages:[{role:'user',content:prompt}]
-      })
-    });
+    const _ofPay=btoa(unescape(encodeURIComponent(JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]}))));
+    const resp={json:async()=>await jsonp({action:'anthropic',payload:_ofPay})};
     const data=await resp.json();
     // Extract text from response (may have tool_use blocks)
     const txt=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
