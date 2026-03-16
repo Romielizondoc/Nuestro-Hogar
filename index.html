@@ -3071,6 +3071,9 @@ window.showTab = function(name, el){
 };
 
 /* ── INVENTARIO ─────────────────────────────────────────────────────────── */
+let COMPS = [];
+try{ COMPS=JSON.parse(localStorage.getItem('hogar-comps')||'[]'); }catch(e){ COMPS=[]; }
+
 let INV = [];
 function loadINV(){ try{INV=JSON.parse(localStorage.getItem('hogar-inv')||'[]');}catch(e){INV=[];} }
 function saveINV(){ localStorage.setItem('hogar-inv',JSON.stringify(INV)); }
