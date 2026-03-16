@@ -792,6 +792,8 @@ header{
   .menu-grid{grid-template-columns:1fr!important;}
   .comp-precios{grid-template-columns:1fr 1fr!important;}
 }
+.menu-receta{cursor:pointer;border-bottom:1px dashed var(--ink3);}
+.menu-receta:hover{color:var(--rust);}
 </style>
 </head>
 <body>
@@ -960,7 +962,7 @@ header{
     <div class="card gap">
       <div class="ch">
         <div class="ct">💰 Comparador de precios</div>
-        <button class="btn-ghost" onclick="openComparadorModal()">+ buscar artículo</button>
+        <button class="btn-ghost" onclick="document.getElementById('comp-ov').classList.add('open');document.getElementById('comp-query').value='';document.getElementById('comp-query').focus();">+ buscar artículo</button>
       </div>
       <div id="list-comparador">
         <div style="text-align:center;padding:16px;color:var(--ink3);font-size:12px">
@@ -3080,6 +3082,12 @@ try{ _menuCache=JSON.parse(localStorage.getItem('hogar-menu')||'null'); }catch(e
 const DIAS_SEMANA=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 const DIAS_EMOJI=['🌅','🌤','🌈','🌻','⭐','🌊','🌟'];
 
+function recipeLink(plato){
+  if(!plato||plato==='—') return plato;
+  const q=encodeURIComponent(plato+' receta chilena');
+  return `<span style="cursor:pointer;border-bottom:1px dashed var(--rust);color:var(--ink)" onclick="window.open('https://www.google.com/search?q=${q}','_blank')" title="Ver receta">${plato} <span style="font-size:10px;color:var(--rust)">🔍</span></span>`;
+}
+
 function renderMenu(menu){
   const el=document.getElementById('menu-semanal-wrap');
   if(!el||!menu?.length) return;
@@ -3088,89 +3096,60 @@ function renderMenu(menu){
   if(lbl&&saved) lbl.textContent='Generado el '+saved;
   el.innerHTML=`<div class="menu-grid">${menu.map((dia,i)=>{
     const tienePapa=dia.almuerzo_papa&&dia.almuerzo_papa.trim();
+    const snack=dia.snack_pascal||dia.colacion||'—';
+    const almuerzo=dia.almuerzo||'—';
+    const cena=dia.cena||'—';
     return `
     <div class="menu-dia">
-      <div class="menu-dia-hdr">${DIAS_EMOJI[i]} ${dia.dia||DIAS_SEMANA[i]}</div>
-      <div class="menu-meal">
-        <div class="menu-meal-lbl">☀️ Desayuno</div>
-        <div class="menu-meal-txt">${dia.desayuno||'—'}</div>
+      <div class="menu-dia-title">${dia.dia}</div>
+      <div class="menu-row"><span class="menu-label">☕ Desayuno</span><span class="menu-val">${dia.desayuno||'—'}</span></div>
+      <div class="menu-row"><span class="menu-label">🎒 Snack Pascal</span><span class="menu-val">${snack}</span></div>
+      <div class="menu-row">
+        <span class="menu-label">🍽️ Almuerzo</span>
+        <span class="menu-val">
+          <span class="menu-receta" onclick="buscarReceta('${almuerzo.replace(/'/g,"\'")}')">${almuerzo} <span style="font-size:10px;opacity:.6">🔍</span></span>
+          ${tienePapa?`<div style="font-size:11px;color:var(--ink3);margin-top:3px">🧔 ${dia.almuerzo_papa} <span class="menu-receta" onclick="buscarReceta('${(dia.almuerzo_papa||'').replace(/'/g,"\'")}')">🔍</span></div>`:''}
+        </span>
       </div>
-      <div class="menu-meal">
-        <div class="menu-meal-lbl">🍽️ Almuerzo</div>
-        <div class="menu-meal-txt">${dia.almuerzo||'—'}</div>
-        ${tienePapa?`<div style="margin-top:5px;padding:5px 8px;border-radius:7px;background:var(--bg2);border-left:3px solid var(--amber)">
-          <span style="font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px">Papá 🧔</span>
-          <div style="font-size:11px;color:var(--ink2);margin-top:2px">${dia.almuerzo_papa}</div>
-        </div>`:''}
-      </div>
-      <div class="menu-meal">
-        <div class="menu-meal-lbl">🌙 Cena</div>
-        <div class="menu-meal-txt">${dia.cena||'—'}</div>
-      </div>
-      <div class="menu-colacion">
-        <div class="menu-meal-lbl">🎒 Colación Pascal</div>
-        <div class="menu-meal-txt">${dia.colacion||'—'}</div>
+      <div class="menu-row">
+        <span class="menu-label">🌙 Cena</span>
+        <span class="menu-val"><span class="menu-receta" onclick="buscarReceta('${cena.replace(/'/g,"\'")}')">${cena} <span style="font-size:10px;opacity:.6">🔍</span></span></span>
       </div>
     </div>`;
-  }).join('')}
-  </div>`;
+  }).join('')}</div>`;
 }
 
-async function generarMenuIA(){
-  const el=document.getElementById('menu-semanal-wrap');
-  if(!el) return;
-  const skel='<div class="skel" style="height:60px;margin-bottom:8px;border-radius:10px"></div>'.repeat(3);
-  el.innerHTML=`<div style="padding:8px">${skel}<div style="text-align:center;font-size:12px;color:var(--ink3);margin-top:8px">Generando menú con IA… ✨</div></div>`;
-
-  const invItems=INV.map(i=>`${i.nombre} (${i.qty} ${i.unidad})`).join(', ')||'inventario vacío';
-  const prompt=`Eres un nutricionista y chef chileno. Genera un menú semanal para una familia chilena de 3 personas: 2 adultos + Pascal (niño de 4-5 años, jardín). El padre NO come productos del mar.
-
-INVENTARIO DISPONIBLE: ${invItems}
-
-REGLAS OBLIGATORIAS:
-1. PESCADO/MARISCOS exactamente 2 días en el almuerzo (ej: salmón, reineta, merluza, atún, camarones)
-2. LEGUMBRES exactamente 1 día en el almuerzo (ej: lentejas, garbanzos, porotos, lentejas)
-3. Para los 2 días de pescado: incluir campo "almuerzo_papa" con alternativa SIN mariscos que use los mismos acompañamientos (ej: si es "arroz con salmón al limón + ensalada", el almuerzo_papa sería "arroz con pechuga al limón + ensalada" — misma base, distinta proteína)
-4. Los otros 5 días NO necesitan almuerzo_papa (campo vacío "")
-5. Desayuno: simple y nutritivo para todos
-6. Cena: liviana, todos comen lo mismo
-7. Colación Pascal: saludable y variada para llevar al jardín
-8. Usa ingredientes del inventario cuando sea posible
-9. Si falta algo indica entre paréntesis: (falta: X)
-10. Cocina cotidiana chilena, porciones para 3 personas
-
-Responde SOLAMENTE JSON puro sin texto ni backticks:
-{"menu":[{"dia":"Lunes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Martes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Miércoles","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Jueves","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Viernes","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Sábado","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."},{"dia":"Domingo","desayuno":"...","almuerzo":"...","almuerzo_papa":"","cena":"...","colacion":"..."}]}`;
-
-  try{
-    const txt=await geminiCall(prompt,3000);
-    let clean=txt.replace(/```json|```/g,'').trim();
-    // Extract JSON if wrapped in other text
-    const jsonMatch=clean.match(/\{[\s\S]*\}/);
-    if(jsonMatch) clean=jsonMatch[0];
-    let parsed;
-    try{ parsed=JSON.parse(clean); }
-    catch(e){ throw new Error('La IA no devolvió JSON válido'); }
-    if(!parsed.menu?.length) throw new Error('Sin datos del menú');
-    _menuCache=parsed.menu;
-    localStorage.setItem('hogar-menu',JSON.stringify(_menuCache));
-    const hoy=new Date().toLocaleDateString('es-CL',{day:'numeric',month:'long'});
-    localStorage.setItem('hogar-menu-fecha',hoy);
-    renderMenu(_menuCache);
-    toast('Menú generado ✓','success');
-  }catch(e){
-    console.error('generarMenuIA error:', e);
-    el.innerHTML=`<div style="text-align:center;padding:20px">
-      <div style="font-size:12px;color:var(--rust);margin-bottom:10px">Error: ${e.message}</div>
-      <button class="btn-prim" onclick="generarMenuIA()">Reintentar</button>
+async function buscarReceta(plato){
+  if(!plato||plato==='—') return;
+  // Abrir modal de receta
+  let modal = document.getElementById('receta-modal-ov');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'receta-modal-ov';
+    modal.className = 'ov';
+    modal.onclick = e=>{ if(e.target===modal) modal.classList.remove('open'); };
+    modal.innerHTML = `<div class="modal" style="max-width:560px;max-height:80vh;overflow-y:auto">
+      <div class="m-title">🍽️ Receta</div>
+      <div id="receta-content" style="font-size:14px;line-height:1.6"></div>
+      <div class="m-actions"><button class="btn-sec" onclick="document.getElementById('receta-modal-ov').classList.remove('open')">Cerrar</button></div>
     </div>`;
+    document.body.appendChild(modal);
+  }
+  const content = document.getElementById('receta-content');
+  content.innerHTML = '<div class="skel" style="height:200px;border-radius:10px"></div>';
+  modal.classList.add('open');
+
+  try {
+    const prompt = `Dame una receta sencilla y práctica para preparar "${plato}" para una familia chilena de 3 personas (2 adultos + 1 niño de 5 años). 
+Formato: ingredientes con cantidades y pasos simples. Tiempo de preparación. Máximo 250 palabras. En español.`;
+    const txt = await geminiCall(prompt, 500);
+    content.innerHTML = '<div style="white-space:pre-wrap">'+txt+'</div>';
+  } catch(e) {
+    content.innerHTML = '<div style="color:var(--rust)">No se pudo cargar la receta. Intenta de nuevo.</div>';
   }
 }
 
 
-/* ── COMPARADOR: estado ─────────────────────────────────────────────────── */
-let COMPS = [];
-try{ COMPS = JSON.parse(localStorage.getItem('hogar-comps')||'[]'); }catch(e){ COMPS=[]; }
 function saveCOMPS(){ localStorage.setItem('hogar-comps', JSON.stringify(COMPS)); }
 
 async function buscarPrecios(){
