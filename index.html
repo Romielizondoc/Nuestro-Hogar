@@ -756,44 +756,176 @@ header{
   .m-row{grid-template-columns:1fr}
   .s-stats{grid-template-columns:1fr 1fr}
 }
-
-/* ===== MOBILE RESPONSIVE ===== */
+.tab-lbl{ display:inline; }
 @media(max-width:768px){
-  .app{flex-direction:column;}
-  .sidebar{
-    position:fixed;bottom:0;left:0;right:0;top:auto;
-    width:100%;height:60px;
-    flex-direction:row;
-    overflow-x:auto;overflow-y:hidden;
-    padding:0;z-index:100;
-    border-top:1px solid var(--border);
-    border-right:none;
-  }
-  .sidebar .logo{display:none;}
-  .sidebar .nav-section{display:flex;flex-direction:row;padding:0;margin:0;}
-  .sidebar .nav-section span{display:none;}
-  .nav-btn{
-    flex-shrink:0;padding:8px 10px;
-    border-radius:0;font-size:10px;
-    display:flex;flex-direction:column;align-items:center;gap:2px;
-    min-width:55px;
-  }
-  .main{
-    margin-left:0!important;
-    padding:12px;
-    padding-bottom:70px;
-  }
-  .card{padding:14px;}
-  .resumen-grid{grid-template-columns:1fr 1fr!important;}
-  .modal{margin:12px;max-height:90vh;overflow-y:auto;}
-  .header{padding:12px 16px;}
-  .fab{bottom:70px!important;}
-  .fab-menu{bottom:130px!important;}
-  .menu-grid{grid-template-columns:1fr!important;}
-  .comp-precios{grid-template-columns:1fr 1fr!important;}
+  .tab-lbl{ display:block;font-size:9px;line-height:1.2; }
+  .tab{ /* emoji shown via data-icon ::before */ }
 }
+
 .menu-receta{cursor:pointer;border-bottom:1px dashed var(--ink3);}
 .menu-receta:hover{color:var(--rust);}
+
+/* ╔══════════════════════════════════════════╗
+   ║   MOBILE — iPhone & Android responsive   ║
+   ╚══════════════════════════════════════════╝ */
+
+@media(max-width:768px){
+
+  /* ── Layout base ── */
+  body{ -webkit-text-size-adjust:100%; }
+  
+  header{
+    height:52px;padding:0 16px;
+    position:sticky;top:0;z-index:200;
+  }
+  .logo{ font-size:15px; }
+  .logo-mark{ font-size:18px; }
+  .hcenter{ display:none; }
+  .av{ display:none; }
+  .hbtn{ font-size:12px;padding:6px 10px; }
+  .dbtn{ font-size:16px;padding:6px 8px; }
+
+  /* ── Navigation — bottom tab bar ── */
+  .tabs-row{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg2);
+    border-top:1px solid var(--border);
+    border-radius:0;
+    z-index:300;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    margin:0;
+    padding:4px 0 env(safe-area-inset-bottom);
+    width:100%;
+    gap:0;
+    box-shadow:0 -4px 20px rgba(0,0,0,.12);
+  }
+  .tabs-row::-webkit-scrollbar{ display:none; }
+  
+  .tab{
+    flex-shrink:0;
+    display:flex;flex-direction:column;align-items:center;
+    padding:6px 10px 4px;
+    font-size:9px;font-weight:600;
+    border-radius:10px;
+    min-width:52px;
+    gap:2px;
+    letter-spacing:.3px;
+  }
+  .tab::before{
+    content:attr(data-icon);
+    font-size:18px;
+    line-height:1;
+  }
+  /* Hide emoji in tab text, show only in ::before */
+  .tab{ text-indent:0; }
+
+  /* ── Main content area ── */
+  .wrap{
+    padding:14px 12px;
+    padding-bottom:80px;
+    max-width:100%;
+  }
+
+  /* ── Cards & grids ── */
+  .card{ padding:14px;border-radius:16px; }
+  .g2,.g3,.g4,.g2l{ grid-template-columns:1fr!important; }
+  .gap{ gap:10px; }
+
+  /* ── Stat cards — 2 per row ── */
+  .resumen-grid,.g4{ grid-template-columns:1fr 1fr!important; }
+  .stat-card{ padding:14px 14px 16px; }
+  .stat-card .sc-val{ font-size:22px; }
+
+  /* ── Finanzas ── */
+  .fi-row{ padding:10px 0; }
+  .fi-name{ font-size:13px; }
+  .fi-meta{ font-size:11px; }
+  .fi-amt{ font-size:13px; }
+
+  /* ── Menú semanal ── */
+  .menu-grid{ grid-template-columns:1fr!important; }
+  .menu-dia{ padding:14px; }
+  .menu-dia-title{ font-size:15px; }
+
+  /* ── Comparador ── */
+  .comp-precios{ grid-template-columns:1fr 1fr!important; }
+  .comp-entry{ padding:12px; }
+
+  /* ── Modales — full screen en mobile ── */
+  .ov{ align-items:flex-end; }
+  .modal{
+    margin:0!important;
+    border-radius:24px 24px 0 0!important;
+    max-height:92vh!important;
+    overflow-y:auto;
+    width:100%!important;
+    max-width:100%!important;
+    padding:24px 20px;
+    padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  }
+  .m-title{ font-size:17px; }
+
+  /* ── FAB ── */
+  .fab{ bottom:74px!important;right:16px!important; }
+  .fab-menu{ bottom:136px!important;right:16px!important; }
+
+  /* ── Pascal ── */
+  .pascal-grid{ grid-template-columns:1fr 1fr!important; }
+  .pascal-stat{ padding:12px; }
+
+  /* ── Noticias ── */
+  .news-wrap{ grid-template-columns:1fr!important; }
+  .news-item{ padding:10px 0; }
+
+  /* ── Forms ── */
+  .fin{ font-size:16px; } /* 16px previene zoom en iOS */
+  .fg{ margin-bottom:14px; }
+  .m-actions{ flex-direction:column;gap:8px; }
+  .m-actions button{ width:100%;padding:13px; }
+  .btn-prim,.btn-sec{ padding:12px 20px;font-size:14px; }
+
+  /* ── Termómetro hormiga ── */
+  .termo-wrap{ padding:14px; }
+
+  /* ── Login ── */
+  .pwd-wrap{ padding:32px 24px; }
+  .pwd-title{ font-size:28px; }
+  .pwd-in{ font-size:16px;padding:14px; }
+  .pwd-go{ padding:14px;font-size:15px; }
+
+  /* ── Headers dentro de cards ── */
+  .ct{ font-size:14px; }
+  .card-header{ flex-wrap:wrap;gap:8px; }
+  
+  /* ── Notas ── */
+  .notes-grid{ grid-template-columns:1fr!important; }
+  
+  /* ── Inventario ── */
+  .inv-item{ padding:10px 12px; }
+  
+  /* ── Recordatorios ── */
+  .rec-item{ padding:10px 0; }
+  
+  /* ── Tablas de finanzas ── */
+  .m-row{ display:flex;flex-direction:column;gap:4px; }
+  
+  /* ── Scroll suave ── */
+  * { -webkit-tap-highlight-color: rgba(0,0,0,0); }
+  .wrap, .modal { scroll-behavior:smooth; }
+}
+
+/* iPhone notch / Dynamic Island */
+@supports(padding: env(safe-area-inset-bottom)){
+  @media(max-width:768px){
+    .tabs-row{ padding-bottom:env(safe-area-inset-bottom); }
+    .wrap{ padding-bottom:calc(80px + env(safe-area-inset-bottom)); }
+  }
+}
+
 </style>
 </head>
 <body>
@@ -828,16 +960,16 @@ header{
 <div class="wrap">
   <!-- TABS -->
   <div class="tabs-row">
-    <button class="tab on"  onclick="showTab('resumen',this)">🏠 Inicio</button>
-    <button class="tab"     onclick="showTab('hogar',this)">🏠 Hogar</button>
-    <button class="tab"     onclick="showTab('finanzas',this)">💰 Finanzas</button>
-    <button class="tab"     onclick="showTab('metas',this)">🎯 Metas</button>
-    <button class="tab"     onclick="showTab('calendario',this)">📅 Calendario</button>
-    <button class="tab"     onclick="showTab('personal',this)">🌿 Personal</button>
-    <button class="tab"     onclick="showTab('tramites',this)">📋 Trámites</button>
-    <button class="tab"     onclick="showTab('notas',this)">📌 Notas</button>
-    <button class="tab" id="tab-pascal" onclick="showTab('pascal',this)">🧒 Pascal</button>
-    <button class="tab" id="tab-noticias" onclick="showTab('noticias',this);setTimeout(triggerNews,50)">📰 Noticias</button>
+    <button class="tab on"  onclick="showTab('resumen',this)" data-icon="🏠"><span class="tab-lbl">Inicio</span></button>
+    <button class="tab"     onclick="showTab('hogar',this)" data-icon="🏡"><span class="tab-lbl">Hogar</span></button>
+    <button class="tab"     onclick="showTab('finanzas',this)" data-icon="💰"><span class="tab-lbl">Finanzas</span></button>
+    <button class="tab"     onclick="showTab('metas',this)" data-icon="🎯"><span class="tab-lbl">Metas</span></button>
+    <button class="tab"     onclick="showTab('calendario',this)" data-icon="📅"><span class="tab-lbl">Agenda</span></button>
+    <button class="tab"     onclick="showTab('personal',this)" data-icon="🌿"><span class="tab-lbl">Personal</span></button>
+    <button class="tab"     onclick="showTab('tramites',this)" data-icon="📋"><span class="tab-lbl">Trámites</span></button>
+    <button class="tab"     onclick="showTab('notas',this)" data-icon="📌"><span class="tab-lbl">Notas</span></button>
+    <button class="tab" id="tab-pascal" onclick="showTab('pascal',this)" data-icon="🧒"><span class="tab-lbl">Pascal</span></button>
+    <button class="tab" id="tab-noticias" onclick="showTab('noticias',this);setTimeout(triggerNews,50)" data-icon="📰"><span class="tab-lbl">Noticias</span></button>
   </div>
 
   <!-- RESUMEN -->
