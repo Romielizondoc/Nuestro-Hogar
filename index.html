@@ -3656,7 +3656,7 @@ function renderMenu(menu){
   el.innerHTML = `<div class="menu-grid">${menu.map((dia,i)=>{
     const h   = heads[i%heads.length];
     const d   = dia.desayuno||'—';
-    const s   = dia.snack_pascal||dia.colacion||'—';
+    const s   = dia.colacion_jardin||dia.snack_pascal||dia.colacion||'—';
     const a   = dia.almuerzo||'—';
     const c   = dia.cena||'—';
     const papa= (dia.almuerzo_papa||'').trim();
@@ -3664,10 +3664,12 @@ function renderMenu(menu){
     const cal = dia.calorias_aprox;
 
     return `
-    <div class="menu-dia">
+    <div class="menu-dia" id="menu-dia-${i}">
       <div class="menu-dia-head" style="background:${h.col}">
         <span class="menu-dia-emoji">${h.emoji}</span>
         <div class="menu-dia-name">${dia.dia||''}</div>
+        <span onclick="editarDiaMenu(${i})" title="Editar este día"
+          style="font-size:10px;opacity:.7;cursor:pointer;margin-left:auto;padding:2px 5px;border-radius:4px;background:rgba(255,255,255,.15)">✏️</span>
       </div>
       <div class="menu-dia-body">
 
@@ -3677,7 +3679,7 @@ function renderMenu(menu){
         </div>
 
         <div class="menu-slot-snack">
-          <div class="menu-slot-lbl">🎒 Pascal</div>
+          <div class="menu-slot-lbl">🎒 Colación jardín</div>
           <div class="menu-slot-txt">${s}</div>
         </div>
 
@@ -3727,9 +3729,9 @@ async function generarMenuIA(forzar=false){
   const invBajo       = invDisponible.filter(i => i.qty <= i.min && i.qty > 0).map(i => i.nombre);
 
   const invStr = invConStock.length
-    ? 'Ingredientes disponibles: ' + invConStock.join(', ')
-      + (invBajo.length ? '. Poco de: ' + invBajo.join(', ') : '')
-      + '. Úsalos en el menú.'
+    ? 'USA SOLO estos ingredientes disponibles en casa: ' + invConStock.join(', ')
+      + (invBajo.length ? '. (poco de: ' + invBajo.join(', ') + ')' : '')
+      + '. NO uses ingredientes que no estén en esta lista para las proteínas y verduras principales.'
     : '';
 
   const prompt =
@@ -3738,9 +3740,10 @@ ${invStr}
 REGLAS:
 1) CENA = misma proteína del almuerzo, distinta guarnición. Ej: almuerzo pollo con arroz → cena pollo con ensalada.
 2) CENA SIN: lentejas, garbanzos, porotos, brócoli, coliflor, repollo, cebolla cruda, puerro, ajo crudo.
-3) almuerzo_papa: completar SOLO si almuerzo tiene mariscos/pescado/zapallo italiano/berenjena/espinacas/acelgas/camote/choclo. Si no, dejar "".
-TODOS los campos son OBLIGATORIOS. Responde SOLO JSON sin backticks, 7 días:
-[{"dia":"Lunes","desayuno":"avena con leche","snack_pascal":"manzana","almuerzo":"pollo al horno con arroz","almuerzo_papa":"","cena":"pollo salteado con ensalada","calorias_aprox":1800}]`;
+3) almuerzo_papa: papá NO come mariscos, pescado, zapallo italiano, berenjena, espinacas, acelgas, camote ni choclo. Si el almuerzo tiene alguno, pon en almuerzo_papa el MISMO plato con proteína similar (ej: merluza al horno → pollo al horno). Si no aplica, dejar "".
+4) colacion_jardin: colación saludable para jardín. Ej: manzana con mantequilla de maní, castañas de cajú y frutillas, palitos de zanahoria con hummus.
+TODOS los campos OBLIGATORIOS. Responde SOLO JSON sin backticks, 7 días:
+[{"dia":"Lunes","desayuno":"avena con leche","colacion_jardin":"manzana con mantequilla de maní","almuerzo":"pollo al horno con arroz","almuerzo_papa":"","cena":"pollo salteado con ensalada","calorias_aprox":1800}]`;
 
   try{
     const txt=await geminiCall(prompt, 1800);
@@ -3753,6 +3756,65 @@ TODOS los campos son OBLIGATORIOS. Responde SOLO JSON sin backticks, 7 días:
       throw new Error('La IA no devolvió JSON válido — respuesta: ' + clean.substring(0,120));
     }
     if(!Array.isArray(parsed)||!parsed.length) throw new Error('Formato inválido — se esperaba array de 7 días');
+
+    // Post-procesamiento: detectar ingredientes prohibidos y asegurar variante papá
+    const ingPapa = [
+      // Mariscos y pescados
+      'marisco','pescado','reineta','salmón','salmon','atún','atun','congrio','merluza',
+      'camarón','camaron','jaiba','almeja','chorito','machas','ostión','ostras','jibia',
+      'corvina','trucha','tilapia','bacalao','ceviche','sushi','paella',
+      // Verduras prohibidas
+      'zapallo italiano','berenjena','espinaca','acelga','camote','choclo',
+      'maíz','maiz','polenta','humita','pastel de choclo'
+    ];
+    // Sustitutos por ingrediente
+    const sustituir = [
+      {ing:'reineta',      por:'pollo'},
+      {ing:'salmón',       por:'pollo'},
+      {ing:'salmon',       por:'pollo'},
+      {ing:'trucha',       por:'pollo'},
+      {ing:'congrio',      por:'pollo'},
+      {ing:'merluza',      por:'pollo'},
+      {ing:'corvina',      por:'pollo'},
+      {ing:'tilapia',      por:'pollo'},
+      {ing:'bacalao',      por:'pollo'},
+      {ing:'pescado',      por:'pollo'},
+      {ing:'marisco',      por:'pollo'},
+      {ing:'camarón',      por:'pollo'},
+      {ing:'camaron',      por:'pollo'},
+      {ing:'jaiba',        por:'pollo'},
+      {ing:'almeja',       por:'pollo'},
+      {ing:'chorito',      por:'pollo'},
+      {ing:'jibia',        por:'pollo'},
+      {ing:'ceviche',      por:'ensalada de pollo'},
+      {ing:'paella',       por:'arroz con pollo'},
+      {ing:'zapallo italiano', por:'zapallo amarillo'},
+      {ing:'berenjena',    por:'zanahorias'},
+      {ing:'espinaca',     por:'lechuga'},
+      {ing:'acelga',       por:'lechuga'},
+      {ing:'camote',       por:'papas'},
+      {ing:'choclo',       por:'arroz'},
+      {ing:'maíz',         por:'arroz'},
+      {ing:'maiz',         por:'arroz'},
+      {ing:'polenta',      por:'puré de papas'},
+      {ing:'humita',       por:'arroz'},
+      {ing:'pastel de choclo', por:'pastel de papas'},
+    ];
+    parsed.forEach(dia => {
+      const aLow = (dia.almuerzo||'').toLowerCase();
+      const aplica = ingPapa.some(ing => aLow.includes(ing));
+      if(aplica){
+        // Siempre generar/corregir la variante — no confiar en lo que trajo la IA
+        let variante = dia.almuerzo;
+        sustituir.forEach(s => {
+          const re = new RegExp(s.ing, 'gi');
+          variante = variante.replace(re, s.por);
+        });
+        dia.almuerzo_papa = variante;
+      } else {
+        dia.almuerzo_papa = '';
+      }
+    });
 
     _menuCache=parsed;
     localStorage.setItem('hogar-menu', JSON.stringify(parsed));
@@ -3771,7 +3833,48 @@ TODOS los campos son OBLIGATORIOS. Responde SOLO JSON sin backticks, 7 días:
   }
 }
 
-async function buscarReceta(plato){
+function editarDiaMenu(idx){
+  const dia = _menuCache[idx];
+  if(!dia) return;
+  let modal = document.getElementById('edit-menu-ov');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'edit-menu-ov';
+    modal.className = 'ov';
+    modal.onclick = e=>{ if(e.target===modal) modal.classList.remove('open'); };
+    document.body.appendChild(modal);
+  }
+  const s = dia.colacion_jardin||dia.snack_pascal||dia.colacion||'';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:480px">
+      <div class="m-title">✏️ Editar — ${dia.dia}</div>
+      <div class="fg"><label class="flbl">☕ Desayuno</label><input class="fin" id="em-desayuno" value="${(dia.desayuno||'').replace(/"/g,'&quot;')}"></div>
+      <div class="fg"><label class="flbl">🎒 Colación jardín</label><input class="fin" id="em-colacion" value="${s.replace(/"/g,'&quot;')}" placeholder="Ej: manzana con mantequilla de maní"></div>
+      <div class="fg"><label class="flbl">🍽 Almuerzo</label><input class="fin" id="em-almuerzo" value="${(dia.almuerzo||'').replace(/"/g,'&quot;')}"></div>
+      <div class="fg"><label class="flbl">🧔🏽 Variante papá <span style="font-size:10px;color:var(--ink3)">(solo si aplica)</span></label><input class="fin" id="em-papa" value="${(dia.almuerzo_papa||'').replace(/"/g,'&quot;')}" placeholder="Dejar vacío si no aplica"></div>
+      <div class="fg"><label class="flbl">🌙 Cena</label><input class="fin" id="em-cena" value="${(dia.cena||'').replace(/"/g,'&quot;')}"></div>
+      <div class="m-actions">
+        <button class="btn-sec" onclick="document.getElementById('edit-menu-ov').classList.remove('open')">Cancelar</button>
+        <button class="btn-prim" onclick="guardarEditDia(${idx})">Guardar cambios</button>
+      </div>
+    </div>`;
+  modal.classList.add('open');
+  setTimeout(()=>document.getElementById('em-desayuno')?.focus(),80);
+}
+
+function guardarEditDia(idx){
+  if(!_menuCache || !_menuCache[idx]) return;
+  _menuCache[idx].desayuno      = document.getElementById('em-desayuno')?.value||'';
+  _menuCache[idx].colacion_jardin = document.getElementById('em-colacion')?.value||'';
+  _menuCache[idx].snack_pascal  = _menuCache[idx].colacion_jardin;
+  _menuCache[idx].almuerzo      = document.getElementById('em-almuerzo')?.value||'';
+  _menuCache[idx].almuerzo_papa = document.getElementById('em-papa')?.value||'';
+  _menuCache[idx].cena          = document.getElementById('em-cena')?.value||'';
+  localStorage.setItem('hogar-menu', JSON.stringify(_menuCache));
+  document.getElementById('edit-menu-ov').classList.remove('open');
+  renderMenu(_menuCache);
+  toast('Día actualizado ✓','success');
+}
   if(!plato||plato==='—') return;
   // Abrir modal de receta
   let modal = document.getElementById('receta-modal-ov');
