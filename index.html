@@ -655,92 +655,77 @@ header{
 .hbtn-filter.on{background:var(--rust);border-color:var(--rust);color:#fff;}
 
 /* ===== INVENTARIO ===== */
-.inv-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
-.inv-stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 12px;text-align:center;}
-.inv-stat-n{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);line-height:1;}
+.inv-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+.inv-stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;text-align:center;}
+.inv-stat-n{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:var(--ink);line-height:1;}
 .inv-stat-n.warn{color:var(--amber);}
 .inv-stat-n.danger{color:var(--rust);}
-.inv-stat-l{font-size:10px;color:var(--ink3);margin-top:3px;}
+.inv-stat-l{font-size:10px;color:var(--ink3);margin-top:2px;}
 .inv-alert{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
-  background:var(--rust-bg);border:1px solid var(--rust-bg2);border-radius:12px;
-  padding:10px 14px;margin-bottom:12px;
+  background:var(--rust-bg);border:1px solid var(--rust-bg2);border-radius:10px;
+  padding:8px 12px;margin-bottom:10px;
 }
 .inv-alert-body{flex:1;min-width:0;}
-.inv-alert-title{font-size:12px;font-weight:700;color:var(--rust);}
-.inv-alert-sub{font-size:11px;color:var(--rust);opacity:.75;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.inv-search-wrap{position:relative;margin-bottom:10px;}
+.inv-alert-title{font-size:11px;font-weight:700;color:var(--rust);}
+.inv-alert-sub{font-size:10px;color:var(--rust);opacity:.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.inv-search-wrap{position:relative;margin-bottom:8px;}
 .inv-search{
-  width:100%;padding:9px 12px 9px 34px;
-  border:1px solid var(--border);border-radius:12px;
+  width:100%;padding:8px 12px 8px 30px;
+  border:1px solid var(--border);border-radius:10px;
   font-family:'Inter',sans-serif;font-size:13px;
   color:var(--ink);background:var(--bg2);outline:none;transition:.15s;
 }
-.inv-search:focus{border-color:var(--rust);background:var(--card);box-shadow:0 0 0 3px rgba(184,92,44,.1);}
-.inv-search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;}
-.inv-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;}
+.inv-search:focus{border-color:var(--rust);background:var(--card);}
+.inv-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;color:var(--ink3);}
+.inv-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
 .inv-chip{
-  font-size:10px;font-weight:600;padding:4px 10px;border-radius:20px;
+  font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;
   border:1px solid var(--border2);background:transparent;
   color:var(--ink3);cursor:pointer;transition:.12s;white-space:nowrap;
   font-family:'Inter',sans-serif;
 }
 .inv-chip:hover{border-color:var(--rust);color:var(--rust);}
 .inv-chip.on{background:var(--rust);border-color:var(--rust);color:#fff;}
-.inv-section{margin-bottom:18px;}
-.inv-section-hdr{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
-.inv-section-icon{font-size:14px;}
-.inv-section-lbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--ink3);}
-.inv-section-count{font-size:10px;color:var(--ink3);margin-left:auto;}
-.inv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
-.inv-card{
-  background:var(--card);border:1px solid var(--border);border-radius:14px;
-  padding:12px 13px;position:relative;transition:.15s;
+.inv-section{margin-bottom:12px;}
+.inv-section-hdr{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 0;margin-bottom:2px;
+  border-bottom:1px solid var(--border);
 }
-.inv-card.low{border-color:#d4b896;background:var(--amber-bg);}
-.inv-card.out{border-color:var(--rust-bg2);background:var(--rust-bg);}
-.inv-card-name{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:8px;padding-right:44px;line-height:1.3;}
-.inv-card-qty-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.inv-section-icon{font-size:11px;}
+.inv-section-lbl{font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink3);}
+.inv-section-count{font-size:9px;color:var(--ink3);margin-left:auto;}
+.inv-row{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 0;border-bottom:1px solid var(--border);
+}
+.inv-row:last-child{border-bottom:none;}
+.inv-status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.dot-ok{background:var(--sage);}
+.dot-low{background:var(--amber);}
+.dot-out{background:var(--rust);}
+.inv-row-name{flex:1;font-size:12px;font-weight:500;color:var(--ink2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.inv-row-name.low{color:var(--amber);}
+.inv-row-name.out{color:var(--rust);}
 .iqbtn{
-  width:26px;height:26px;border-radius:50%;
+  width:22px;height:22px;border-radius:50%;
   border:1px solid var(--border2);background:var(--bg2);
-  color:var(--ink2);font-size:16px;cursor:pointer;
+  color:var(--ink2);font-size:14px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:.1s;line-height:1;font-family:'Inter';flex-shrink:0;
 }
 .iqbtn:hover{background:var(--rust);border-color:var(--rust);color:#fff;}
-.iqnum{font-size:13px;font-weight:700;color:var(--ink);flex:1;text-align:center;}
+.iqnum{font-size:11px;font-weight:700;color:var(--ink);min-width:44px;text-align:center;}
 .iqnum.low{color:var(--amber);}
 .iqnum.out{color:var(--rust);}
-.inv-progress{height:3px;background:var(--border2);border-radius:3px;overflow:hidden;margin-bottom:5px;}
-.inv-progress-fill{height:100%;border-radius:3px;transition:width .4s ease;}
-.fill-ok{background:var(--sage);}
-.fill-low{background:var(--amber);}
-.fill-out{background:var(--rust);}
-.inv-card-min{font-size:10px;color:var(--ink3);}
-.inv-status-pill{
-  position:absolute;top:10px;right:10px;
-  font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;
+.inv-add-row{
+  display:flex;align-items:center;gap:4px;padding:5px 0;
+  font-size:11px;color:var(--ink3);cursor:pointer;transition:.1s;
+  background:none;border:none;font-family:'Inter',sans-serif;width:100%;
 }
-.pill-ok{background:var(--sage-bg);color:var(--sage);}
-.pill-low{background:var(--amber-bg);color:var(--amber);}
-.pill-out{background:var(--rust-bg);color:var(--rust);}
-.inv-card-del{
-  position:absolute;bottom:9px;right:9px;
-  width:18px;height:18px;border-radius:50%;
-  border:none;background:transparent;cursor:pointer;
-  font-size:13px;color:var(--border2);display:flex;align-items:center;justify-content:center;
-  transition:.1s;
-}
-.inv-card-del:hover{color:var(--rust);}
-.inv-add-card{
-  background:transparent;border:1.5px dashed var(--border2);border-radius:14px;
-  padding:12px 13px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;gap:5px;color:var(--ink3);font-size:11px;font-weight:500;
-  transition:.12s;font-family:'Inter',sans-serif;min-height:90px;
-}
-.inv-add-card:hover{border-color:var(--rust);color:var(--rust);background:var(--rust-bg);}
-.inv-empty{text-align:center;padding:32px 16px;color:var(--ink3);font-size:13px;}
+.inv-add-row:hover{color:var(--rust);}
+.inv-empty{text-align:center;padding:24px 16px;color:var(--ink3);font-size:12px;}
 
 /* ===== MENÚ SEMANAL ===== */
 .menu-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;overflow-x:auto;}
@@ -1011,11 +996,9 @@ header{
   
   /* ── Inventario ── */
   .inv-stats-row{ grid-template-columns:repeat(3,1fr); }
-  .inv-grid{ grid-template-columns:repeat(2,1fr); }
-  .inv-card{ padding:11px 11px; }
-  .inv-card-name{ font-size:12px; }
-  .iqnum{ font-size:12px; }
-  .inv-item{ padding:10px 12px; }
+  .inv-row{ padding:7px 0; }
+  .inv-row-name{ font-size:12px; }
+  .iqnum{ font-size:11px;min-width:38px; }
   
   /* ── Recordatorios ── */
   .rec-item{ padding:10px 0; }
@@ -1215,6 +1198,7 @@ header{
           <span id="menu-fecha-lbl" style="font-size:10px;color:var(--ink3)"></span>
           <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="generarMenuIA(false)">✨ Generar con IA</button>
           <button class="btn-ghost" style="border-color:var(--rust);color:var(--rust);font-size:11px" onclick="generarMenuIA(true)" title="Limpia caché y genera menú nuevo">↺ Regenerar</button>
+          <button class="btn-ghost" id="menu-dl-btn" style="font-size:11px" onclick="descargarMenuImagen()" title="Descargar menú como imagen">↓ imagen</button>
         </div>
       </div>
       <div id="menu-semanal-wrap">
@@ -1691,9 +1675,14 @@ function post(body){
 /* ─────────────── IA proxy (OpenAI via Apps Script) ─────────────── */
 async function geminiCall(prompt, maxTokens=1000){
   const payload = btoa(unescape(encodeURIComponent(JSON.stringify({prompt, max_tokens:maxTokens}))));
-  const data = await jsonp({action:'gemini', payload});
-  if(!data.ok) throw new Error(data.error||'Error del servidor');
-  return (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
+  let data;
+  try{ data = await jsonp({action:'gemini', payload}); }
+  catch(e){ throw new Error('Sin conexión con el servidor (' + (e.message||'timeout') + ')'); }
+  if(!data) throw new Error('El servidor no respondió (data vacía)');
+  if(!data.ok) throw new Error(data.error || 'El servidor respondió con error');
+  const txt = (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
+  if(!txt) throw new Error('La IA devolvió respuesta vacía');
+  return txt;
 }
 
 /* ─────────────── AUTH ─────────────── */
@@ -3451,29 +3440,24 @@ function rInventario(){
     grouped[c].push(i);
   });
 
-  /* ── Render ── */
+  /* ── Render — filas compactas agrupadas por categoría ── */
   el.innerHTML = Object.entries(grouped).map(([cat, citems]) => {
-    const cards = citems.map(i => {
+    const rows = citems.map(i => {
       const isOut = i.qty === 0;
       const isLow = !isOut && i.qty <= i.min;
-      const statusClass = isOut ? 'out' : isLow ? 'low' : '';
-      const pillClass = isOut ? 'pill-out' : isLow ? 'pill-low' : 'pill-ok';
-      const pillLabel = isOut ? 'agotado' : isLow ? 'bajo' : 'ok';
+      const dotClass = isOut ? 'dot-out' : isLow ? 'dot-low' : 'dot-ok';
       const numClass = isOut ? 'out' : isLow ? 'low' : '';
-      const fillClass = isOut ? 'fill-out' : isLow ? 'fill-low' : 'fill-ok';
-      const pct = i.min > 0 ? Math.min(100, Math.round((i.qty / (i.min * 2)) * 100)) : 100;
+      const nameClass = isOut ? 'out' : isLow ? 'low' : '';
       return `
-        <div class="inv-card ${statusClass}">
-          <span class="inv-status-pill ${pillClass}">${pillLabel}</span>
-          <div class="inv-card-name">${i.nombre}</div>
-          <div class="inv-card-qty-row">
+        <div class="inv-row">
+          <span class="inv-status-dot ${dotClass}"></span>
+          <span class="inv-row-name ${nameClass}" title="${i.nombre}">${i.nombre}</span>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
             <button class="iqbtn" onclick="adjInv(${i.id},-1)">−</button>
             <span class="iqnum ${numClass}">${i.qty} ${i.unidad}</span>
             <button class="iqbtn" onclick="adjInv(${i.id},+1)">+</button>
           </div>
-          <div class="inv-progress"><div class="inv-progress-fill ${fillClass}" style="width:${pct}%"></div></div>
-          <div class="inv-card-min">mínimo ${i.min} ${i.unidad}</div>
-          <button class="inv-card-del" onclick="delInv(${i.id})" title="Eliminar">×</button>
+          <span class="x-btn" onclick="delInv(${i.id})" style="font-size:15px;margin-left:2px">×</span>
         </div>`;
     }).join('');
     return `
@@ -3483,10 +3467,8 @@ function rInventario(){
           <span class="inv-section-lbl">${cat.split(' ').slice(1).join(' ')}</span>
           <span class="inv-section-count">${citems.length} ítem${citems.length>1?'s':''}</span>
         </div>
-        <div class="inv-grid">
-          ${cards}
-          <button class="inv-add-card" onclick="openInvModalCat('${cat.replace(/'/g,"\\'")}')">+ añadir</button>
-        </div>
+        ${rows}
+        <button class="inv-add-row" onclick="openInvModalCat('${cat.replace(/'/g,"\\'")}')">＋ añadir a esta categoría</button>
       </div>`;
   }).join('');
 }
@@ -4005,6 +3987,109 @@ function saveRec(){
 }
 
 
+
+/* ─────────────── DESCARGAR MENÚ COMO IMAGEN ─────────────── */
+async function descargarMenuImagen(){
+  if(!_menuCache || !_menuCache.length){
+    toast('Primero genera el menú ✨','');
+    return;
+  }
+  const btn = document.getElementById('menu-dl-btn');
+  btn.textContent = '⏳ generando…';
+  btn.disabled = true;
+
+  /* Cargar html2canvas lazy */
+  await new Promise((res, rej) => {
+    if(window.html2canvas){ res(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+
+  /* Construir un nodo temporal off-screen con el contenido del menú */
+  const dark = document.body.classList.contains('dark');
+  const bg      = dark ? '#1e1812' : '#faf6f0';
+  const bgCard  = dark ? '#221c16' : '#fffdf9';
+  const border  = dark ? '#2e261e' : '#e6ddd2';
+  const ink     = dark ? '#f0e8de' : '#2c1f14';
+  const ink2    = dark ? '#c4ad98' : '#6b5744';
+  const ink3    = dark ? '#7a6658' : '#a89280';
+  const rust    = '#b85c2c';
+  const sage    = '#3d6b52';
+  const plum    = '#5e3a7a';
+
+  const fecha = localStorage.getItem('hogar-menu-fecha') || new Date().toLocaleDateString('es-CL');
+
+  /* Colores por día para el encabezado */
+  const diaColors = ['#b85c2c','#5e3a7a','#3d6b52','#9c6a1a','#b85c2c','#5e3a7a','#3d6b52'];
+
+  const diasHtml = _menuCache.map((dia, i) => {
+    const snack  = dia.snack_pascal || dia.colacion || '—';
+    const cals   = dia.calorias_aprox ? `<div style="font-size:9px;color:${ink3};margin-top:6px;padding-top:5px;border-top:1px solid ${border}">🔥 ${dia.calorias_aprox} kcal</div>` : '';
+    const papa   = dia.almuerzo_papa && dia.almuerzo_papa.trim()
+      ? `<div style="font-size:9px;color:${ink3};margin-top:2px">🧔 ${dia.almuerzo_papa}</div>` : '';
+    const col    = diaColors[i % diaColors.length];
+    return `
+      <div style="background:${bgCard};border:1px solid ${border};border-radius:10px;overflow:hidden;min-width:0">
+        <div style="background:${col};padding:7px 8px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:#fff;letter-spacing:.5px;text-transform:uppercase">${dia.dia}</div>
+        </div>
+        <div style="padding:8px 9px;font-size:10px;color:${ink2};line-height:1.5">
+          <div style="margin-bottom:5px"><span style="font-size:8px;font-weight:700;color:${ink3};text-transform:uppercase;letter-spacing:.5px;display:block">☕ Desayuno</span>${dia.desayuno||'—'}</div>
+          <div style="margin-bottom:5px;background:rgba(94,58,122,.07);border-radius:6px;padding:4px 6px"><span style="font-size:8px;font-weight:700;color:${plum};text-transform:uppercase;letter-spacing:.5px;display:block">🎒 Pascal</span>${snack}</div>
+          <div style="margin-bottom:5px"><span style="font-size:8px;font-weight:700;color:${ink3};text-transform:uppercase;letter-spacing:.5px;display:block">🍽️ Almuerzo</span>${dia.almuerzo||'—'}${papa}</div>
+          <div><span style="font-size:8px;font-weight:700;color:${ink3};text-transform:uppercase;letter-spacing:.5px;display:block">🌙 Cena</span>${dia.cena||'—'}</div>
+          ${cals}
+        </div>
+      </div>`;
+  }).join('');
+
+  const node = document.createElement('div');
+  node.style.cssText = `
+    position:fixed;left:-9999px;top:0;
+    width:900px;background:${bg};
+    padding:28px 28px 32px;font-family:'Inter',system-ui,sans-serif;
+    box-sizing:border-box;
+  `;
+  node.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid ${rust}">
+      <div>
+        <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-style:italic;color:${ink}">Nuestro Hogar ✦</div>
+        <div style="font-size:11px;color:${ink3};margin-top:2px">Menú semanal · Generado el ${fecha}</div>
+      </div>
+      <div style="font-size:28px">🍽️</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px">
+      ${diasHtml}
+    </div>
+    <div style="margin-top:16px;text-align:center;font-size:9px;color:${ink3}">
+      Generado por Nuestro Hogar · ${fecha}
+    </div>`;
+
+  document.body.appendChild(node);
+
+  try {
+    const canvas = await html2canvas(node, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: bg,
+      logging: false,
+    });
+    const link = document.createElement('a');
+    link.download = `menu-semanal-${fecha.replace(/\//g,'-')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    toast('Imagen descargada ✓','success');
+  } catch(e) {
+    console.error('descargarMenuImagen:', e);
+    toast('No se pudo generar la imagen','');
+  } finally {
+    document.body.removeChild(node);
+    btn.textContent = '↓ imagen';
+    btn.disabled = false;
+  }
+}
 
 /* ─────────────── INIT ─────────────── */
 document.getElementById('hDate').textContent=(()=>{
