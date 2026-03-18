@@ -2226,21 +2226,64 @@ function rExtras(){
 function rTramites(){
   const el=document.getElementById('list-tramites');
   if(!D.tramites?.length){el.innerHTML=empty('Sin trámites');return;}
-  el.innerHTML=D.tramites.map(t=>{
-    const st=t.status||'pendiente';
-    const ds=t.due?new Date(normDate(t.due)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
-    return`<div class="tri-row">
-      <span>${t.priority==='urgente'?'🔴':'🟡'}</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--ink2)">${t.name}</div><div style="font-size:11px;color:var(--ink3)">${t.notes||''}${ds?' · '+ds:''}</div></div>
+
+  const sorted=[...D.tramites].sort((a,b)=>{
+    if(a.status==='listo'&&b.status!=='listo') return 1;
+    if(a.status!=='listo'&&b.status==='listo') return -1;
+    const po={urgente:0,alta:1,normal:2};
+    const pa=po[a.priority||'normal']??2, pb=po[b.priority||'normal']??2;
+    if(pa!==pb) return pa-pb;
+    if(a.due&&b.due) return new Date(a.due)-new Date(b.due);
+    return a.due?-1:b.due?1:0;
+  });
+
+  el.innerHTML=sorted.map(t=>{
+    const st  = t.status||'pendiente';
+    const pri = t.priority||'normal';
+    const ds  = t.due?new Date(normDate(t.due)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
+    const isListo = st==='listo';
+    const priCol  = pri==='urgente'?'var(--rust)':pri==='alta'?'var(--amber)':'var(--ink3)';
+    const priDot  = pri==='urgente'?'🔴':pri==='alta'?'🟠':'🟡';
+    return`<div class="tri-row" style="${isListo?'opacity:.5':''}">
+      <span style="font-size:14px;cursor:pointer;user-select:none" title="Click para cambiar prioridad" onclick="cyclePriority(${t.id})">${priDot}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--ink2);${isListo?'text-decoration:line-through':''}">${t.name}</div>
+        <div style="font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px">
+          <select onchange="setPriority(${t.id},this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;background:var(--bg2);color:${priCol};cursor:pointer;font-family:'Inter';font-weight:600">
+            <option value="urgente" ${pri==='urgente'?'selected':''}>🔴 Urgente</option>
+            <option value="alta"    ${pri==='alta'?'selected':''}>🟠 Alta</option>
+            <option value="normal"  ${pri==='normal'?'selected':''}>🟡 Normal</option>
+          </select>
+          ${t.notes?`<span>${t.notes}</span>`:''}
+          ${ds?`<span style="color:var(--rust)">📅 ${ds}</span>`:''}
+        </div>
+      </div>
       <div class="av-sm" style="${wS(t.who)}">${t.who}</div>
       <select onchange="setStatus(${t.id},this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:8px;padding:4px 8px;background:var(--bg2);color:var(--ink);cursor:pointer;font-family:'Inter'">
-        <option value="pendiente" ${st==='pendiente'?'selected':''}>Pendiente</option>
+        <option value="pendiente"   ${st==='pendiente'?'selected':''}>Pendiente</option>
         <option value="en-progreso" ${st==='en-progreso'?'selected':''}>En curso</option>
-        <option value="listo" ${st==='listo'?'selected':''}>Listo</option>
+        <option value="listo"       ${st==='listo'?'selected':''}>Listo ✓</option>
       </select>
       <span class="x-btn" onclick="del('tramites',${t.id})">×</span>
     </div>`;
   }).join('');
+}
+
+function setPriority(id, val){
+  const t=D.tramites.find(i=>String(i.id)===String(id));
+  if(!t) return;
+  t.priority=val;
+  post({action:'update',type:'tramites',id,field:'priority',value:val});
+  rTramites();
+  rResumen();
+  toast('Prioridad actualizada ✓','success');
+}
+
+function cyclePriority(id){
+  const t=D.tramites.find(i=>String(i.id)===String(id));
+  if(!t) return;
+  const ciclo={urgente:'alta',alta:'normal',normal:'urgente'};
+  setPriority(id, ciclo[t.priority||'normal']||'urgente');
 }
 
 function rNotas(){
@@ -2272,19 +2315,24 @@ function rResumen(){
   document.getElementById('p-tareas').style.width=all.length?Math.round(done/all.length*100)+'%':'0%';
   const pend=(D.tramites||[]).filter(t=>t.status!=='listo');
   const urg=pend.filter(t=>t.priority==='urgente');
+  const alta=pend.filter(t=>t.priority==='alta');
   document.getElementById('s-tramites').textContent=pend.length;
-  document.getElementById('s-tramites-sub').textContent='urgentes: '+urg.length;
-  // urgentes card
+  document.getElementById('s-tramites-sub').textContent=
+    (urg.length?'🔴 '+urg.length+' urgente'+(urg.length>1?'s':''):'') +
+    (urg.length&&alta.length?' · ':'') +
+    (alta.length?'🟠 '+alta.length+' alta'+(alta.length>1?'s':''):'') +
+    (!urg.length&&!alta.length?'sin urgentes':'');
+  // urgentes card — incluye urgentes y alta prioridad
   const urgEl=document.getElementById('r-urgentes');
   const urgItems=[
-    ...(D.tramites||[]).filter(t=>t.status!=='listo'&&t.priority==='urgente').map(t=>({text:t.name,due:t.due})),
-    ...(D.tareas||[]).filter(t=>!isDone(t.done)&&t.priority==='urgente').map(t=>({text:t.text,due:''}))
+    ...(D.tramites||[]).filter(t=>t.status!=='listo'&&(t.priority==='urgente'||t.priority==='alta')).map(t=>({text:t.name,due:t.due,dot:t.priority==='urgente'?'var(--rust)':'var(--amber)'})),
+    ...(D.tareas||[]).filter(t=>!isDone(t.done)&&t.priority==='urgente').map(t=>({text:t.text,due:'',dot:'var(--rust)'}))
   ];
   urgEl.innerHTML=urgItems.length?urgItems.map(u=>{
     const dStr=normDate((u.due||'').trim());
     const d=dStr?new Date(dStr+'T12:00'):null;
     const days=(d&&!isNaN(d.getTime()))?Math.ceil((d-new Date())/86400000):null;
-    const dot=days!==null&&days<=3?'var(--rust)':'var(--amber)';
+    const dot=u.dot||(days!==null&&days<=3?'var(--rust)':'var(--amber)');
     return`<div class="urg-item">
       <div class="urg-dot" style="background:${dot}"></div>
       <div style="flex:1;font-size:13px;color:var(--ink2)">${u.text}</div>
@@ -3685,27 +3733,14 @@ async function generarMenuIA(forzar=false){
     : '';
 
   const prompt =
-`Eres el planificador de menú semanal de una familia chilena en Santiago.
-Familia: 2 adultos (papá y mamá) + Pascal (5 años, jardín).
+`Planifica menú semanal familia chilena Santiago: 2 adultos + Pascal (5 años).
 ${invStr}
-
-REGLA 1 — CENA: La cena DEBE usar la MISMA proteína del almuerzo, solo cambia la guarnición o ensalada.
-EJEMPLOS CORRECTOS:
-- Almuerzo: pollo al horno con arroz → Cena: pollo salteado con ensalada verde
-- Almuerzo: carne con papas → Cena: carne con ensalada de tomate
-- Almuerzo: lentejas → Cena: sopa de verduras con pan (las legumbres no se repiten en cena)
-La cena NUNCA debe ser un plato completamente distinto al almuerzo.
-
-REGLA 2 — CENA SIN meteorizantes: PROHIBIDO en cena: lentejas, garbanzos, porotos, brócoli, coliflor, repollo, cebolla cruda, puerro, ajo crudo.
-
-REGLA 3 — PAPÁ: El campo "almuerzo_papa" es la variante del almuerzo SOLO para el papá.
-Completar "almuerzo_papa" ÚNICAMENTE cuando el almuerzo contiene: mariscos, pescado, zapallo italiano, berenjena, espinacas, acelgas, camote o choclo.
-En ese caso, poner el MISMO almuerzo pero reemplazando ese ingrediente. Ejemplo: "reineta al horno con puré" → almuerzo_papa: "pollo al horno con puré".
-Si el almuerzo NO contiene ninguno de esos ingredientes, "almuerzo_papa" debe ser "" (vacío).
-EJEMPLOS: "cazuela de vacuno" → almuerzo_papa: "". "pasta con espinacas" → almuerzo_papa: "pasta con salsa de tomate". "pollo asado" → almuerzo_papa: "".
-
-Responde SOLO con este JSON (7 días, sin texto extra, sin backticks):
-[{"dia":"Lunes","desayuno":"","snack_pascal":"","almuerzo":"","almuerzo_papa":"","cena":"","calorias_aprox":1800}]`;
+REGLAS:
+1) CENA = misma proteína del almuerzo, distinta guarnición. Ej: almuerzo pollo con arroz → cena pollo con ensalada.
+2) CENA SIN: lentejas, garbanzos, porotos, brócoli, coliflor, repollo, cebolla cruda, puerro, ajo crudo.
+3) almuerzo_papa: completar SOLO si almuerzo tiene mariscos/pescado/zapallo italiano/berenjena/espinacas/acelgas/camote/choclo. Si no, dejar "".
+TODOS los campos son OBLIGATORIOS. Responde SOLO JSON sin backticks, 7 días:
+[{"dia":"Lunes","desayuno":"avena con leche","snack_pascal":"manzana","almuerzo":"pollo al horno con arroz","almuerzo_papa":"","cena":"pollo salteado con ensalada","calorias_aprox":1800}]`;
 
   try{
     const txt=await geminiCall(prompt, 1800);
