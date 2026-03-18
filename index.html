@@ -1673,26 +1673,37 @@ function post(body){
 }
 
 /* ─────────────── IA proxy (OpenAI via Apps Script) ─────────────── */
-/* ─────────────── IA proxy (OpenAI via Apps Script) ─────────────── */
 async function geminiCall(prompt, maxTokens=1000){
-  /* Usa POST directo — doPost del Apps Script maneja action:'gemini' */
-  let data;
-  try{
-    const res = await fetch(GAS, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({action:'gemini', prompt, max_tokens: maxTokens})
-    });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    data = await res.json();
-  } catch(e){
-    throw new Error('Sin conexión con el servidor: ' + e.message);
-  }
-  if(!data) throw new Error('El servidor no respondió');
-  if(!data.ok) throw new Error(data.error || 'Error en el servidor');
-  const txt = (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
-  if(!txt) throw new Error('La IA devolvió respuesta vacía');
-  return txt;
+  const payload = btoa(unescape(encodeURIComponent(
+    JSON.stringify({prompt, max_tokens: maxTokens})
+  )));
+  return new Promise((resolve, reject) => {
+    const cbName = '_gasIA' + (++cbN);
+    const timer  = setTimeout(() => {
+      delete window[cbName];
+      reject(new Error('Timeout — el servidor tardó demasiado'));
+    }, 55000);
+    window[cbName] = (data) => {
+      clearTimeout(timer);
+      delete window[cbName];
+      if(!data || !data.ok){
+        reject(new Error(data?.error || 'Error del servidor'));
+        return;
+      }
+      const txt = (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
+      if(!txt){ reject(new Error('La IA devolvió respuesta vacía')); return; }
+      resolve(txt);
+    };
+    const s = document.createElement('script');
+    s.src = GAS + '?action=gemini&payload=' + encodeURIComponent(payload) + '&callback=' + cbName;
+    s.onerror = () => {
+      clearTimeout(timer);
+      delete window[cbName];
+      reject(new Error('Error de red al contactar el servidor'));
+    };
+    document.head.appendChild(s);
+    setTimeout(() => { try{ s.remove(); }catch(e){} }, 60000);
+  });
 }
 
 /* ─────────────── AUTH ─────────────── */
@@ -3595,47 +3606,24 @@ async function generarMenuIA(forzar=false){
   // Mostrar estado de carga
   if(wrap) wrap.innerHTML='<div class="skel" style="height:180px;border-radius:12px;margin-bottom:8px"></div><div class="skel" style="height:180px;border-radius:12px"></div>';
 
-  const hoy=new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const hoy = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-  // Construir lista de inventario disponible
+  // Inventario — solo nombres, sin unidades, para achicar el prompt
   const invDisponible = INV.filter(i => i.qty > 0);
-  const invConStock   = invDisponible.filter(i => i.qty > i.min).map(i => `${i.nombre} (${i.qty} ${i.unidad})`);
-  const invBajo       = invDisponible.filter(i => i.qty <= i.min && i.qty > 0).map(i => `${i.nombre} (poco, ${i.qty} ${i.unidad})`);
+  const invConStock   = invDisponible.filter(i => i.qty > i.min).map(i => i.nombre);
+  const invBajo       = invDisponible.filter(i => i.qty <= i.min && i.qty > 0).map(i => i.nombre);
 
-  const seccionInventario = invConStock.length || invBajo.length ? `
-INVENTARIO DISPONIBLE EN CASA:
-${invConStock.length ? `Con stock suficiente: ${invConStock.join(', ')}` : ''}
-${invBajo.length ? `Stock bajo (usar con moderación): ${invBajo.join(', ')}` : ''}
+  const invStr = invConStock.length
+    ? 'Ingredientes disponibles: ' + invConStock.join(', ')
+      + (invBajo.length ? '. Poco de: ' + invBajo.join(', ') : '')
+      + '. Úsalos en el menú.'
+    : '';
 
-INSTRUCCIÓN CLAVE: Prioriza usar los ingredientes con stock suficiente del inventario al planificar las comidas. Puedes complementar con ingredientes básicos que normalmente se tienen en casa (aceite, sal, etc.) o que sea fácil comprar, pero el menú debe girar en torno a lo disponible.` : `
-(No hay inventario registrado — genera un menú chileno variado y práctico)`;
-
-  const prompt=`Eres el asistente de planificación semanal de una familia chilena en Providencia/Ñuñoa, Santiago.
-Familia: 2 adultos + Pascal (niño 4-5 años, va al jardín). IMPORTANTE: el papá NO come productos del mar (sin pescado, mariscos, ni salsas de mariscos).
-Hoy es ${hoy}.
-${seccionInventario}
-
-Genera el menú semanal completo (Lunes a Domingo) con comida casera, variada, práctica y nutritiva.
-- Desayunos sencillos (pan, huevo, fruta, cereal, etc.)
-- Snack de colación para Pascal (algo sano para llevar al jardín)
-- Almuerzos chilenos o fáciles de cocinar
-- Si el almuerzo contiene mariscos o pescado, agrega una variante para papá en "almuerzo_papa"
-- Cenas livianas
-
-Responde SOLAMENTE con JSON puro (sin backticks, sin texto extra):
-[
-  {
-    "dia":"Lunes",
-    "desayuno":"...",
-    "snack_pascal":"...",
-    "almuerzo":"...",
-    "almuerzo_papa":"(solo si el almuerzo lleva mariscos/pescado, si no deja vacío)",
-    "cena":"...",
-    "calorias_aprox": 1800
-  }
-]
-El campo "calorias_aprox" es el total estimado del día para un adulto (número entero, sin texto).
-Responde con el array de 7 días, nada más.`;
+  const prompt =
+`Familia chilena Santiago: 2 adultos + Pascal (5 años, jardín). Papá NO come mariscos ni pescado. ${invStr}
+Genera menú Lunes-Domingo. JSON puro sin backticks:
+[{"dia":"Lunes","desayuno":"","snack_pascal":"","almuerzo":"","almuerzo_papa":"","cena":"","calorias_aprox":1800}]
+7 días, nada más.`;
 
   try{
     const txt=await geminiCall(prompt, 1800);
