@@ -3875,6 +3875,8 @@ function guardarEditDia(idx){
   renderMenu(_menuCache);
   toast('Día actualizado ✓','success');
 }
+
+async function buscarReceta(plato){
   if(!plato||plato==='—') return;
   // Abrir modal de receta
   let modal = document.getElementById('receta-modal-ov');
