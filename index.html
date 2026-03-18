@@ -728,54 +728,74 @@ header{
 .inv-empty{text-align:center;padding:24px 16px;color:var(--ink3);font-size:12px;}
 
 /* ===== MENÚ SEMANAL ===== */
-/* ── Clases del menú renderizado por JS ── */
 .menu-grid{
-  display:flex;gap:10px;
-  overflow-x:auto;padding-bottom:8px;
-  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:10px;
 }
-.menu-grid::-webkit-scrollbar{height:4px;}
-.menu-grid::-webkit-scrollbar-track{background:transparent;}
-.menu-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 .menu-dia{
-  flex:0 0 200px;
-  background:var(--bg2);border-radius:14px;
+  background:var(--card);
   border:1px solid var(--border);
+  border-radius:16px;
   overflow:hidden;
 }
-.menu-dia-title{
-  font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-  color:#fff;text-align:center;padding:8px 10px;
-  background:var(--rust);
+.menu-dia-head{
+  padding:10px 8px 8px;
+  text-align:center;
 }
-.menu-dia-body{padding:10px 12px;}
-.menu-bloque{margin-bottom:9px;}
-.menu-bloque:last-child{margin-bottom:0;}
-.menu-bloque-lbl{
-  font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
-  color:var(--ink3);margin-bottom:3px;display:flex;align-items:center;gap:4px;
+.menu-dia-emoji{
+  font-size:18px;display:block;margin-bottom:3px;line-height:1;
 }
-.menu-bloque-txt{
-  font-size:12px;color:var(--ink2);line-height:1.45;
+.menu-dia-name{
+  font-size:10px;font-weight:800;letter-spacing:.8px;
+  text-transform:uppercase;color:#fff;
 }
-.menu-bloque-txt.clickable{
-  cursor:pointer;border-bottom:1px dashed var(--border2);
-  display:inline;transition:.12s;
+.menu-dia-body{ padding:10px 10px 8px; }
+.menu-slot{ margin-bottom:8px; }
+.menu-slot:last-child{ margin-bottom:0; }
+.menu-slot-lbl{
+  font-size:9px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--ink3);
+  margin-bottom:3px;
 }
-.menu-bloque-txt.clickable:hover{color:var(--rust);border-color:var(--rust);}
-.menu-snack{
-  background:var(--plum-bg);border-radius:8px;padding:6px 8px;
+.menu-slot-txt{
+  font-size:11.5px;color:var(--ink2);line-height:1.45;
+  overflow-wrap:break-word;
 }
-.menu-snack .menu-bloque-lbl{color:var(--plum);}
-.menu-snack .menu-bloque-txt{color:var(--plum);font-size:11px;}
-.menu-papa{
-  margin-top:4px;padding:4px 7px;
+.menu-slot-link{
+  font-size:11.5px;color:var(--ink2);line-height:1.45;
+  overflow-wrap:break-word;cursor:pointer;
+  border-bottom:1px dashed var(--border2);
+  transition:color .12s,border-color .12s;
+  display:inline;
+}
+.menu-slot-link:hover{ color:var(--rust);border-color:var(--rust); }
+.menu-slot-snack{
+  background:var(--plum-bg);border-radius:9px;
+  padding:6px 8px;margin-bottom:8px;
+}
+.menu-slot-snack .menu-slot-lbl{ color:var(--plum); }
+.menu-slot-snack .menu-slot-txt{ color:var(--plum);font-weight:500;font-size:11px; }
+.menu-slot-papa{
+  margin-top:4px;padding:3px 7px;
   background:var(--sage-bg);border-radius:6px;
-  font-size:10px;color:var(--sage);
+  font-size:10px;color:var(--sage);line-height:1.35;
 }
-.menu-cals{
-  margin-top:8px;padding-top:7px;border-top:1px solid var(--border);
-  font-size:10px;color:var(--ink3);text-align:right;
+.menu-slot-divider{ height:1px;background:var(--border);margin:6px 0; }
+.menu-slot-cals{
+  font-size:9px;color:var(--ink3);
+  text-align:right;
+}
+
+@media(max-width:900px){
+  .menu-grid{
+    display:flex;gap:10px;
+    overflow-x:auto;padding-bottom:8px;
+    scrollbar-width:none;
+  }
+  .menu-grid::-webkit-scrollbar{ display:none; }
+  .menu-dia{ flex:0 0 162px; }
+  .menu-slot-txt,.menu-slot-link{ font-size:11px; }
 }
 
 /* ===== COMPARADOR ===== */
@@ -943,13 +963,7 @@ header{
   .fi-meta{ font-size:11px; }
   .fi-amt{ font-size:13px; }
 
-  /* ── Menú semanal ── */
-  .menu-grid{ gap:8px; padding-bottom:6px; }
-  .menu-dia{ flex:0 0 160px; }
-  .menu-dia-title{ font-size:10px;padding:7px 8px; }
-  .menu-bloque-txt{ font-size:11px; }
-  .menu-label{ min-width:100px; }
-  .menu-val{ font-size:13px; }
+  /* ── Menú semanal — se adapta via CSS propio ── */
 
   /* ── Comparador ── */
   .comp-precios{ grid-template-columns:1fr 1fr!important; }
@@ -3573,46 +3587,64 @@ function renderMenu(menu){
   const lbl=document.getElementById('menu-fecha-lbl');
   if(lbl&&saved) lbl.textContent='Generado el '+saved;
 
-  const diaColors=['#b85c2c','#5e3a7a','#3d6b52','#9c6a1a','#7a3a6a','#2c6b7a','#6b4a2c'];
+  const heads=[
+    {col:'#b85c2c',emoji:'🌅'},
+    {col:'#5e3a7a',emoji:'🌤'},
+    {col:'#2d6a4f',emoji:'🌈'},
+    {col:'#9c6a1a',emoji:'🌻'},
+    {col:'#1d5f73',emoji:'⭐'},
+    {col:'#7a3060',emoji:'🌊'},
+    {col:'#5a3e28',emoji:'🌟'},
+  ];
 
-  el.innerHTML=`<div class="menu-grid">${menu.map((dia,i)=>{
-    const snack    = dia.snack_pascal||dia.colacion||'—';
-    const almuerzo = dia.almuerzo||'—';
-    const cena     = dia.cena||'—';
-    const desayuno = dia.desayuno||'—';
-    const tienePapa= dia.almuerzo_papa&&dia.almuerzo_papa.trim()&&dia.almuerzo_papa!=='(solo si el almuerzo lleva mariscos/pescado, si no deja vacío)';
-    const cals     = dia.calorias_aprox;
-    const color    = diaColors[i%diaColors.length];
+  const esc = s => (s||'').replace(/'/g,"\\'");
 
-    const esc = s => (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  /* Link a receta — abre modal en desktop, Google en mobile */
+  const recetaLink = (plato) => {
+    if(!plato||plato==='—') return `<span class="menu-slot-txt">${plato}</span>`;
+    return `<span class="menu-slot-link" onclick="buscarReceta('${esc(plato)}')" title="Ver receta">${plato}</span>`;
+  };
+
+  el.innerHTML = `<div class="menu-grid">${menu.map((dia,i)=>{
+    const h   = heads[i%heads.length];
+    const d   = dia.desayuno||'—';
+    const s   = dia.snack_pascal||dia.colacion||'—';
+    const a   = dia.almuerzo||'—';
+    const c   = dia.cena||'—';
+    const papa= (dia.almuerzo_papa||'').trim();
+    const validPapa = papa && !papa.startsWith('(') && papa.length > 2;
+    const cal = dia.calorias_aprox;
 
     return `
     <div class="menu-dia">
-      <div class="menu-dia-title" style="background:${color}">${dia.dia||'—'}</div>
+      <div class="menu-dia-head" style="background:${h.col}">
+        <span class="menu-dia-emoji">${h.emoji}</span>
+        <div class="menu-dia-name">${dia.dia||''}</div>
+      </div>
       <div class="menu-dia-body">
 
-        <div class="menu-bloque">
-          <div class="menu-bloque-lbl">☕ Desayuno</div>
-          <div class="menu-bloque-txt">${desayuno}</div>
+        <div class="menu-slot">
+          <div class="menu-slot-lbl">☕ Desayuno</div>
+          <div class="menu-slot-txt">${d}</div>
         </div>
 
-        <div class="menu-bloque menu-snack">
-          <div class="menu-bloque-lbl">🎒 Pascal</div>
-          <div class="menu-bloque-txt">${snack}</div>
+        <div class="menu-slot-snack">
+          <div class="menu-slot-lbl">🎒 Pascal</div>
+          <div class="menu-slot-txt">${s}</div>
         </div>
 
-        <div class="menu-bloque">
-          <div class="menu-bloque-lbl">🍽️ Almuerzo</div>
-          <div class="menu-bloque-txt clickable" onclick="buscarReceta('${esc(almuerzo)}')">${almuerzo} <span style="font-size:9px;opacity:.5">🔍</span></div>
-          ${tienePapa?`<div class="menu-papa">🧔 ${dia.almuerzo_papa}</div>`:''}
+        <div class="menu-slot">
+          <div class="menu-slot-lbl">🍽 Almuerzo</div>
+          ${recetaLink(a)}
+          ${validPapa?`<div class="menu-slot-papa">🧔 Papá: ${papa}</div>`:''}
         </div>
 
-        <div class="menu-bloque">
-          <div class="menu-bloque-lbl">🌙 Cena</div>
-          <div class="menu-bloque-txt clickable" onclick="buscarReceta('${esc(cena)}')">${cena} <span style="font-size:9px;opacity:.5">🔍</span></div>
+        <div class="menu-slot">
+          <div class="menu-slot-lbl">🌙 Cena</div>
+          ${recetaLink(c)}
         </div>
 
-        ${cals?`<div class="menu-cals">🔥 ${cals} kcal</div>`:''}
+        ${cal?`<div class="menu-slot-divider"></div><div class="menu-slot-cals">🔥 ${cal} kcal</div>`:''}
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -4038,7 +4070,6 @@ async function descargarMenuImagen(){
   btn.textContent = '⏳ generando…';
   btn.disabled = true;
 
-  /* Cargar html2canvas lazy */
   await new Promise((res, rej) => {
     if(window.html2canvas){ res(); return; }
     const s = document.createElement('script');
@@ -4047,82 +4078,95 @@ async function descargarMenuImagen(){
     document.head.appendChild(s);
   });
 
-  /* Construir un nodo temporal off-screen con el contenido del menú */
-  const dark = document.body.classList.contains('dark');
-  const bg      = dark ? '#1e1812' : '#faf6f0';
-  const bgCard  = dark ? '#221c16' : '#fffdf9';
-  const border  = dark ? '#2e261e' : '#e6ddd2';
-  const ink     = dark ? '#f0e8de' : '#2c1f14';
-  const ink2    = dark ? '#c4ad98' : '#6b5744';
-  const ink3    = dark ? '#7a6658' : '#a89280';
-  const rust    = '#b85c2c';
-  const sage    = '#3d6b52';
-  const plum    = '#5e3a7a';
+  const fecha  = localStorage.getItem('hogar-menu-fecha') || new Date().toLocaleDateString('es-CL');
+  const bg     = '#faf6f0';
+  const bgCard = '#fffdf9';
+  const border = '#e6ddd2';
+  const ink    = '#2c1f14';
+  const ink2   = '#6b5744';
+  const ink3   = '#a89280';
+  const plumBg = '#f4eef9';
+  const plum   = '#5e3a7a';
+  const sageBg = '#eaf3ec';
+  const sage   = '#2d6a4f';
 
-  const fecha = localStorage.getItem('hogar-menu-fecha') || new Date().toLocaleDateString('es-CL');
+  const heads = [
+    {col:'#b85c2c',emoji:'🌅'},
+    {col:'#5e3a7a',emoji:'🌤'},
+    {col:'#2d6a4f',emoji:'🌈'},
+    {col:'#9c6a1a',emoji:'🌻'},
+    {col:'#1d5f73',emoji:'⭐'},
+    {col:'#7a3060',emoji:'🌊'},
+    {col:'#5a3e28',emoji:'🌟'},
+  ];
 
-  /* Colores por día para el encabezado */
-  const diaColors = ['#b85c2c','#5e3a7a','#3d6b52','#9c6a1a','#b85c2c','#5e3a7a','#3d6b52'];
+  const lbl = (txt, color) =>
+    `<div style="font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:${color||ink3};margin-bottom:3px">${txt}</div>`;
 
   const diasHtml = _menuCache.map((dia, i) => {
-    const snack  = dia.snack_pascal || dia.colacion || '—';
-    const cals   = dia.calorias_aprox ? `<div style="font-size:9px;color:${ink3};margin-top:6px;padding-top:5px;border-top:1px solid ${border}">🔥 ${dia.calorias_aprox} kcal</div>` : '';
-    const papa   = dia.almuerzo_papa && dia.almuerzo_papa.trim()
-      ? `<div style="font-size:9px;color:${ink3};margin-top:2px">🧔 ${dia.almuerzo_papa}</div>` : '';
-    const col    = diaColors[i % diaColors.length];
+    const h     = heads[i % heads.length];
+    const snack = dia.snack_pascal || dia.colacion || '—';
+    const papa  = (dia.almuerzo_papa||'').trim();
+    const validPapa = papa && !papa.startsWith('(') && papa.length > 2;
+    const cal   = dia.calorias_aprox;
+
     return `
-      <div style="background:${bgCard};border:1px solid ${border};border-radius:10px;overflow:hidden;min-width:0">
-        <div style="background:${col};padding:7px 8px;text-align:center">
-          <div style="font-size:11px;font-weight:700;color:#fff;letter-spacing:.5px;text-transform:uppercase">${dia.dia}</div>
+    <div style="background:${bgCard};border:1px solid ${border};border-radius:14px;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="background:${h.col};padding:9px 6px 7px;text-align:center;">
+        <div style="font-size:18px;line-height:1;margin-bottom:3px">${h.emoji}</div>
+        <div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#fff">${dia.dia}</div>
+      </div>
+      <div style="padding:10px 10px 8px;flex:1;font-family:'Inter',system-ui,sans-serif;">
+        <div style="margin-bottom:8px">
+          ${lbl('☕ Desayuno')}
+          <div style="font-size:11px;color:${ink2};line-height:1.4">${dia.desayuno||'—'}</div>
         </div>
-        <div style="padding:8px 9px;font-size:10px;color:${ink2};line-height:1.5">
-          <div style="margin-bottom:5px"><span style="font-size:8px;font-weight:700;color:${ink3};text-transform:uppercase;letter-spacing:.5px;display:block">☕ Desayuno</span>${dia.desayuno||'—'}</div>
-          <div style="margin-bottom:5px;background:rgba(94,58,122,.07);border-radius:6px;padding:4px 6px"><span style="font-size:8px;font-weight:700;color:${plum};text-transform:uppercase;letter-spacing:.5px;display:block">🎒 Pascal</span>${snack}</div>
-          <div style="margin-bottom:5px"><span style="font-size:8px;font-weight:700;color:${ink3};text-transform:uppercase;letter-spacing:.5px;display:block">🍽️ Almuerzo</span>${dia.almuerzo||'—'}${papa}</div>
-          <div><span style="font-size:8px;font-weight:700;color:${ink3};text-transform:uppercase;letter-spacing:.5px;display:block">🌙 Cena</span>${dia.cena||'—'}</div>
-          ${cals}
+        <div style="background:${plumBg};border-radius:8px;padding:6px 8px;margin-bottom:8px">
+          ${lbl('🎒 Pascal', plum)}
+          <div style="font-size:11px;color:${plum};font-weight:500;line-height:1.4">${snack}</div>
         </div>
-      </div>`;
+        <div style="margin-bottom:8px">
+          ${lbl('🍽 Almuerzo')}
+          <div style="font-size:11px;color:${ink2};line-height:1.4">${dia.almuerzo||'—'}</div>
+          ${validPapa?`<div style="margin-top:4px;padding:3px 7px;background:${sageBg};border-radius:6px;font-size:9px;color:${sage};line-height:1.35">🧔 Papá: ${papa}</div>`:''}
+        </div>
+        <div style="margin-bottom:${cal?'6px':'0'}">
+          ${lbl('🌙 Cena')}
+          <div style="font-size:11px;color:${ink2};line-height:1.4">${dia.cena||'—'}</div>
+        </div>
+        ${cal?`<div style="border-top:1px solid ${border};padding-top:5px;font-size:9px;color:${ink3};text-align:right">🔥 ${cal} kcal</div>`:''}
+      </div>
+    </div>`;
   }).join('');
 
   const node = document.createElement('div');
-  node.style.cssText = `
-    position:fixed;left:-9999px;top:0;
-    width:900px;background:${bg};
-    padding:28px 28px 32px;font-family:'Inter',system-ui,sans-serif;
-    box-sizing:border-box;
-  `;
+  node.style.cssText = `position:fixed;left:-9999px;top:0;width:980px;background:${bg};padding:32px;font-family:'Inter',system-ui,sans-serif;box-sizing:border-box;`;
   node.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid ${rust}">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;padding-bottom:16px;border-bottom:2px solid #b85c2c">
       <div>
-        <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-style:italic;color:${ink}">Nuestro Hogar ✦</div>
-        <div style="font-size:11px;color:${ink3};margin-top:2px">Menú semanal · Generado el ${fecha}</div>
+        <div style="font-family:'Playfair Display',Georgia,serif;font-size:24px;font-style:italic;color:${ink};letter-spacing:-.3px">Nuestro Hogar ✦</div>
+        <div style="font-size:11px;color:${ink3};margin-top:3px;letter-spacing:.2px">Menú semanal · ${fecha}</div>
       </div>
-      <div style="font-size:28px">🍽️</div>
+      <div style="font-size:32px">🍽️</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px">
       ${diasHtml}
     </div>
-    <div style="margin-top:16px;text-align:center;font-size:9px;color:${ink3}">
-      Generado por Nuestro Hogar · ${fecha}
+    <div style="margin-top:18px;text-align:center;font-size:9px;color:${ink3};letter-spacing:.3px">
+      ✦ Nuestro Hogar · ${fecha}
     </div>`;
 
   document.body.appendChild(node);
-
   try {
     const canvas = await html2canvas(node, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: bg,
-      logging: false,
+      scale:2, useCORS:true, backgroundColor:bg, logging:false,
     });
     const link = document.createElement('a');
-    link.download = `menu-semanal-${fecha.replace(/\//g,'-')}.png`;
+    link.download = `menu-${fecha.replace(/\//g,'-')}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
     toast('Imagen descargada ✓','success');
-  } catch(e) {
-    console.error('descargarMenuImagen:', e);
+  } catch(e){
     toast('No se pudo generar la imagen','');
   } finally {
     document.body.removeChild(node);
