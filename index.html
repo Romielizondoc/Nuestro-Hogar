@@ -926,6 +926,28 @@ header{
   }
 }
 
+
+/* ===== AUSENCIAS ===== */
+.aus-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;
+}
+.aus-row:last-child{border-bottom:none;}
+.aus-fecha{color:var(--ink3);font-size:11px;}
+.aus-tipo{
+  display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:10px;font-weight:700;
+}
+.aus-tipo.injustificada{background:#fde8e4;color:var(--rust);}
+.aus-tipo.justificada{background:#e8f4e8;color:var(--sage);}
+.aus-tipo.media{background:#fef3c7;color:#92400e;}
+.aus-resumen{
+  display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;
+}
+.aus-badge{
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;
+  background:var(--bg2);border:1px solid var(--border);
+}
 </style>
 </head>
 <body>
@@ -1443,6 +1465,34 @@ header{
   </div>
 </div>
 
+<!-- MODAL AUSENCIAS -->
+<div class="ov" id="aus-modal-ov" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:480px">
+    <div class="m-title">📅 Registrar ausencia</div>
+    <input type="hidden" id="aus-person-id">
+    <div class="fg">
+      <label class="flbl">Fecha</label>
+      <input class="fin" type="date" id="aus-fecha">
+    </div>
+    <div class="fg">
+      <label class="flbl">Tipo</label>
+      <select class="fin" id="aus-tipo">
+        <option value="injustificada">Injustificada</option>
+        <option value="justificada">Justificada (con aviso)</option>
+        <option value="media">Media jornada</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="flbl">Nota (opcional)</label>
+      <input class="fin" id="aus-nota" placeholder="ej: estuvo enferma">
+    </div>
+    <div class="m-actions">
+      <button class="btn-sec" onclick="document.getElementById('aus-modal-ov').classList.remove('open')">Cancelar</button>
+      <button class="btn-prim" onclick="saveAusencia()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- FAB -->
 <button id="fab" onclick="toggleFab()">+</button>
 <div id="fab-menu">
@@ -1472,6 +1522,11 @@ const GAS = 'https://script.google.com/macros/s/AKfycbwn0kzfnv6c0lSekbOhlT9B56aI
 
 /* ─────────────── STATE ─────────────── */
 let D = {tareas:[],compras:[],finanzas:[],tramites:[],notas:[],metas:[],eventos:[],personal:[],extras:[],recurrentes:[],pascal:[]};
+
+// ── AUSENCIAS (localStorage) ──────────────────────────────
+let AUSENCIAS = {};
+try{ AUSENCIAS=JSON.parse(localStorage.getItem('hogar-ausencias')||'{}'); }catch(e){ AUSENCIAS={}; }
+function saveAusencias(){ localStorage.setItem('hogar-ausencias',JSON.stringify(AUSENCIAS)); }
 let curModal=null, cbN=0, calY, calM, CH={}, fabOpen=false;
 let nCache={cl:null,int:null}, newsLoading=false;
 
@@ -1915,9 +1970,90 @@ function rPersonal(){
         <div class="s-stat"><div class="s-lbl">A pagar</div><div class="s-val" style="color:${totPend>0?'var(--rust)':'var(--sage)'}">${clp(Number(p.sueldo)+totPend)}</div></div>
       </div>
       ${pend.map(e=>`<div class="extra-row"><span>${e.tipo}: ${e.descripcion||''}</span><div style="display:flex;align-items:center;gap:6px"><span class="e-amt">${clp(e.monto)}</span><button class="p-badge p-no" onclick="toggleExtra(${e.id})">Pendiente</button></div></div>`).join('')}
+      ${renderAusenciasCard(p.id)}
     </div>`;
   }).join('')+'</div>';
 }
+
+
+/* ══ AUSENCIAS ══════════════════════════════════════════════════════════ */
+
+function openAusenciaModal(personId){
+  document.getElementById('aus-person-id').value = personId;
+  document.getElementById('aus-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('aus-tipo').value = 'injustificada';
+  document.getElementById('aus-nota').value = '';
+  document.getElementById('aus-modal-ov').classList.add('open');
+}
+
+function saveAusencia(){
+  const personId = String(document.getElementById('aus-person-id').value);
+  const fecha    = document.getElementById('aus-fecha').value;
+  const tipo     = document.getElementById('aus-tipo').value;
+  const nota     = document.getElementById('aus-nota').value.trim();
+  if(!fecha) return;
+
+  if(!AUSENCIAS[personId]) AUSENCIAS[personId] = [];
+  // Avoid duplicates on same date
+  AUSENCIAS[personId] = AUSENCIAS[personId].filter(a => a.fecha !== fecha);
+  AUSENCIAS[personId].unshift({ id: Date.now(), fecha, tipo, nota });
+  // Keep last 60 records per person
+  if(AUSENCIAS[personId].length > 60) AUSENCIAS[personId] = AUSENCIAS[personId].slice(0,60);
+  saveAusencias();
+  document.getElementById('aus-modal-ov').classList.remove('open');
+  rPersonal();
+  toast('Ausencia registrada ✓', 'success');
+}
+
+function delAusencia(personId, ausId){
+  if(!AUSENCIAS[personId]) return;
+  AUSENCIAS[personId] = AUSENCIAS[personId].filter(a => String(a.id) !== String(ausId));
+  saveAusencias();
+  rPersonal();
+}
+
+function renderAusenciasCard(personId){
+  const pid = String(personId);
+  const list = (AUSENCIAS[pid] || []);
+  
+  // Count this month
+  const mesStr = new Date().toISOString().slice(0,7);
+  const esteMes = list.filter(a => a.fecha.startsWith(mesStr));
+  const injust  = esteMes.filter(a => a.tipo === 'injustificada').length;
+  const just    = esteMes.filter(a => a.tipo === 'justificada').length;
+  const media   = esteMes.filter(a => a.tipo === 'media').length;
+
+  const tipoLabel = { injustificada:'Injustificada', justificada:'Justificada', media:'Media jornada' };
+  const tipoClass = { injustificada:'injustificada', justificada:'justificada', media:'media' };
+
+  const recentRows = list.slice(0,5).map(a => `
+    <div class="aus-row">
+      <div>
+        <span class="aus-tipo ${tipoClass[a.tipo]||'injustificada'}">${tipoLabel[a.tipo]||a.tipo}</span>
+        ${a.nota ? `<span style="font-size:11px;color:var(--ink3);margin-left:6px">${a.nota}</span>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="aus-fecha">${a.fecha}</span>
+        <span class="x-btn" onclick="delAusencia('${pid}',${a.id})">×</span>
+      </div>
+    </div>`).join('');
+
+  return `
+  <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--ink2)">📅 Ausencias este mes</div>
+      <button class="btn-ghost" style="font-size:11px;padding:3px 10px" onclick="openAusenciaModal('${pid}')">+ registrar</button>
+    </div>
+    <div class="aus-resumen">
+      <span class="aus-badge" style="color:var(--rust)">❌ ${injust} injustificada${injust!==1?'s':''}</span>
+      <span class="aus-badge" style="color:var(--sage)">✓ ${just} justificada${just!==1?'s':''}</span>
+      ${media>0?`<span class="aus-badge" style="color:#92400e">½ ${media} media jornada${media!==1?'s':''}</span>`:''}
+    </div>
+    ${recentRows ? `<div style="margin-top:4px">${recentRows}</div>` : '<div style="font-size:12px;color:var(--ink3);padding:8px 0">Sin ausencias registradas este mes 👍</div>'}
+    ${list.length>5?`<div style="font-size:11px;color:var(--ink3);margin-top:6px;text-align:right">${list.length} ausencias en total</div>`:''}
+  </div>`;
+}
+
 
 function rExtras(){
   const el=document.getElementById('list-extras');
