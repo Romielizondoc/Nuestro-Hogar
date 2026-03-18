@@ -3685,15 +3685,27 @@ async function generarMenuIA(forzar=false){
     : '';
 
   const prompt =
-`Familia chilena Santiago: 2 adultos + Pascal (5 años, jardín). ${invStr}
-REGLAS IMPORTANTES:
-1. "almuerzo_papa": completar SOLO si el almuerzo principal contiene mariscos, pescado, zapallo italiano, berenjena, espinacas, acelgas, camote, choclo o preparaciones con choclo. Si no aplica, dejar vacío "".
-2. La cena debe ser similar al almuerzo en proteína y acompañante (ej: si almuerzo es pollo con arroz, cena puede ser pollo con ensalada). Solo varía la ensalada o guarnición.
-3. CENA SIN alimentos meteorizantes: sin legumbres (lentejas, garbanzos, porotos), sin brócoli, sin coliflor, sin repollo, sin cebolla cruda, sin puerro, sin ajo crudo.
-4. Papá NO come mariscos, pescado, zapallo italiano, berenjena, espinacas, acelgas, camote ni choclo.
-Genera menú Lunes-Domingo. JSON puro sin backticks:
-[{"dia":"Lunes","desayuno":"","snack_pascal":"","almuerzo":"","almuerzo_papa":"","cena":"","calorias_aprox":1800}]
-7 días, nada más.`;
+`Eres el planificador de menú semanal de una familia chilena en Santiago.
+Familia: 2 adultos (papá y mamá) + Pascal (5 años, jardín).
+${invStr}
+
+REGLA 1 — CENA: La cena DEBE usar la MISMA proteína del almuerzo, solo cambia la guarnición o ensalada.
+EJEMPLOS CORRECTOS:
+- Almuerzo: pollo al horno con arroz → Cena: pollo salteado con ensalada verde
+- Almuerzo: carne con papas → Cena: carne con ensalada de tomate
+- Almuerzo: lentejas → Cena: sopa de verduras con pan (las legumbres no se repiten en cena)
+La cena NUNCA debe ser un plato completamente distinto al almuerzo.
+
+REGLA 2 — CENA SIN meteorizantes: PROHIBIDO en cena: lentejas, garbanzos, porotos, brócoli, coliflor, repollo, cebolla cruda, puerro, ajo crudo.
+
+REGLA 3 — PAPÁ: El campo "almuerzo_papa" es la variante del almuerzo SOLO para el papá.
+Completar "almuerzo_papa" ÚNICAMENTE cuando el almuerzo contiene: mariscos, pescado, zapallo italiano, berenjena, espinacas, acelgas, camote o choclo.
+En ese caso, poner el MISMO almuerzo pero reemplazando ese ingrediente. Ejemplo: "reineta al horno con puré" → almuerzo_papa: "pollo al horno con puré".
+Si el almuerzo NO contiene ninguno de esos ingredientes, "almuerzo_papa" debe ser "" (vacío).
+EJEMPLOS: "cazuela de vacuno" → almuerzo_papa: "". "pasta con espinacas" → almuerzo_papa: "pasta con salsa de tomate". "pollo asado" → almuerzo_papa: "".
+
+Responde SOLO con este JSON (7 días, sin texto extra, sin backticks):
+[{"dia":"Lunes","desayuno":"","snack_pascal":"","almuerzo":"","almuerzo_papa":"","cena":"","calorias_aprox":1800}]`;
 
   try{
     const txt=await geminiCall(prompt, 1800);
