@@ -740,8 +740,12 @@ header{
   overflow:hidden;
 }
 .menu-dia-head{
-  padding:10px 8px 8px;
-  text-align:center;
+  padding:8px 8px 6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  position:relative;
 }
 .menu-dia-emoji{
   font-size:18px;display:block;margin-bottom:3px;line-height:1;
@@ -1794,9 +1798,42 @@ async function syncAll(){
   btn.classList.remove('syncing');
   toast('Actualizado ✓','success');
   loadNews();
+  // Sincronizar Google Calendar
+  sincGoogleCalendar();
   setTimeout(()=>{
     // ofertas se verifican al entrar a pestaña Hogar
   }, 1500);
+}
+
+/* ─────────────── GOOGLE CALENDAR SYNC ─────────────── */
+async function sincGoogleCalendar(){
+  try{
+    const r = await jsonp({action:'gcal'});
+    if(!r?.ok || !r.data?.length) return;
+    // Fusionar con eventos de Sheets — no duplicar por ID
+    const existentes = new Set((D.eventos||[]).map(e=>String(e.id)));
+    let agregados = 0;
+    r.data.forEach(ev=>{
+      if(!existentes.has(String(ev.id))){
+        D.eventos = D.eventos || [];
+        D.eventos.push(ev);
+        agregados++;
+      } else {
+        // Actualizar el evento existente con datos de GCal
+        const idx = D.eventos.findIndex(e=>String(e.id)===String(ev.id));
+        if(idx>=0) D.eventos[idx] = {...D.eventos[idx], ...ev};
+      }
+    });
+    // Eliminar eventos gcal que ya no existen en Google Calendar
+    const gcalIds = new Set(r.data.map(e=>String(e.id)));
+    D.eventos = (D.eventos||[]).filter(e=>!e.gcal || gcalIds.has(String(e.id)));
+    rCalendario();
+    rEventos();
+    rResumen();
+    if(agregados>0) toast(`📅 ${agregados} evento${agregados>1?'s':''} de Google Calendar sincronizados`,'success');
+  }catch(e){
+    console.warn('sincGoogleCalendar error:', e.message);
+  }
 }
 
 /* ─────────────── RECURRENTES ─────────────── */
@@ -3669,7 +3706,7 @@ function renderMenu(menu){
         <span class="menu-dia-emoji">${h.emoji}</span>
         <div class="menu-dia-name">${dia.dia||''}</div>
         <span onclick="editarDiaMenu(${i})" title="Editar este día"
-          style="font-size:10px;opacity:.7;cursor:pointer;margin-left:auto;padding:2px 5px;border-radius:4px;background:rgba(255,255,255,.15)">✏️</span>
+          style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;cursor:pointer;padding:2px 5px;border-radius:4px;background:rgba(255,255,255,.2);line-height:1">✏️</span>
       </div>
       <div class="menu-dia-body">
 
@@ -3723,7 +3760,6 @@ async function generarMenuIA(forzar=false){
 
   const hoy = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-  // Inventario — solo nombres, sin unidades, para achicar el prompt
   const invDisponible = INV.filter(i => i.qty > 0);
   const invConStock   = invDisponible.filter(i => i.qty > i.min).map(i => i.nombre);
   const invBajo       = invDisponible.filter(i => i.qty <= i.min && i.qty > 0).map(i => i.nombre);
@@ -3757,54 +3793,41 @@ TODOS los campos OBLIGATORIOS. Responde SOLO JSON sin backticks, 7 días:
     }
     if(!Array.isArray(parsed)||!parsed.length) throw new Error('Formato inválido — se esperaba array de 7 días');
 
-    // Post-procesamiento: detectar ingredientes prohibidos y asegurar variante papá
+    // Post-procesamiento: variante papá usando proteína del inventario
+    const carneCats = ['🥩 Carnes y pescados','🥩 Carnes','Carnes y pescados','Carnes'];
+    const protInv = INV.filter(i=>i.qty>0&&carneCats.some(c=>(i.cat||'').includes('Carne')))
+                       .map(i=>i.nombre.toLowerCase())
+                       .filter(n=>!['marisco','pescado','reineta','salmón','trucha','congrio',
+                         'merluza','corvina','tilapia','bacalao','jibia','chorito','jaiba',
+                         'almeja','camarón'].some(p=>n.includes(p)));
+    const protBase = protInv.length ? protInv[0] : 'pollo';
+
     const ingPapa = [
-      // Mariscos y pescados
       'marisco','pescado','reineta','salmón','salmon','atún','atun','congrio','merluza',
       'camarón','camaron','jaiba','almeja','chorito','machas','ostión','ostras','jibia',
       'corvina','trucha','tilapia','bacalao','ceviche','sushi','paella',
-      // Verduras prohibidas
       'zapallo italiano','berenjena','espinaca','acelga','camote','choclo',
       'maíz','maiz','polenta','humita','pastel de choclo'
     ];
-    // Sustitutos por ingrediente
     const sustituir = [
-      {ing:'reineta',      por:'pollo'},
-      {ing:'salmón',       por:'pollo'},
-      {ing:'salmon',       por:'pollo'},
-      {ing:'trucha',       por:'pollo'},
-      {ing:'congrio',      por:'pollo'},
-      {ing:'merluza',      por:'pollo'},
-      {ing:'corvina',      por:'pollo'},
-      {ing:'tilapia',      por:'pollo'},
-      {ing:'bacalao',      por:'pollo'},
-      {ing:'pescado',      por:'pollo'},
-      {ing:'marisco',      por:'pollo'},
-      {ing:'camarón',      por:'pollo'},
-      {ing:'camaron',      por:'pollo'},
-      {ing:'jaiba',        por:'pollo'},
-      {ing:'almeja',       por:'pollo'},
-      {ing:'chorito',      por:'pollo'},
-      {ing:'jibia',        por:'pollo'},
-      {ing:'ceviche',      por:'ensalada de pollo'},
-      {ing:'paella',       por:'arroz con pollo'},
-      {ing:'zapallo italiano', por:'zapallo amarillo'},
-      {ing:'berenjena',    por:'zanahorias'},
-      {ing:'espinaca',     por:'lechuga'},
-      {ing:'acelga',       por:'lechuga'},
-      {ing:'camote',       por:'papas'},
-      {ing:'choclo',       por:'arroz'},
-      {ing:'maíz',         por:'arroz'},
-      {ing:'maiz',         por:'arroz'},
-      {ing:'polenta',      por:'puré de papas'},
-      {ing:'humita',       por:'arroz'},
-      {ing:'pastel de choclo', por:'pastel de papas'},
+      {ing:'reineta',por:protBase},{ing:'salmón',por:protBase},{ing:'salmon',por:protBase},
+      {ing:'trucha',por:protBase},{ing:'congrio',por:protBase},{ing:'merluza',por:protBase},
+      {ing:'corvina',por:protBase},{ing:'tilapia',por:protBase},{ing:'bacalao',por:protBase},
+      {ing:'pescado',por:protBase},{ing:'marisco',por:protBase},{ing:'camarón',por:protBase},
+      {ing:'camaron',por:protBase},{ing:'jaiba',por:protBase},{ing:'almeja',por:protBase},
+      {ing:'chorito',por:protBase},{ing:'jibia',por:protBase},
+      {ing:'ceviche',por:'ensalada de '+protBase},{ing:'paella',por:'arroz con '+protBase},
+      {ing:'zapallo italiano',por:'zapallo amarillo'},{ing:'berenjena',por:'zanahorias'},
+      {ing:'espinaca',por:'lechuga'},{ing:'acelga',por:'lechuga'},
+      {ing:'camote',por:'papas'},{ing:'choclo',por:'arroz'},
+      {ing:'maíz',por:'arroz'},{ing:'maiz',por:'arroz'},
+      {ing:'polenta',por:'puré de papas'},{ing:'humita',por:'arroz'},
+      {ing:'pastel de choclo',por:'pastel de papas'},
     ];
     parsed.forEach(dia => {
       const aLow = (dia.almuerzo||'').toLowerCase();
       const aplica = ingPapa.some(ing => aLow.includes(ing));
       if(aplica){
-        // Siempre generar/corregir la variante — no confiar en lo que trajo la IA
         let variante = dia.almuerzo;
         sustituir.forEach(s => {
           const re = new RegExp(s.ing, 'gi');
