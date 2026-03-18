@@ -699,14 +699,7 @@ header{
 .comp-tienda-precio{font-size:13px;font-weight:700;color:var(--ink);}
 .comp-tienda.mejor .comp-tienda-precio{color:var(--sage);}
 
-/* ===== OFERTA POPUP ===== */
-.oferta-popup{
-  position:fixed;top:76px;right:24px;z-index:4000;
-  background:var(--card);border:1px solid var(--border);border-radius:18px;
-  padding:18px 20px;max-width:300px;width:92vw;
-  box-shadow:var(--sh3);animation:slideup .25s ease;
-}
-.oferta-popup-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+/* OFERTA POPUP — eliminado */
 
 /* ===== MINI HORMIGA RESUMEN ===== */
 .mini-hormiga{
@@ -1101,7 +1094,8 @@ header{
         <div class="ct">🍽️ Menú semanal</div>
         <div style="display:flex;gap:6px;align-items:center">
           <span id="menu-fecha-lbl" style="font-size:10px;color:var(--ink3)"></span>
-          <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="generarMenuIA()">✨ Generar con IA</button>
+          <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="generarMenuIA(false)">✨ Generar con IA</button>
+          <button class="btn-ghost" style="border-color:var(--rust);color:var(--rust);font-size:11px" onclick="generarMenuIA(true)" title="Limpia caché y genera menú nuevo">↺ Regenerar</button>
         </div>
       </div>
       <div id="menu-semanal-wrap">
@@ -3192,14 +3186,7 @@ window.showTab = function(name, el){
       const low=INV.filter(i=>i.qty<=i.min);
       if(low.length) toast(`⚠ ${low.length} ítem${low.length>1?'s':''} con stock bajo — pulsa 🛒 sync para agregar a compras`,'');
     }, 600);
-    // Ofertas (once per day, only from Hogar)
-    setTimeout(()=>{
-      const items=(D.compras||[]).filter(c=>!isDone(c.done));
-      if(items.length){
-        toast('🏷️ Revisando ofertas para tu lista...','');
-        setTimeout(checkOfertasCompras, 800);
-      }
-    }, 1200);
+
   }
   if(name==='tramites'){
     rRecordatorios();
@@ -3370,6 +3357,7 @@ function renderMenu(menu){
     const snack=dia.snack_pascal||dia.colacion||'—';
     const almuerzo=dia.almuerzo||'—';
     const cena=dia.cena||'—';
+    const cals=dia.calorias_aprox;
     return `
     <div class="menu-dia">
       <div class="menu-dia-title">${dia.dia}</div>
@@ -3386,8 +3374,78 @@ function renderMenu(menu){
         <span class="menu-label">🌙 Cena</span>
         <span class="menu-val"><span class="menu-receta" onclick="buscarReceta('${cena.replace(/'/g,"\'")}')">${cena} <span style="font-size:10px;opacity:.6">🔍</span></span></span>
       </div>
+      ${cals?`<div class="menu-row" style="margin-top:4px;border-top:1px solid var(--border);padding-top:5px"><span class="menu-label" style="font-size:10px">🔥 Cal. aprox.</span><span class="menu-val" style="font-size:11px;color:var(--ink3)">${cals} kcal</span></div>`:''}
     </div>`;
   }).join('')}</div>`;
+}
+
+async function generarMenuIA(forzar=false){
+  const wrap=document.getElementById('menu-semanal-wrap');
+  const lbl=document.getElementById('menu-fecha-lbl');
+
+  // Si hay caché y no se está forzando, mostrar el guardado
+  if(!forzar && _menuCache){
+    renderMenu(_menuCache);
+    return;
+  }
+
+  // Limpiar caché si se fuerza regeneración
+  if(forzar){
+    _menuCache=null;
+    localStorage.removeItem('hogar-menu');
+    localStorage.removeItem('hogar-menu-fecha');
+    if(lbl) lbl.textContent='';
+  }
+
+  // Mostrar estado de carga
+  if(wrap) wrap.innerHTML='<div class="skel" style="height:180px;border-radius:12px;margin-bottom:8px"></div><div class="skel" style="height:180px;border-radius:12px"></div>';
+
+  const hoy=new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const prompt=`Eres el asistente de planificación semanal de una familia chilena en Providencia/Ñuñoa, Santiago.
+Familia: 2 adultos + Pascal (niño 4-5 años, va al jardín). IMPORTANTE: el papá NO come productos del mar (sin pescado, mariscos, ni salsas de mariscos).
+Hoy es ${hoy}.
+
+Genera el menú semanal completo (Lunes a Domingo) con comida casera, variada, práctica y nutritiva.
+- Desayunos sencillos (pan, huevo, fruta, cereal, etc.)
+- Snack de colación para Pascal (algo sano para llevar al jardín)
+- Almuerzos chilenos o fáciles de cocinar
+- Si el almuerzo contiene mariscos o pescado, agrega una variante para papá en "almuerzo_papa"
+- Cenas livianas
+
+Responde SOLAMENTE con JSON puro (sin backticks, sin texto extra):
+[
+  {
+    "dia":"Lunes",
+    "desayuno":"...",
+    "snack_pascal":"...",
+    "almuerzo":"...",
+    "almuerzo_papa":"(solo si el almuerzo lleva mariscos/pescado, si no deja vacío)",
+    "cena":"...",
+    "calorias_aprox": 1800
+  }
+]
+El campo "calorias_aprox" es el total estimado del día para un adulto (número entero, sin texto).
+Responde con el array de 7 días, nada más.`;
+
+  try{
+    const txt=await geminiCall(prompt, 1800);
+    if(!txt) throw new Error('Respuesta vacía de la IA');
+    const clean=txt.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    if(!Array.isArray(parsed)||!parsed.length) throw new Error('Formato inválido');
+
+    _menuCache=parsed;
+    localStorage.setItem('hogar-menu', JSON.stringify(parsed));
+    const fechaStr=new Date().toLocaleDateString('es-CL');
+    localStorage.setItem('hogar-menu-fecha', fechaStr);
+    renderMenu(parsed);
+    toast('Menú generado ✓','success');
+  }catch(e){
+    console.error('generarMenuIA error:',e);
+    if(wrap) wrap.innerHTML=`<div style="text-align:center;padding:24px;color:var(--rust);font-size:13px">⚠ No se pudo generar el menú: ${e.message}<br><button class="btn-ghost" style="margin-top:12px" onclick="generarMenuIA(true)">Reintentar</button></div>`;
+    toast('Error al generar menú','');
+  }
 }
 
 async function buscarReceta(plato){
@@ -3513,112 +3571,7 @@ function delComp(id){
   rComparadorList();
 }
 
-/* ── ALERTAS DE OFERTA ──────────────────────────────────────────────────── */
-let ALERTAS_VISTAS=[];
-try{ALERTAS_VISTAS=JSON.parse(localStorage.getItem('hogar-alertas-vistas')||'[]');}catch(e){}
-
-function checkOfertasCompras(){
-  // Only run once per day
-  const hoy=new Date().toDateString();
-  const lastCheck=localStorage.getItem('hogar-oferta-check');
-  if(lastCheck===hoy) return;
-
-  const items=(D.compras||[]).filter(c=>!isDone(c.done));
-  if(!items.length) return;
-
-  // Mark as checked today
-  localStorage.setItem('hogar-oferta-check', hoy);
-
-  buscarOfertasOnline(items);
-}
-
-async function buscarOfertasOnline(items){
-  const nombres=items.slice(0,12).map(c=>c.text).join(', ');
-  const hoy=new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  
-  const prompt=`Hoy es ${hoy} en Chile. El usuario tiene esta lista de compras pendiente: ${nombres}
-
-Tu tarea: Para CADA artículo, busca si hay una oferta o precio conveniente HOY en los supermercados chilenos (Jumbo, Líder, Unimarc, Walmart, SMU). 
-
-Considera:
-- Ofertas semanales típicas de supermercados chilenos
-- Días de descuento (martes/miércoles suelen tener ofertas)
-- Precios convenientes del momento
-- Si no sabes si hay oferta específica hoy, indica el supermercado donde suele ser más barato ese artículo
-
-Responde SOLAMENTE con JSON puro sin backticks ni texto adicional:
-{"fecha":"${hoy}","ofertas":[
-  {"articulo":"nombre del artículo","tienda":"Jumbo","precio":0,"descuento":"ej: 30% off o 2x1","url":"https://www.jumbo.cl/search?q=ARTICULO","confianza":"alta/media/baja","nota":"por qué conviene"}
-]}
-
-Solo incluye artículos donde realmente haya algo conveniente. Si ninguno tiene oferta relevante, devuelve {"fecha":"${hoy}","ofertas":[]}`;
-
-  try{
-    const txt=await geminiCall(prompt,1200);
-    if(!txt) return;
-    const clean=txt.replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(clean);
-    if(parsed.ofertas?.length){
-      // Filter out ones already seen
-      const nuevas=parsed.ofertas.filter(o=>{
-        const key='oferta_'+o.articulo+hoy;
-        return !ALERTAS_VISTAS.includes(key);
-      });
-      if(nuevas.length) showOfertasPopup(nuevas, true);
-    }
-  }catch(e){
-    console.log('Oferta check:', e.message);
-  }
-}
-
-
-function showOfertasPopup(alertas, esOnline=false){
-  const popup=document.createElement('div');
-  popup.className='oferta-popup';
-  const hoy=new Date().toDateString();
-  // Build keys for "ya vista"
-  const keys=alertas.map(a=>esOnline?('oferta_'+a.articulo+new Date().toLocaleDateString('es-CL')):String(a.id));
-  popup.innerHTML=`
-    <div class="oferta-popup-hdr">
-      <span style="font-size:22px">🏷️</span>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:700;color:var(--ink)">¡Ofertas en tu lista hoy!</div>
-        <div style="font-size:11px;color:var(--ink3)">${esOnline?'Encontradas online ahora':'Precios por debajo de tu referencia'}</div>
-      </div>
-      <span class="x-btn" onclick="this.closest('.oferta-popup').remove()">×</span>
-    </div>
-    <div style="max-height:280px;overflow-y:auto">
-    ${alertas.map(a=>`
-      <div style="padding:9px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--ink2)">${a.articulo}</div>
-            ${a.precio>0?`<div style="font-size:13px;font-weight:700;color:var(--sage);margin-top:2px">${clp(a.precio)} <span style="color:var(--ink3);font-size:10px;font-weight:400">en ${a.tienda}</span></div>`:''}
-            ${a.descuento?`<div style="font-size:11px;color:var(--rust);font-weight:600">${a.descuento}</div>`:''}
-            ${a.nota?`<div style="font-size:10px;color:var(--ink3);margin-top:2px;font-style:italic">${a.nota}</div>`:''}
-          </div>
-          ${a.url?`<a href="${a.url}" target="_blank" style="flex-shrink:0;font-size:11px;color:var(--rust);font-weight:600;text-decoration:none;border:1px solid var(--rust);border-radius:20px;padding:3px 10px;white-space:nowrap">ver →</a>`:''}
-        </div>
-      </div>`).join('')}
-    </div>
-    <button onclick="cerrarOferta(${JSON.stringify(keys)},this)"
-      style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:none;background:var(--sage);color:#fff;font-size:12px;font-weight:700;cursor:pointer">
-      ✓ Entendido, no mostrar de nuevo hoy
-    </button>`;
-  document.body.appendChild(popup);
-}
-
-function cerrarOferta(keys, btn){
-  const popup=btn.closest('.oferta-popup');
-  if(popup) popup.remove();
-  keys.forEach(k=>{if(!ALERTAS_VISTAS.includes(String(k)))ALERTAS_VISTAS.push(String(k));});
-  localStorage.setItem('hogar-alertas-vistas',JSON.stringify(ALERTAS_VISTAS));
-}
-
-/* rTermometro: definida en sección TERMÓMETRO HORMIGA */
-
-/* ── Llamar checkOfertas al cargar ──────────────────────────────────────── */
-/* Will be called after syncAll */
+/* ── Ofertas automáticas eliminadas por solicitud del usuario ─────────── */
 
 
 
