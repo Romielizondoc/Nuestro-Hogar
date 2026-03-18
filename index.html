@@ -3636,7 +3636,7 @@ function renderMenu(menu){
         <div class="menu-slot">
           <div class="menu-slot-lbl">🍽 Almuerzo</div>
           ${recetaLink(a)}
-          ${validPapa?`<div class="menu-slot-papa">🧔 Papá: ${papa}</div>`:''}
+          ${validPapa?`<div class="menu-slot-papa">🧔🏽 Papá: ${papa}</div>`:''}
         </div>
 
         <div class="menu-slot">
@@ -3685,7 +3685,12 @@ async function generarMenuIA(forzar=false){
     : '';
 
   const prompt =
-`Familia chilena Santiago: 2 adultos + Pascal (5 años, jardín). Papá NO come mariscos ni pescado. ${invStr}
+`Familia chilena Santiago: 2 adultos + Pascal (5 años, jardín). ${invStr}
+REGLAS IMPORTANTES:
+1. "almuerzo_papa": completar SOLO si el almuerzo principal contiene mariscos, pescado, zapallo italiano, berenjena, espinacas, acelgas, camote, choclo o preparaciones con choclo. Si no aplica, dejar vacío "".
+2. La cena debe ser similar al almuerzo en proteína y acompañante (ej: si almuerzo es pollo con arroz, cena puede ser pollo con ensalada). Solo varía la ensalada o guarnición.
+3. CENA SIN alimentos meteorizantes: sin legumbres (lentejas, garbanzos, porotos), sin brócoli, sin coliflor, sin repollo, sin cebolla cruda, sin puerro, sin ajo crudo.
+4. Papá NO come mariscos, pescado, zapallo italiano, berenjena, espinacas, acelgas, camote ni choclo.
 Genera menú Lunes-Domingo. JSON puro sin backticks:
 [{"dia":"Lunes","desayuno":"","snack_pascal":"","almuerzo":"","almuerzo_papa":"","cena":"","calorias_aprox":1800}]
 7 días, nada más.`;
@@ -4128,7 +4133,7 @@ async function descargarMenuImagen(){
         <div style="margin-bottom:8px">
           ${lbl('🍽 Almuerzo')}
           <div style="font-size:11px;color:${ink2};line-height:1.4">${dia.almuerzo||'—'}</div>
-          ${validPapa?`<div style="margin-top:4px;padding:3px 7px;background:${sageBg};border-radius:6px;font-size:9px;color:${sage};line-height:1.35">🧔 Papá: ${papa}</div>`:''}
+          ${validPapa?`<div style="margin-top:4px;padding:3px 7px;background:${sageBg};border-radius:6px;font-size:9px;color:${sage};line-height:1.35">🧔🏽 Papá: ${papa}</div>`:''}
         </div>
         <div style="margin-bottom:${cal?'6px':'0'}">
           ${lbl('🌙 Cena')}
