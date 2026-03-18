@@ -1615,7 +1615,7 @@ header{
 
 <script>
 /* ─────────────── CONFIG ─────────────── */
-const GAS = 'https://script.google.com/macros/s/AKfycbwn0kzfnv6c0lSekbOhlT9B56aIS2nPD_6Jlagh4BmU1Rg05J4GvgJX7nr44FGc2DhZ/exec';
+const GAS = 'https://script.google.com/macros/s/AKfycby64a3RBnNPpyAhO04LdupMnk6Buw9_G7mSUGBf2FHgF5_T01b-7XYw2ccN8Duo3snp/exec';
 
 /* ─────────────── STATE ─────────────── */
 let D = {tareas:[],compras:[],finanzas:[],tramites:[],notas:[],metas:[],eventos:[],personal:[],extras:[],recurrentes:[],pascal:[]};
@@ -1673,8 +1673,9 @@ function post(body){
 }
 
 /* ─────────────── IA proxy (OpenAI via Apps Script) ─────────────── */
+/* ─────────────── IA proxy (OpenAI via Apps Script) ─────────────── */
 async function geminiCall(prompt, maxTokens=1000){
-  /* Intentar primero con POST (sin límite de URL) */
+  /* Usa POST directo — doPost del Apps Script maneja action:'gemini' */
   let data;
   try{
     const res = await fetch(GAS, {
@@ -1684,18 +1685,11 @@ async function geminiCall(prompt, maxTokens=1000){
     });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     data = await res.json();
-  } catch(postErr){
-    /* Fallback: JSONP (GET) si POST falla — solo para prompts cortos */
-    console.warn('geminiCall POST falló, intentando JSONP:', postErr.message);
-    try{
-      const payload = btoa(unescape(encodeURIComponent(JSON.stringify({prompt, max_tokens:maxTokens}))));
-      data = await jsonp({action:'gemini', payload});
-    } catch(jsonpErr){
-      throw new Error('Sin conexión con el servidor (' + jsonpErr + ')');
-    }
+  } catch(e){
+    throw new Error('Sin conexión con el servidor: ' + e.message);
   }
   if(!data) throw new Error('El servidor no respondió');
-  if(!data.ok) throw new Error(data.error || 'Error del servidor — revisa el Apps Script');
+  if(!data.ok) throw new Error(data.error || 'Error en el servidor');
   const txt = (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
   if(!txt) throw new Error('La IA devolvió respuesta vacía');
   return txt;
