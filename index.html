@@ -728,40 +728,54 @@ header{
 .inv-empty{text-align:center;padding:24px 16px;color:var(--ink3);font-size:12px;}
 
 /* ===== MENÚ SEMANAL ===== */
-.menu-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;overflow-x:auto;}
-.menu-dia{
-  background:var(--bg2);border-radius:12px;padding:12px 10px;
-  border:1px solid var(--border);min-width:120px;
-}
-.menu-dia-hdr{
-  font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
-  color:var(--rust);margin-bottom:10px;text-align:center;
-}
-.menu-meal{margin-bottom:9px;}
-.menu-meal-lbl{font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink3);margin-bottom:2px;}
-.menu-meal-txt{font-size:11px;color:var(--ink2);line-height:1.4;}
-.menu-colacion{background:var(--plum-bg);border-radius:8px;padding:6px 8px;margin-top:6px;}
-.menu-colacion .menu-meal-lbl{color:var(--plum);}
-.menu-colacion .menu-meal-txt{color:var(--plum);font-weight:500;}
-
 /* ── Clases del menú renderizado por JS ── */
+.menu-grid{
+  display:flex;gap:10px;
+  overflow-x:auto;padding-bottom:8px;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+.menu-grid::-webkit-scrollbar{height:4px;}
+.menu-grid::-webkit-scrollbar-track{background:transparent;}
+.menu-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+.menu-dia{
+  flex:0 0 200px;
+  background:var(--bg2);border-radius:14px;
+  border:1px solid var(--border);
+  overflow:hidden;
+}
 .menu-dia-title{
-  font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
-  color:var(--rust);text-align:center;margin-bottom:10px;padding-bottom:7px;
-  border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:#fff;text-align:center;padding:8px 10px;
+  background:var(--rust);
 }
-.menu-row{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  gap:6px;padding:5px 0;border-bottom:1px solid var(--border);
-  font-size:12px;
+.menu-dia-body{padding:10px 12px;}
+.menu-bloque{margin-bottom:9px;}
+.menu-bloque:last-child{margin-bottom:0;}
+.menu-bloque-lbl{
+  font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--ink3);margin-bottom:3px;display:flex;align-items:center;gap:4px;
 }
-.menu-row:last-child{border-bottom:none;}
-.menu-label{
-  font-size:10px;font-weight:600;color:var(--ink3);
-  white-space:nowrap;flex-shrink:0;padding-top:1px;min-width:96px;
+.menu-bloque-txt{
+  font-size:12px;color:var(--ink2);line-height:1.45;
 }
-.menu-val{
-  font-size:12px;color:var(--ink2);line-height:1.4;text-align:right;flex:1;
+.menu-bloque-txt.clickable{
+  cursor:pointer;border-bottom:1px dashed var(--border2);
+  display:inline;transition:.12s;
+}
+.menu-bloque-txt.clickable:hover{color:var(--rust);border-color:var(--rust);}
+.menu-snack{
+  background:var(--plum-bg);border-radius:8px;padding:6px 8px;
+}
+.menu-snack .menu-bloque-lbl{color:var(--plum);}
+.menu-snack .menu-bloque-txt{color:var(--plum);font-size:11px;}
+.menu-papa{
+  margin-top:4px;padding:4px 7px;
+  background:var(--sage-bg);border-radius:6px;
+  font-size:10px;color:var(--sage);
+}
+.menu-cals{
+  margin-top:8px;padding-top:7px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--ink3);text-align:right;
 }
 
 /* ===== COMPARADOR ===== */
@@ -789,8 +803,7 @@ header{
 .mini-hormiga-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:4px;overflow:hidden;}
 .mini-hormiga-bar{height:100%;border-radius:4px;transition:.5s;}
 
-@media(max-width:900px){.menu-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:600px){.menu-grid{grid-template-columns:1fr 1fr}.comp-precios{grid-template-columns:1fr 1fr}}
+/* scroll del menú se adapta solo — no necesita media queries adicionales */
 
 
 /* ===== RECORDATORIOS ===== */
@@ -931,9 +944,10 @@ header{
   .fi-amt{ font-size:13px; }
 
   /* ── Menú semanal ── */
-  .menu-grid{ grid-template-columns:1fr!important; }
-  .menu-dia{ padding:14px; }
-  .menu-dia-title{ font-size:15px; }
+  .menu-grid{ gap:8px; padding-bottom:6px; }
+  .menu-dia{ flex:0 0 160px; }
+  .menu-dia-title{ font-size:10px;padding:7px 8px; }
+  .menu-bloque-txt{ font-size:11px; }
   .menu-label{ min-width:100px; }
   .menu-val{ font-size:13px; }
 
@@ -3558,29 +3572,48 @@ function renderMenu(menu){
   const saved=localStorage.getItem('hogar-menu-fecha');
   const lbl=document.getElementById('menu-fecha-lbl');
   if(lbl&&saved) lbl.textContent='Generado el '+saved;
+
+  const diaColors=['#b85c2c','#5e3a7a','#3d6b52','#9c6a1a','#7a3a6a','#2c6b7a','#6b4a2c'];
+
   el.innerHTML=`<div class="menu-grid">${menu.map((dia,i)=>{
-    const tienePapa=dia.almuerzo_papa&&dia.almuerzo_papa.trim();
-    const snack=dia.snack_pascal||dia.colacion||'—';
-    const almuerzo=dia.almuerzo||'—';
-    const cena=dia.cena||'—';
-    const cals=dia.calorias_aprox;
+    const snack    = dia.snack_pascal||dia.colacion||'—';
+    const almuerzo = dia.almuerzo||'—';
+    const cena     = dia.cena||'—';
+    const desayuno = dia.desayuno||'—';
+    const tienePapa= dia.almuerzo_papa&&dia.almuerzo_papa.trim()&&dia.almuerzo_papa!=='(solo si el almuerzo lleva mariscos/pescado, si no deja vacío)';
+    const cals     = dia.calorias_aprox;
+    const color    = diaColors[i%diaColors.length];
+
+    const esc = s => (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+
     return `
     <div class="menu-dia">
-      <div class="menu-dia-title">${dia.dia}</div>
-      <div class="menu-row"><span class="menu-label">☕ Desayuno</span><span class="menu-val">${dia.desayuno||'—'}</span></div>
-      <div class="menu-row"><span class="menu-label">🎒 Snack Pascal</span><span class="menu-val">${snack}</span></div>
-      <div class="menu-row">
-        <span class="menu-label">🍽️ Almuerzo</span>
-        <span class="menu-val">
-          <span class="menu-receta" onclick="buscarReceta('${almuerzo.replace(/'/g,"\'")}')">${almuerzo} <span style="font-size:10px;opacity:.6">🔍</span></span>
-          ${tienePapa?`<div style="font-size:11px;color:var(--ink3);margin-top:3px">🧔 ${dia.almuerzo_papa} <span class="menu-receta" onclick="buscarReceta('${(dia.almuerzo_papa||'').replace(/'/g,"\'")}')">🔍</span></div>`:''}
-        </span>
+      <div class="menu-dia-title" style="background:${color}">${dia.dia||'—'}</div>
+      <div class="menu-dia-body">
+
+        <div class="menu-bloque">
+          <div class="menu-bloque-lbl">☕ Desayuno</div>
+          <div class="menu-bloque-txt">${desayuno}</div>
+        </div>
+
+        <div class="menu-bloque menu-snack">
+          <div class="menu-bloque-lbl">🎒 Pascal</div>
+          <div class="menu-bloque-txt">${snack}</div>
+        </div>
+
+        <div class="menu-bloque">
+          <div class="menu-bloque-lbl">🍽️ Almuerzo</div>
+          <div class="menu-bloque-txt clickable" onclick="buscarReceta('${esc(almuerzo)}')">${almuerzo} <span style="font-size:9px;opacity:.5">🔍</span></div>
+          ${tienePapa?`<div class="menu-papa">🧔 ${dia.almuerzo_papa}</div>`:''}
+        </div>
+
+        <div class="menu-bloque">
+          <div class="menu-bloque-lbl">🌙 Cena</div>
+          <div class="menu-bloque-txt clickable" onclick="buscarReceta('${esc(cena)}')">${cena} <span style="font-size:9px;opacity:.5">🔍</span></div>
+        </div>
+
+        ${cals?`<div class="menu-cals">🔥 ${cals} kcal</div>`:''}
       </div>
-      <div class="menu-row">
-        <span class="menu-label">🌙 Cena</span>
-        <span class="menu-val"><span class="menu-receta" onclick="buscarReceta('${cena.replace(/'/g,"\'")}')">${cena} <span style="font-size:10px;opacity:.6">🔍</span></span></span>
-      </div>
-      ${cals?`<div class="menu-row" style="margin-top:4px;border-top:1px solid var(--border);padding-top:5px"><span class="menu-label" style="font-size:10px">🔥 Cal. aprox.</span><span class="menu-val" style="font-size:11px;color:var(--ink3)">${cals} kcal</span></div>`:''}
     </div>`;
   }).join('')}</div>`;
 }
