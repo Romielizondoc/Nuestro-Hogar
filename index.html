@@ -1674,12 +1674,28 @@ function post(body){
 
 /* ─────────────── IA proxy (OpenAI via Apps Script) ─────────────── */
 async function geminiCall(prompt, maxTokens=1000){
-  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({prompt, max_tokens:maxTokens}))));
+  /* Intentar primero con POST (sin límite de URL) */
   let data;
-  try{ data = await jsonp({action:'gemini', payload}); }
-  catch(e){ throw new Error('Sin conexión con el servidor (' + (e.message||'timeout') + ')'); }
-  if(!data) throw new Error('El servidor no respondió (data vacía)');
-  if(!data.ok) throw new Error(data.error || 'El servidor respondió con error');
+  try{
+    const res = await fetch(GAS, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({action:'gemini', prompt, max_tokens: maxTokens})
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+  } catch(postErr){
+    /* Fallback: JSONP (GET) si POST falla — solo para prompts cortos */
+    console.warn('geminiCall POST falló, intentando JSONP:', postErr.message);
+    try{
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify({prompt, max_tokens:maxTokens}))));
+      data = await jsonp({action:'gemini', payload});
+    } catch(jsonpErr){
+      throw new Error('Sin conexión con el servidor (' + jsonpErr + ')');
+    }
+  }
+  if(!data) throw new Error('El servidor no respondió');
+  if(!data.ok) throw new Error(data.error || 'Error del servidor — revisa el Apps Script');
   const txt = (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
   if(!txt) throw new Error('La IA devolvió respuesta vacía');
   return txt;
@@ -3631,8 +3647,13 @@ Responde con el array de 7 días, nada más.`;
     const txt=await geminiCall(prompt, 1800);
     if(!txt) throw new Error('Respuesta vacía de la IA');
     const clean=txt.replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(clean);
-    if(!Array.isArray(parsed)||!parsed.length) throw new Error('Formato inválido');
+    let parsed;
+    try{ parsed = JSON.parse(clean); }
+    catch(parseErr){
+      console.error('JSON inválido recibido:', clean.substring(0,300));
+      throw new Error('La IA no devolvió JSON válido — respuesta: ' + clean.substring(0,120));
+    }
+    if(!Array.isArray(parsed)||!parsed.length) throw new Error('Formato inválido — se esperaba array de 7 días');
 
     _menuCache=parsed;
     localStorage.setItem('hogar-menu', JSON.stringify(parsed));
@@ -3641,8 +3662,12 @@ Responde con el array de 7 días, nada más.`;
     renderMenu(parsed);
     toast('Menú generado ✓','success');
   }catch(e){
-    console.error('generarMenuIA error:',e);
-    if(wrap) wrap.innerHTML=`<div style="text-align:center;padding:24px;color:var(--rust);font-size:13px">⚠ No se pudo generar el menú: ${e.message}<br><button class="btn-ghost" style="margin-top:12px" onclick="generarMenuIA(true)">Reintentar</button></div>`;
+    console.error('generarMenuIA error completo:', e);
+    if(wrap) wrap.innerHTML=`<div style="text-align:center;padding:24px;color:var(--rust);font-size:13px">
+      ⚠ No se pudo generar el menú<br>
+      <span style="font-size:11px;opacity:.75">${e.message}</span><br>
+      <button class="btn-ghost" style="margin-top:12px" onclick="generarMenuIA(true)">↺ Reintentar</button>
+    </div>`;
     toast('Error al generar menú','');
   }
 }
