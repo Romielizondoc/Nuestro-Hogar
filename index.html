@@ -476,6 +476,7 @@ header{
 }
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .chart-box{position:relative;height:200px;margin-top:8px;}
+@media(max-width:600px){.chart-box{height:280px;}}
 .trend-box{height:165px;margin-top:8px;}
 
 /* ===== MODAL ===== */
@@ -1980,7 +1981,7 @@ function rDonut(wid){
   CH[wid]=new Chart(document.getElementById(wid+'c').getContext('2d'),{
     type:'doughnut',
     data:{labels,datasets:[{data:vals,backgroundColor:pal,borderWidth:2,borderColor:dark?'#1e1812':'#fffdf9'}]},
-    options:{animation:false,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:10},boxWidth:10,color:dark?'#c4ad98':'#6b5744'}}},cutout:'62%',responsive:false,maintainAspectRatio:false}
+    options:{animation:false,plugins:{legend:{position:window.innerWidth<600?'bottom':'right',labels:{font:{family:'Inter',size:10},boxWidth:10,color:dark?'#c4ad98':'#6b5744'}}},cutout:'62%',responsive:true,maintainAspectRatio:false}
   });
 }
 
