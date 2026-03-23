@@ -897,15 +897,16 @@ header{
   }
   
   header{
-    height:52px;padding:0 16px;
-    position:sticky;top:0;z-index:200;
+    height:52px;padding:0 12px;
+    position:sticky;top:env(safe-area-inset-top,0);z-index:200;
   }
-  .logo{ font-size:15px; }
-  .logo-mark{ font-size:18px; }
-  .hcenter{ display:none; }
+  .logo{ font-size:14px;gap:6px; }
+  .logo-mark{ width:24px;height:24px;font-size:12px; }
+  .hcenter{ display:none!important; }
   .av{ display:none; }
-  .hbtn{ font-size:12px;padding:6px 10px; }
-  .dbtn{ font-size:16px;padding:6px 8px; }
+  .hbtn{ font-size:11px;padding:5px 8px; }
+  .dbtn{ font-size:14px;padding:5px 7px; }
+  #sync-btn{ font-size:11px;padding:5px 10px; }
 
   /* ── Navigation — bottom tab bar ── */
   .tabs-row{
@@ -948,8 +949,9 @@ header{
   /* ── Main content area ── */
   .wrap{
     padding:14px 12px;
-    padding-bottom:80px;
+    padding-bottom:calc(80px + env(safe-area-inset-bottom));
     max-width:100%;
+    overflow-x:hidden;
   }
 
   /* ── Cards & grids ── */
@@ -970,9 +972,6 @@ header{
 
   /* ── Menú semanal — se adapta via CSS propio ── */
 
-  /* ── Comparador ── */
-  .comp-precios{ grid-template-columns:1fr 1fr!important; }
-  .comp-entry{ padding:12px; }
 
   /* ── Modales — full screen en mobile ── */
   .ov{ align-items:flex-end; }
@@ -3703,7 +3702,7 @@ function renderMenu(menu){
         <span class="menu-dia-emoji">${h.emoji}</span>
         <div class="menu-dia-name">${dia.dia||''}</div>
         <span onclick="editarDiaMenu(${i})" title="Editar este día"
-          style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;cursor:pointer;padding:2px 5px;border-radius:4px;background:rgba(255,255,255,.2);line-height:1">✏️</span>
+          style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:13px;cursor:pointer;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.25);line-height:1;min-width:26px;text-align:center">✏️</span>
       </div>
       <div class="menu-dia-body">
 
