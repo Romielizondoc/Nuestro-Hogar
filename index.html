@@ -1370,20 +1370,53 @@ header{
 
 <!-- MODAL IMPORTAR SANTANDER -->
 <div class="ov" id="import-ov" onclick="if(event.target===this)closeImport()" style="display:none">
-  <div class="modal" style="max-width:600px">
+  <div class="modal" style="max-width:620px">
     <div class="m-title">📥 Importar movimientos Santander</div>
-    <div style="background:var(--sage-bg);border-radius:12px;padding:14px;font-size:12px;color:var(--sage);margin-bottom:16px;line-height:1.7">
-      <b>¿Cómo exportar desde Santander?</b><br>
-      App Santander → Mis productos → Tu tarjeta → Movimientos → Exportar → Excel<br>
-      <span style="color:var(--ink3)">También desde santander.cl → sección movimientos → descargar</span>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button id="imp-tab-csv" onclick="switchImportTab('csv')"
+        style="flex:1;padding:8px;border-radius:10px;border:2px solid var(--sage);background:var(--sage);color:#fff;font-size:12px;font-weight:700;cursor:pointer">
+        📊 Excel / CSV<br><span style="font-size:10px;font-weight:400;opacity:.85">Cuenta corriente</span>
+      </button>
+      <button id="imp-tab-pdf" onclick="switchImportTab('pdf')"
+        style="flex:1;padding:8px;border-radius:10px;border:2px solid var(--border2);background:var(--bg2);color:var(--ink2);font-size:12px;font-weight:700;cursor:pointer">
+        📄 PDF<br><span style="font-size:10px;font-weight:400;opacity:.85">Estado de cuenta tarjeta</span>
+      </button>
     </div>
-    <div id="import-drop" onclick="document.getElementById('import-file').click()"
-      style="border:2px dashed var(--border2);border-radius:14px;padding:32px;text-align:center;cursor:pointer;transition:.15s;margin-bottom:14px">
-      <div style="font-size:28px;margin-bottom:8px">📂</div>
-      <div style="font-size:13px;font-weight:600;color:var(--ink2)">Haz clic para seleccionar el archivo</div>
-      <div style="font-size:11px;color:var(--ink3);margin-top:4px">Excel (.xlsx) o CSV (.csv)</div>
-      <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
+
+    <!-- CSV panel -->
+    <div id="imp-panel-csv">
+      <div style="background:var(--sage-bg);border-radius:12px;padding:12px;font-size:12px;color:var(--sage);margin-bottom:14px;line-height:1.6">
+        <b>¿Cómo exportar desde Santander?</b><br>
+        App Santander → Mis productos → Tu cuenta → Movimientos → Exportar → Excel<br>
+        <span style="color:var(--ink3)">También desde santander.cl → sección movimientos → descargar</span>
+      </div>
+      <div id="import-drop" onclick="document.getElementById('import-file').click()"
+        style="border:2px dashed var(--border2);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:.15s;margin-bottom:14px">
+        <div style="font-size:28px;margin-bottom:8px">📂</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink2)">Haz clic para seleccionar el archivo</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:4px">Excel (.xlsx) o CSV (.csv)</div>
+        <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
+      </div>
     </div>
+
+    <!-- PDF panel -->
+    <div id="imp-panel-pdf" style="display:none">
+      <div style="background:var(--amber-bg);border-radius:12px;padding:12px;font-size:12px;color:var(--amber);margin-bottom:14px;line-height:1.6">
+        <b>Estado de cuenta tarjeta de crédito</b><br>
+        Descarga el PDF desde santander.cl → Tarjeta de crédito → Estado de cuenta<br>
+        <span style="color:var(--ink3)">Solo se importan los cargos del período actual, no saldos ni cancelaciones</span>
+      </div>
+      <div id="import-drop-pdf" onclick="document.getElementById('import-file-pdf').click()"
+        style="border:2px dashed var(--border2);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:.15s;margin-bottom:14px">
+        <div style="font-size:28px;margin-bottom:8px">📄</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink2)">Haz clic para seleccionar el PDF</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:4px">Estado de cuenta (.pdf)</div>
+        <input type="file" id="import-file-pdf" accept=".pdf" style="display:none" onchange="handleImportPDF(this)">
+      </div>
+    </div>
+
     <div id="import-preview" style="display:none">
       <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Vista previa</div>
       <div id="import-table" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px"></div>
@@ -2875,8 +2908,200 @@ function openImportModal(){
   document.getElementById('import-err').style.display='none';
   document.getElementById('import-save-btn').style.display='none';
   document.getElementById('import-file').value='';
+  document.getElementById('import-file-pdf').value='';
   document.getElementById('import-drop').style.borderColor='var(--border2)';
+  document.getElementById('import-drop-pdf').style.borderColor='var(--border2)';
   document.getElementById('import-ov').style.display='flex';
+  switchImportTab('csv');
+}
+
+function switchImportTab(tab){
+  const csvBtn=document.getElementById('imp-tab-csv');
+  const pdfBtn=document.getElementById('imp-tab-pdf');
+  const csvP=document.getElementById('imp-panel-csv');
+  const pdfP=document.getElementById('imp-panel-pdf');
+  importData=[];
+  document.getElementById('import-preview').style.display='none';
+  document.getElementById('import-save-btn').style.display='none';
+  document.getElementById('import-err').style.display='none';
+  if(tab==='csv'){
+    csvBtn.style.background='var(--sage)'; csvBtn.style.color='#fff'; csvBtn.style.borderColor='var(--sage)';
+    pdfBtn.style.background='var(--bg2)'; pdfBtn.style.color='var(--ink2)'; pdfBtn.style.borderColor='var(--border2)';
+    csvP.style.display='block'; pdfP.style.display='none';
+  } else {
+    pdfBtn.style.background='var(--amber)'; pdfBtn.style.color='#fff'; pdfBtn.style.borderColor='var(--amber)';
+    csvBtn.style.background='var(--bg2)'; csvBtn.style.color='var(--ink2)'; csvBtn.style.borderColor='var(--border2)';
+    pdfP.style.display='block'; csvP.style.display='none';
+  }
+}
+
+/* ── PARSER PDF ESTADO DE CUENTA SANTANDER ── */
+async function handleImportPDF(input){
+  const file=input.files[0];
+  if(!file) return;
+  const errEl=document.getElementById('import-err');
+  errEl.style.display='none';
+  document.getElementById('import-drop-pdf').style.borderColor='var(--border2)';
+
+  try {
+    // Leer PDF como base64 y enviarlo a Apps Script para que lo procese con OpenAI
+    const base64 = await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=()=>res(r.result.split(',')[1]);
+      r.onerror=()=>rej(new Error('No se pudo leer el archivo'));
+      r.readAsDataURL(file);
+    });
+
+    // Extraer texto del PDF en el navegador usando pdf.js
+    const pdfjsLib = await loadPDFJS();
+    const pdfData = atob(base64);
+    const pdfBytes = new Uint8Array(pdfData.length);
+    for(let i=0;i<pdfData.length;i++) pdfBytes[i]=pdfData.charCodeAt(i);
+
+    const pdf = await pdfjsLib.getDocument({data:pdfBytes}).promise;
+    let fullText = '';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      fullText += content.items.map(it=>it.str).join(' ') + '\n';
+    }
+
+    // Parsear el texto extraído
+    importData = parseSantanderPDF(fullText);
+
+    if(!importData.length){
+      errEl.textContent='No se encontraron movimientos en el PDF. Asegúrate de subir el estado de cuenta de tarjeta de crédito Santander.';
+      errEl.style.display='block';
+      return;
+    }
+
+    document.getElementById('import-drop-pdf').style.borderColor='var(--sage)';
+    showImportPreview();
+
+  } catch(e){
+    errEl.textContent='Error al leer el PDF: '+e.message;
+    errEl.style.display='block';
+  }
+}
+
+function loadPDFJS(){
+  return new Promise((ok,fail)=>{
+    if(window.pdfjsLib){ok(window.pdfjsLib);return;}
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload=()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      ok(window.pdfjsLib);
+    };
+    s.onerror=()=>fail(new Error('No se pudo cargar pdf.js'));
+    document.head.appendChild(s);
+  });
+}
+
+function parseSantanderPDF(text){
+  const movimientos = [];
+  const lines = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  const fullText = lines.join('\n');
+
+  // Detectar período facturado para asignar año correcto
+  let año = new Date().getFullYear();
+  const periodoMatch = fullText.match(/PERÍODO FACTURADO[^\d]*(\d{2})\/(\d{2})\/(\d{4})/);
+  if(periodoMatch) año = parseInt(periodoMatch[3]);
+
+  // Patrón: DD/MM/YY o DD/MM/YYYY seguido de descripción y monto al final
+  // Formato del estado de cuenta: fecha | descripción | [cuota info] | monto
+  const linePattern = /(\d{2})\/(\d{2})\/(\d{2,4})\s+(.+?)\s+\$\s*([\d.,]+)\s*$/;
+  // También captura líneas sin fecha pero con monto de cargo (cuotas)
+  const cargoPattern = /^(.+?)\s+(?:CUOTA\s+(?:FIJA|COMERCIO)[^$]*)\s+\$[\d.,]+\s+\$[\d.,]+\s+\d+\/\d+\s+\$([\d.,]+)$/i;
+
+  lines.forEach(line=>{
+    // Ignorar líneas de totales, cancelaciones, headers
+    if(/MONTO CANCELADO|TOTAL OPERACIONES|MOVIMIENTOS TARJETA|PERÍODO ANTERIOR|PERÍODO ACTUAL|PRODUCTOS O SERVICIOS|CARGOS, COMISIONES|INFORMACION COMPRAS|SALDO ADEUDADO|MONTO FACTURADO|MONTO PAGADO/i.test(line)) return;
+    if(/INTERESES|IMPUESTOS/i.test(line)){
+      // Capturar intereses e impuestos como categoría Servicios
+      const mMatch = line.match(/\$([\d.,]+)\s*$/);
+      if(mMatch){
+        const monto = parseMonto(mMatch[1]);
+        if(monto>0){
+          const fecha = new Date().toISOString().slice(0,10);
+          const tipo = /INTERESES/i.test(line)?'Intereses tarjeta':'Impuestos tarjeta';
+          movimientos.push({id:Date.now()+movimientos.length, name:tipo, type:'gasto', amount:monto, date:fecha, category:'Servicios', source:'santander-pdf'});
+        }
+      }
+      return;
+    }
+
+    // Línea con fecha al inicio: movimientos directos
+    const m = line.match(/^(\d{2})\/(\d{2})\/(\d{2,4})\s+(.+?)\s+\$\s*([\d.,]+)\s*$/);
+    if(m){
+      const [,dd,mm,yy,desc,montoStr] = m;
+      const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
+      const fecha = `${yearFull}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+      const monto = parseMonto(montoStr);
+      if(monto>0 && monto<50000000){
+        movimientos.push({
+          id:Date.now()+movimientos.length,
+          name: desc.trim(),
+          type:'gasto',
+          amount: monto,
+          date: fecha,
+          category: guessCategory(desc),
+          source:'santander-pdf'
+        });
+      }
+      return;
+    }
+
+    // Línea de cuota: sin fecha propia, cargo mensual al final
+    // Patrón: DESCRIPCION CUOTA FIJA X.XX% $ORIGEN $TOTAL NR/TOTAL $CARGO
+    const cuotaM = line.match(/^(\d{2})\/(\d{2})\/(\d{2,4})\s+(.+?)\s+CUOTA\s+(?:FIJA|COMERCIO)\s+[\d.,]+\s*%\s+\$([\d.,]+)\s+\$([\d.,]+)\s+\d+\/\d+\s+\$([\d.,]+)/i);
+    if(cuotaM){
+      const [,dd,mm,yy,desc,,,cargoStr] = cuotaM;
+      const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
+      const fecha = `${año}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+      const monto = parseMonto(cargoStr);
+      if(monto>0){
+        movimientos.push({
+          id:Date.now()+movimientos.length,
+          name: desc.trim()+' (cuota)',
+          type:'gasto',
+          amount: monto,
+          date: `${año}-${String(new Date().getMonth()+1).padStart(2,'0')}-${dd.padStart(2,'0')}`,
+          category: guessCategory(desc),
+          source:'santander-pdf'
+        });
+      }
+    }
+  });
+
+  return movimientos;
+}
+
+function showImportPreview(){
+  document.getElementById('import-preview').style.display='block';
+  document.getElementById('import-save-btn').style.display='block';
+  const total=importData.filter(m=>m.type==='gasto').reduce((s,m)=>s+m.amount,0);
+  document.getElementById('import-summary').innerHTML=
+    `<b>${importData.length} movimientos</b> detectados · Total gastos: <b>$${total.toLocaleString('es-CL')}</b>`;
+  const preview=importData.slice(0,8);
+  document.getElementById('import-table').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:var(--bg2)">
+        <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Fecha</th>
+        <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Descripción</th>
+        <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Categoría</th>
+        <th style="padding:7px 10px;text-align:right;color:var(--ink3)">Monto</th>
+      </tr></thead>
+      <tbody>
+        ${preview.map(m=>`<tr style="border-top:1px solid var(--border)">
+          <td style="padding:7px 10px;color:var(--ink3)">${m.date}</td>
+          <td style="padding:7px 10px;color:var(--ink2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</td>
+          <td style="padding:7px 10px"><span class="badge b-sage" style="font-size:9px">${m.category}</span></td>
+          <td style="padding:7px 10px;text-align:right;color:var(--rust);font-weight:600">$${m.amount.toLocaleString('es-CL')}</td>
+        </tr>`).join('')}
+        ${importData.length>8?`<tr><td colspan="4" style="padding:8px 10px;text-align:center;color:var(--ink3);font-size:11px">...y ${importData.length-8} más</td></tr>`:''}
+      </tbody>
+    </table>`;
 }
 function closeImport(){
   document.getElementById('import-ov').style.display='none';
@@ -3044,33 +3269,8 @@ async function handleImportFile(input){
     }
 
     // Mostrar preview
-    document.getElementById('import-preview').style.display='block';
-    document.getElementById('import-save-btn').style.display='block';
     document.getElementById('import-drop').style.borderColor='var(--sage)';
-    
-    const total=importData.reduce((s,m)=>s+m.amount,0);
-    document.getElementById('import-summary').innerHTML=
-      `<b>${importData.length} movimientos</b> detectados · Total: <b>$${total.toLocaleString('es-CL')}</b>`;
-
-    const preview=importData.slice(0,8);
-    document.getElementById('import-table').innerHTML=`
-      <table style="width:100%;border-collapse:collapse;font-size:11px">
-        <thead><tr style="background:var(--bg2)">
-          <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Fecha</th>
-          <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Descripción</th>
-          <th style="padding:7px 10px;text-align:left;color:var(--ink3)">Categoría</th>
-          <th style="padding:7px 10px;text-align:right;color:var(--ink3)">Monto</th>
-        </tr></thead>
-        <tbody>
-          ${preview.map((m,i)=>`<tr style="border-top:1px solid var(--border)">
-            <td style="padding:7px 10px;color:var(--ink3)">${m.date}</td>
-            <td style="padding:7px 10px;color:var(--ink2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</td>
-            <td style="padding:7px 10px"><span class="badge b-sage" style="font-size:9px">${m.category}</span></td>
-            <td style="padding:7px 10px;text-align:right;color:var(--rust);font-weight:600">$${m.amount.toLocaleString('es-CL')}</td>
-          </tr>`).join('')}
-          ${importData.length>8?`<tr><td colspan="4" style="padding:8px 10px;text-align:center;color:var(--ink3);font-size:11px">...y ${importData.length-8} más</td></tr>`:''}
-        </tbody>
-      </table>`;
+    showImportPreview();
   }catch(e){
     errEl.textContent='Error al leer el archivo: '+e.message;
     errEl.style.display='block';
