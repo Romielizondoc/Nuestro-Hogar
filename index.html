@@ -2943,7 +2943,7 @@ async function handleImportPDF(input){
     for(let i=1;i<=pdf.numPages;i++){
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      fullText += content.items.map(it=>it.str).join(' ') + '\n';
+      fullText += content.items.map(it=>it.str).join('|') + '\n---PAGE---\n';
     }
 
     // Parsear el texto extraído
