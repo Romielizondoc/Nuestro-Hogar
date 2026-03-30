@@ -1129,14 +1129,66 @@ header{
 
   <!-- FINANZAS -->
   <div class="panel" id="panel-finanzas">
-    <div class="g3 gap">
-      <div class="stat-card sc-sage"><div class="sc-pill pill-sage">Ingresos</div><div class="sc-lbl">Total</div><div class="sc-val" id="f-ing">—</div></div>
-      <div class="stat-card sc-rust"><div class="sc-pill pill-rust">Egresos</div><div class="sc-lbl">Total</div><div class="sc-val" id="f-egr">—</div></div>
-      <div class="stat-card sc-amber"><div class="sc-pill pill-amber">Balance</div><div class="sc-lbl">Resultado</div><div class="sc-val" id="f-bal">—</div></div>
+
+    <!-- HEADER: selector de mes + acciones -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="fMesMove(-1)" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:16px;cursor:pointer;color:var(--ink2);display:flex;align-items:center;justify-content:center">‹</button>
+        <div id="f-mes-lbl" style="font-size:15px;font-weight:700;color:var(--ink);min-width:130px;text-align:center"></div>
+        <button onclick="fMesMove(1)" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:16px;cursor:pointer;color:var(--ink2);display:flex;align-items:center;justify-content:center">›</button>
+        <button onclick="fMesHoy()" id="f-mes-hoy-btn" style="display:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--ink3);cursor:pointer">hoy</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="openModal('recurrente')">↻ recurrente</button>
+        <button class="btn-ghost" style="border-color:var(--sage);color:var(--sage)" onclick="openImportModal()">📥 importar</button>
+        <button class="btn-ghost" onclick="openModal('finanza')">+ agregar</button>
+      </div>
+    </div>
+
+    <!-- STATS del mes -->
+    <div class="g3 gap" style="margin-bottom:16px">
+      <div class="stat-card sc-sage">
+        <div class="sc-pill pill-sage">Ingresos</div>
+        <div class="sc-lbl">Este mes</div>
+        <div class="sc-val" id="f-ing">—</div>
+        <div id="f-ing-vs" style="font-size:10px;color:var(--ink3);margin-top:4px"></div>
+      </div>
+      <div class="stat-card sc-rust">
+        <div class="sc-pill pill-rust">Egresos</div>
+        <div class="sc-lbl">Este mes</div>
+        <div class="sc-val" id="f-egr">—</div>
+        <div id="f-egr-vs" style="font-size:10px;color:var(--ink3);margin-top:4px"></div>
+      </div>
+      <div class="stat-card sc-amber">
+        <div class="sc-pill pill-amber">Balance</div>
+        <div class="sc-lbl">Resultado</div>
+        <div class="sc-val" id="f-bal">—</div>
+        <div id="f-bal-vs" style="font-size:10px;color:var(--ink3);margin-top:4px"></div>
+      </div>
+    </div>
+
+    <!-- GASTO RÁPIDO -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">⚡ Gasto rápido</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:2;min-width:140px">
+          <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">Descripción</div>
+          <input id="qg-name" class="fin" placeholder="Ej: Almacén Doña Clarita" style="margin:0">
+        </div>
+        <div style="flex:1;min-width:90px">
+          <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">Monto ($)</div>
+          <input id="qg-amount" class="fin" type="number" placeholder="0" style="margin:0">
+        </div>
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">Categoría</div>
+          <select id="qg-cat" class="fsel" style="margin:0"><option>Hogar</option><option>Alimentación</option><option>Servicios</option><option>Salud</option><option>Trabajo</option><option>Transporte</option><option>Uber/Rappi</option><option>Almacén</option><option>Entretenimiento</option><option>Personal del hogar</option><option>Otro</option></select>
+        </div>
+        <button onclick="quickGasto()" style="background:var(--rust);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;height:38px">Guardar</button>
+      </div>
     </div>
 
     <!-- TERMÓMETRO HORMIGA -->
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <div style="flex:1;min-width:200px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
           <span style="font-size:13px;font-weight:700;color:var(--ink)">🛒 Compras hormiga esta semana</span>
@@ -1153,7 +1205,7 @@ header{
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         <div style="text-align:right">
-          <div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Meta semanal (Almacén + Uber/Rappi)</div>
+          <div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Meta semanal</div>
           <div style="display:flex;align-items:center;gap:4px">
             <span style="font-size:12px;color:var(--ink3)">$</span>
             <input id="termo-input" type="number" placeholder="15000"
@@ -1164,19 +1216,39 @@ header{
       </div>
     </div>
 
+    <!-- PRESUPUESTO POR CATEGORÍA -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="ch">
+        <div class="ct">📊 Presupuesto mensual</div>
+        <button class="btn-ghost" onclick="togglePresupuesto()" id="pres-toggle-btn">configurar</button>
+      </div>
+      <div id="pres-config" style="display:none;margin-bottom:14px;padding:12px;background:var(--bg2);border-radius:10px">
+        <div style="font-size:11px;color:var(--ink3);margin-bottom:10px">Define cuánto quieres gastar por categoría este mes</div>
+        <div id="pres-inputs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px"></div>
+        <button onclick="savePresupuesto()" style="margin-top:10px;background:var(--rust);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer">Guardar presupuesto</button>
+      </div>
+      <div id="list-presupuesto"></div>
+    </div>
+
+    <!-- MOVIMIENTOS + GRÁFICO -->
     <div class="g2">
       <div class="card">
         <div class="ch">
           <div class="ct">Movimientos</div>
-          <div style="display:flex;gap:6px">
-            <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="openModal('recurrente')">↻ recurrente</button>
-            <button class="btn-ghost" style="border-color:var(--sage);color:var(--sage)" onclick="openImportModal()">📥 importar Santander</button>
-            <button class="btn-ghost" onclick="openModal('finanza')">+ agregar</button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input id="f-search" class="fin" placeholder="🔍 buscar..." style="margin:0;padding:5px 10px;font-size:12px;width:130px" oninput="rFinanzas()">
+            <select id="f-filter-cat" class="fsel" style="margin:0;padding:5px 8px;font-size:12px" onchange="rFinanzas()">
+              <option value="">Todas</option>
+              <option>Hogar</option><option>Alimentación</option><option>Servicios</option><option>Salud</option><option>Trabajo</option><option>Transporte</option><option>Uber/Rappi</option><option>Almacén</option><option>Entretenimiento</option><option>Personal del hogar</option><option>Otro</option>
+            </select>
           </div>
         </div>
         <div id="list-finanzas"><div class="skel" style="height:40px"></div></div>
       </div>
-      <div class="card card-warm"><div class="ch"><div class="ct">Por categoría</div></div><div id="wrap-donut-f" class="chart-box"></div></div>
+      <div>
+        <div class="card card-warm" style="margin-bottom:12px"><div class="ch"><div class="ct">Por categoría</div></div><div id="wrap-donut-f" class="chart-box"></div></div>
+        <div class="card"><div class="ch"><div class="ct">Tendencia 6 meses</div></div><div id="wrap-trend-f" class="chart-box"></div></div>
+      </div>
     </div>
   </div>
 
@@ -1674,10 +1746,12 @@ const mLabel=ym=>{if(!ym)return'';const[y,m]=ym.split('-');return['Ene','Feb','M
 
 /* ─────────────── RENDER ALL ─────────────── */
 function renderAll(){
+  fMesInit(); loadPresupuesto();
   rTareas();rCompras();rFinanzas();rTramites();rNotas();rMetas();rCalendario();rEventos();rPersonal();rExtras();rResumen();rSpotify();rPascal();
   rTermometro();
   rInventario();
   rComparadorList();
+  rPresupuesto();
 }
 
 /* checklist */
@@ -1732,46 +1806,224 @@ function rCompras(){
 }
 
 /* finanzas */
+/* ── MES SELECTOR ── */
+let _fMes = null; // 'YYYY-MM', null = mes actual
+
+function _fMesActual(){
+  const n=new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
+}
+function fMesInit(){
+  if(!_fMes) _fMes=_fMesActual();
+  _fMesRender();
+}
+function fMesMove(d){
+  const [y,m]=_fMes.split('-').map(Number);
+  const nd=new Date(y,m-1+d,1);
+  _fMes=nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0');
+  _fMesRender();
+  rFinanzas();
+  renderCharts();
+  rPresupuesto();
+}
+function fMesHoy(){
+  _fMes=_fMesActual();
+  _fMesRender();
+  rFinanzas();
+  renderCharts();
+  rPresupuesto();
+}
+function _fMesRender(){
+  const [y,m]=_fMes.split('-').map(Number);
+  const lbl=new Date(y,m-1,1).toLocaleDateString('es-CL',{month:'long',year:'numeric'});
+  const el=document.getElementById('f-mes-lbl');
+  if(el) el.textContent=lbl.charAt(0).toUpperCase()+lbl.slice(1);
+  const btn=document.getElementById('f-mes-hoy-btn');
+  if(btn) btn.style.display=_fMes===_fMesActual()?'none':'inline-block';
+}
+
+function _finMes(){ return (D.finanzas||[]).filter(f=>String(f.date||'').startsWith(_fMes)); }
+function _finMesAnterior(){
+  const [y,m]=_fMes.split('-').map(Number);
+  const nd=new Date(y,m-2,1);
+  const pm=nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0');
+  return (D.finanzas||[]).filter(f=>String(f.date||'').startsWith(pm));
+}
+
 function rFinanzas(){
-  const el=document.getElementById('list-finanzas');
-  if(!D.finanzas?.length){el.innerHTML=empty('Sin movimientos');return;}
-  const sorted=[...D.finanzas].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  el.innerHTML=sorted.map(f=>{
-    const isIn=f.type==='ingreso';
-    const ds=f.date?new Date(normDate(f.date)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
-    return`<div class="fi-row">
-      <div>
-        <div class="fi-name">${f.name}${f.recurrenteId?'<span class="tag-rec">↻</span>':''}</div>
-        <div class="fi-meta">${f.category||''}${ds?' · '+ds:''}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="fi-amt ${isIn?'amt-in':'amt-out'}">${isIn?'+':'-'} ${clp(f.amount)}</div>
-        <span class="x-btn" onclick="del('finanzas',${f.id})">×</span>
-      </div>
-    </div>`;
-  }).join('');
-  const ing=D.finanzas.filter(f=>f.type==='ingreso').reduce((s,f)=>s+Number(f.amount),0);
-  const egr=D.finanzas.filter(f=>f.type==='gasto').reduce((s,f)=>s+Number(f.amount),0);
+  if(!_fMes) _fMes=_fMesActual();
+  _fMesRender();
+
+  const mes=_finMes();
+  const prev=_finMesAnterior();
+
+  // Stats mes actual
+  const ing=mes.filter(f=>f.type==='ingreso').reduce((s,f)=>s+Number(f.amount),0);
+  const egr=mes.filter(f=>f.type==='gasto').reduce((s,f)=>s+Number(f.amount),0);
   const bal=ing-egr;
+  // Stats mes anterior
+  const pIng=prev.filter(f=>f.type==='ingreso').reduce((s,f)=>s+Number(f.amount),0);
+  const pEgr=prev.filter(f=>f.type==='gasto').reduce((s,f)=>s+Number(f.amount),0);
+  const pBal=pIng-pEgr;
+
   document.getElementById('f-ing').textContent=clp(ing);
   document.getElementById('f-egr').textContent=clp(egr);
   const bEl=document.getElementById('f-bal');
   bEl.textContent=(bal>=0?'+':'')+clp(bal);
   bEl.style.color=bal>=0?'var(--sage)':'var(--rust)';
+
+  // Comparación mes anterior
+  function vsDiff(curr,prev){
+    if(!prev) return '';
+    const diff=curr-prev;
+    const sign=diff>=0?'+':'';
+    const col=diff>=0?'var(--sage)':'var(--rust)';
+    return `<span style="color:${col}">${sign}${clp(Math.abs(diff))} vs mes anterior</span>`;
+  }
+  const ingVs=document.getElementById('f-ing-vs');
+  const egrVs=document.getElementById('f-egr-vs');
+  const balVs=document.getElementById('f-bal-vs');
+  if(ingVs) ingVs.innerHTML=pIng?vsDiff(ing,pIng):'';
+  if(egrVs) egrVs.innerHTML=pEgr?vsDiff(egr,pEgr):'';
+  if(balVs) balVs.innerHTML=pBal?vsDiff(bal,pBal):'';
+
+  // Lista con filtros
+  const el=document.getElementById('list-finanzas');
+  const search=(document.getElementById('f-search')?.value||'').toLowerCase();
+  const catFilter=document.getElementById('f-filter-cat')?.value||'';
+
+  let items=[...mes].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(search) items=items.filter(f=>(f.name||'').toLowerCase().includes(search)||(f.category||'').toLowerCase().includes(search));
+  if(catFilter) items=items.filter(f=>f.category===catFilter);
+
+  if(!items.length){el.innerHTML=empty('Sin movimientos este mes');return;}
+
+  // Agrupar por día
+  const byDay={};
+  items.forEach(f=>{
+    const d=f.date||'';
+    if(!byDay[d]) byDay[d]=[];
+    byDay[d].push(f);
+  });
+
+  el.innerHTML=Object.entries(byDay).map(([date,fs])=>{
+    const dayLbl=date?new Date(date+'T12:00').toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'}):'Sin fecha';
+    const rows=fs.map(f=>{
+      const isIn=f.type==='ingreso';
+      return`<div class="fi-row">
+        <div>
+          <div class="fi-name">${f.name}${f.recurrenteId?'<span class="tag-rec">↻</span>':''}</div>
+          <div class="fi-meta">${f.category||''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="fi-amt ${isIn?'amt-in':'amt-out'}">${isIn?'+':'-'} ${clp(f.amount)}</div>
+          <span class="x-btn" onclick="del('finanzas',${f.id})">×</span>
+        </div>
+      </div>`;
+    }).join('');
+    return`<div style="margin-bottom:4px">
+      <div style="font-size:10px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;padding:8px 4px 4px;border-bottom:1px solid var(--border)">${dayLbl}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+/* ── GASTO RÁPIDO ── */
+async function quickGasto(){
+  const name=document.getElementById('qg-name').value.trim();
+  const amount=parseFloat(document.getElementById('qg-amount').value);
+  const category=document.getElementById('qg-cat').value;
+  if(!name||!amount) return;
+  const today=new Date();
+  const date=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  const item={id:Date.now(),name,type:'gasto',amount,date,category};
+  D.finanzas.push(item);
+  rFinanzas(); renderCharts(); rPresupuesto();
+  document.getElementById('qg-name').value='';
+  document.getElementById('qg-amount').value='';
+  await post({action:'add',type:'finanzas',item});
+}
+
+/* ── PRESUPUESTO ── */
+let _presupuesto={};
+function loadPresupuesto(){
+  try{ _presupuesto=JSON.parse(localStorage.getItem('nh_presupuesto')||'{}'); }catch(e){ _presupuesto={}; }
+}
+function savePresupuesto(){
+  CATS.forEach(cat=>{
+    const inp=document.getElementById('pinp-'+cat.replace(/\//g,'-'));
+    if(inp) _presupuesto[cat]=parseFloat(inp.value)||0;
+  });
+  localStorage.setItem('nh_presupuesto',JSON.stringify(_presupuesto));
+  rPresupuesto();
+  document.getElementById('pres-config').style.display='none';
+  document.getElementById('pres-toggle-btn').textContent='configurar';
+}
+function togglePresupuesto(){
+  const cfg=document.getElementById('pres-config');
+  const btn=document.getElementById('pres-toggle-btn');
+  if(cfg.style.display==='none'){
+    cfg.style.display='block';
+    btn.textContent='cerrar';
+    // Render inputs
+    document.getElementById('pres-inputs').innerHTML=CATS.map(cat=>{
+      const id='pinp-'+cat.replace(/\//g,'-');
+      const val=_presupuesto[cat]||'';
+      return`<div>
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:3px">${cat}</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:11px;color:var(--ink3)">$</span>
+          <input id="${id}" type="number" value="${val}" placeholder="0"
+            style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;background:var(--bg);color:var(--ink)">
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    cfg.style.display='none';
+    btn.textContent='configurar';
+  }
+}
+function rPresupuesto(){
+  const el=document.getElementById('list-presupuesto');
+  if(!el) return;
+  const mes=_finMes();
+  const gastosCat={};
+  mes.filter(f=>f.type==='gasto').forEach(f=>{ gastosCat[f.category||'Otro']=(gastosCat[f.category||'Otro']||0)+Number(f.amount); });
+  const cats=CATS.filter(cat=>_presupuesto[cat]||gastosCat[cat]);
+  if(!cats.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--ink3);padding:8px 0;text-align:center">Configura tu presupuesto mensual por categoría →</div>';
+    return;
+  }
+  el.innerHTML=cats.map(cat=>{
+    const gasto=gastosCat[cat]||0;
+    const meta=_presupuesto[cat]||0;
+    const pct=meta>0?Math.min(100,Math.round(gasto/meta*100)):null;
+    const color=pct===null?'var(--ink3)':pct>=90?'var(--rust)':pct>=70?'var(--amber)':'var(--sage)';
+    const barW=pct!==null?pct:0;
+    return`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:600;color:var(--ink)">${cat}</span>
+        <span style="font-size:12px;color:${color};font-weight:700">${clp(gasto)}${meta?' / '+clp(meta):''}</span>
+      </div>
+      ${meta?`<div style="background:var(--border);border-radius:6px;height:6px;overflow:hidden">
+        <div style="height:6px;width:${barW}%;background:${color};border-radius:6px;transition:.4s"></div>
+      </div>
+      <div style="font-size:10px;color:${color};margin-top:2px;text-align:right">${pct}% usado</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 /* charts */
 function catData(){
   const c={};
-  D.finanzas.filter(f=>f.type==='gasto').forEach(f=>{
+  _finMes().filter(f=>f.type==='gasto').forEach(f=>{
     const cat = f.category||'Otro';
-    // Si la categoría es hormiga, agrupar. Si no, verificar por nombre también
     const label = isHormiga(f) ? '🛒 Gasto hormiga' : cat;
     c[label]=(c[label]||0)+Number(f.amount);
   });
   return c;
 }
-function renderCharts(){rDonut('wrap-donut-r');rDonut('wrap-donut-f');rTrend();rProy();}
+function renderCharts(){rDonut('wrap-donut-r');rDonut('wrap-donut-f');rTrend();rTrendF();rProy();}
 
 function rDonut(wid){
   const wrap=document.getElementById(wid);if(!wrap)return;
@@ -1797,6 +2049,24 @@ function rTrend(){
   if(CH.trend){CH.trend.destroy();delete CH.trend;}
   wrap.innerHTML='<canvas id="trendc" width="400" height="165"></canvas>';
   CH.trend=new Chart(document.getElementById('trendc').getContext('2d'),{
+    type:'bar',
+    data:{labels:keys.map(mLabel),datasets:[
+      {label:'Ingresos',data:keys.map(k=>ms[k].i),backgroundColor:'rgba(61,107,82,.7)',borderRadius:6,borderSkipped:false},
+      {label:'Gastos',data:keys.map(k=>ms[k].e),backgroundColor:'rgba(184,92,44,.7)',borderRadius:6,borderSkipped:false}
+    ]},
+    options:{animation:false,plugins:{legend:{labels:{font:{size:10},boxWidth:10}}},scales:{y:{ticks:{callback:v=>'$'+Number(v/1000).toFixed(0)+'K',font:{size:9}}},x:{ticks:{font:{size:9}}}},responsive:false,maintainAspectRatio:false}
+  });
+}
+
+function rTrendF(){
+  const wrap=document.getElementById('wrap-trend-f');if(!wrap)return;
+  const ms={};
+  D.finanzas.forEach(f=>{const m=(f.date||'').substring(0,7);if(!m)return;if(!ms[m])ms[m]={i:0,e:0};if(f.type==='ingreso')ms[m].i+=Number(f.amount);else ms[m].e+=Number(f.amount);});
+  const keys=Object.keys(ms).sort().slice(-6);
+  if(!keys.length){wrap.innerHTML='<div class="empty" style="padding:40px 0;font-size:12px">Sin datos aún</div>';return;}
+  if(CH.trendF){CH.trendF.destroy();delete CH.trendF;}
+  wrap.innerHTML='<canvas id="trendFc" width="400" height="165"></canvas>';
+  CH.trendF=new Chart(document.getElementById('trendFc').getContext('2d'),{
     type:'bar',
     data:{labels:keys.map(mLabel),datasets:[
       {label:'Ingresos',data:keys.map(k=>ms[k].i),backgroundColor:'rgba(61,107,82,.7)',borderRadius:6,borderSkipped:false},
