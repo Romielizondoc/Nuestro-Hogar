@@ -2,10 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nuestro Hogar ✦</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -476,7 +473,6 @@ header{
 }
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .chart-box{position:relative;height:200px;margin-top:8px;}
-@media(max-width:600px){.chart-box{height:280px;}}
 .trend-box{height:165px;margin-top:8px;}
 
 /* ===== MODAL ===== */
@@ -656,152 +652,38 @@ header{
 .hbtn-filter.on{background:var(--rust);border-color:var(--rust);color:#fff;}
 
 /* ===== INVENTARIO ===== */
-.inv-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
-.inv-stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;text-align:center;}
-.inv-stat-n{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:var(--ink);line-height:1;}
-.inv-stat-n.warn{color:var(--amber);}
-.inv-stat-n.danger{color:var(--rust);}
-.inv-stat-l{font-size:10px;color:var(--ink3);margin-top:2px;}
-.inv-alert{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  background:var(--rust-bg);border:1px solid var(--rust-bg2);border-radius:10px;
-  padding:8px 12px;margin-bottom:10px;
+.inv-section{margin-bottom:16px;}
+.inv-section-lbl{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--ink3);padding:4px 0 8px;border-bottom:1px solid var(--border);margin-bottom:4px;
 }
-.inv-alert-body{flex:1;min-width:0;}
-.inv-alert-title{font-size:11px;font-weight:700;color:var(--rust);}
-.inv-alert-sub{font-size:10px;color:var(--rust);opacity:.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.inv-search-wrap{position:relative;margin-bottom:8px;}
-.inv-search{
-  width:100%;padding:8px 12px 8px 30px;
-  border:1px solid var(--border);border-radius:10px;
-  font-family:'Inter',sans-serif;font-size:13px;
-  color:var(--ink);background:var(--bg2);outline:none;transition:.15s;
-}
-.inv-search:focus{border-color:var(--rust);background:var(--card);}
-.inv-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;color:var(--ink3);}
-.inv-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
-.inv-chip{
-  font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;
-  border:1px solid var(--border2);background:transparent;
-  color:var(--ink3);cursor:pointer;transition:.12s;white-space:nowrap;
-  font-family:'Inter',sans-serif;
-}
-.inv-chip:hover{border-color:var(--rust);color:var(--rust);}
-.inv-chip.on{background:var(--rust);border-color:var(--rust);color:#fff;}
-.inv-section{margin-bottom:12px;}
-.inv-section-hdr{
-  display:flex;align-items:center;gap:5px;
-  padding:4px 0;margin-bottom:2px;
-  border-bottom:1px solid var(--border);
-}
-.inv-section-icon{font-size:11px;}
-.inv-section-lbl{font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink3);}
-.inv-section-count{font-size:9px;color:var(--ink3);margin-left:auto;}
-.inv-row{
-  display:flex;align-items:center;gap:8px;
-  padding:6px 0;border-bottom:1px solid var(--border);
-}
+.inv-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
 .inv-row:last-child{border-bottom:none;}
-.inv-status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
-.dot-ok{background:var(--sage);}
-.dot-low{background:var(--amber);}
-.dot-out{background:var(--rust);}
-.inv-row-name{flex:1;font-size:12px;font-weight:500;color:var(--ink2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.inv-row-name.low{color:var(--amber);}
-.inv-row-name.out{color:var(--rust);}
-.iqbtn{
-  width:22px;height:22px;border-radius:50%;
-  border:1px solid var(--border2);background:var(--bg2);
-  color:var(--ink2);font-size:14px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:.1s;line-height:1;font-family:'Inter';flex-shrink:0;
-}
+.inv-low-badge{font-size:9px;padding:1px 6px;border-radius:20px;background:var(--rust-bg);color:var(--rust);font-weight:700;flex-shrink:0;}
+.inv-qty{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.iqbtn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;
+  color:var(--ink2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:.1s;line-height:1;font-family:'Inter';}
 .iqbtn:hover{background:var(--rust);border-color:var(--rust);color:#fff;}
-.iqnum{font-size:11px;font-weight:700;color:var(--ink);min-width:44px;text-align:center;}
-.iqnum.low{color:var(--amber);}
-.iqnum.out{color:var(--rust);}
-.inv-add-row{
-  display:flex;align-items:center;gap:4px;padding:5px 0;
-  font-size:11px;color:var(--ink3);cursor:pointer;transition:.1s;
-  background:none;border:none;font-family:'Inter',sans-serif;width:100%;
-}
-.inv-add-row:hover{color:var(--rust);}
-.inv-empty{text-align:center;padding:24px 16px;color:var(--ink3);font-size:12px;}
+.iqnum{font-size:13px;font-weight:700;color:var(--ink);min-width:26px;text-align:center;}
+.iqnum.low{color:var(--rust);}
 
 /* ===== MENÚ SEMANAL ===== */
-.menu-grid{
-  display:grid;
-  grid-template-columns:repeat(7,minmax(0,1fr));
-  gap:10px;
-}
+.menu-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;overflow-x:auto;}
 .menu-dia{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:16px;
-  overflow:hidden;
+  background:var(--bg2);border-radius:12px;padding:12px 10px;
+  border:1px solid var(--border);min-width:120px;
 }
-.menu-dia-head{
-  padding:8px 8px 6px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:4px;
-  position:relative;
+.menu-dia-hdr{
+  font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--rust);margin-bottom:10px;text-align:center;
 }
-.menu-dia-emoji{
-  font-size:18px;display:block;margin-bottom:3px;line-height:1;
-}
-.menu-dia-name{
-  font-size:10px;font-weight:800;letter-spacing:.8px;
-  text-transform:uppercase;color:#fff;
-}
-.menu-dia-body{ padding:10px 10px 8px; }
-.menu-slot{ margin-bottom:8px; }
-.menu-slot:last-child{ margin-bottom:0; }
-.menu-slot-lbl{
-  font-size:9px;font-weight:700;letter-spacing:.5px;
-  text-transform:uppercase;color:var(--ink3);
-  margin-bottom:3px;
-}
-.menu-slot-txt{
-  font-size:11.5px;color:var(--ink2);line-height:1.45;
-  overflow-wrap:break-word;
-}
-.menu-slot-link{
-  font-size:11.5px;color:var(--ink2);line-height:1.45;
-  overflow-wrap:break-word;cursor:pointer;
-  border-bottom:1px dashed var(--border2);
-  transition:color .12s,border-color .12s;
-  display:inline;
-}
-.menu-slot-link:hover{ color:var(--rust);border-color:var(--rust); }
-.menu-slot-snack{
-  background:var(--plum-bg);border-radius:9px;
-  padding:6px 8px;margin-bottom:8px;
-}
-.menu-slot-snack .menu-slot-lbl{ color:var(--plum); }
-.menu-slot-snack .menu-slot-txt{ color:var(--plum);font-weight:500;font-size:11px; }
-.menu-slot-papa{
-  margin-top:4px;padding:3px 7px;
-  background:var(--sage-bg);border-radius:6px;
-  font-size:10px;color:var(--sage);line-height:1.35;
-}
-.menu-slot-divider{ height:1px;background:var(--border);margin:6px 0; }
-.menu-slot-cals{
-  font-size:9px;color:var(--ink3);
-  text-align:right;
-}
-
-@media(max-width:900px){
-  .menu-grid{
-    display:flex;gap:10px;
-    overflow-x:auto;padding-bottom:8px;
-    scrollbar-width:none;
-  }
-  .menu-grid::-webkit-scrollbar{ display:none; }
-  .menu-dia{ flex:0 0 162px; }
-  .menu-slot-txt,.menu-slot-link{ font-size:11px; }
-}
+.menu-meal{margin-bottom:9px;}
+.menu-meal-lbl{font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink3);margin-bottom:2px;}
+.menu-meal-txt{font-size:11px;color:var(--ink2);line-height:1.4;}
+.menu-colacion{background:var(--plum-bg);border-radius:8px;padding:6px 8px;margin-top:6px;}
+.menu-colacion .menu-meal-lbl{color:var(--plum);}
+.menu-colacion .menu-meal-txt{color:var(--plum);font-weight:500;}
 
 /* ===== COMPARADOR ===== */
 .comp-entry{
@@ -817,7 +699,14 @@ header{
 .comp-tienda-precio{font-size:13px;font-weight:700;color:var(--ink);}
 .comp-tienda.mejor .comp-tienda-precio{color:var(--sage);}
 
-/* OFERTA POPUP — eliminado */
+/* ===== OFERTA POPUP ===== */
+.oferta-popup{
+  position:fixed;top:76px;right:24px;z-index:4000;
+  background:var(--card);border:1px solid var(--border);border-radius:18px;
+  padding:18px 20px;max-width:300px;width:92vw;
+  box-shadow:var(--sh3);animation:slideup .25s ease;
+}
+.oferta-popup-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
 
 /* ===== MINI HORMIGA RESUMEN ===== */
 .mini-hormiga{
@@ -828,7 +717,8 @@ header{
 .mini-hormiga-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:4px;overflow:hidden;}
 .mini-hormiga-bar{height:100%;border-radius:4px;transition:.5s;}
 
-/* scroll del menú se adapta solo — no necesita media queries adicionales */
+@media(max-width:900px){.menu-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.menu-grid{grid-template-columns:1fr 1fr}.comp-precios{grid-template-columns:1fr 1fr}}
 
 
 /* ===== RECORDATORIOS ===== */
@@ -855,7 +745,7 @@ header{
   box-shadow:var(--sh3);animation:slideup .25s ease;
 }
 
-/* ===== RESPONSIVE intermedios ===== */
+/* ===== RESPONSIVE ===== */
 @media(max-width:1000px){.g4{grid-template-columns:repeat(2,1fr)}.news-wrap{grid-template-columns:1fr}}
 @media(max-width:700px){
   .g2,.g3,.g4,.g2l{grid-template-columns:1fr}
@@ -870,15 +760,6 @@ header{
 @media(max-width:768px){
   .tab-lbl{ display:block;font-size:9px;line-height:1.2; }
   .tab{ /* emoji shown via data-icon ::before */ }
-  /* toast sube por encima de la tab bar */
-  #toast{ bottom:calc(80px + env(safe-area-inset-bottom) + 8px); }
-  /* spotify card: stack en mobile */
-  .spotify-card{ flex-direction:column;align-items:flex-start;gap:12px; }
-  .sp-btn{ align-self:flex-start; }
-  /* staff stats: 2 columnas en mobile */
-  .s-stats{ grid-template-columns:1fr 1fr; }
-  /* notas: 1 columna en mobile pequeño */
-  .notes-grid{ grid-template-columns:1fr 1fr; }
 }
 
 .menu-receta{cursor:pointer;border-bottom:1px dashed var(--ink3);}
@@ -891,22 +772,18 @@ header{
 @media(max-width:768px){
 
   /* ── Layout base ── */
-  body{
-    -webkit-text-size-adjust:100%;
-    overscroll-behavior-y:none; /* evita pull-to-refresh accidental */
-  }
+  body{ -webkit-text-size-adjust:100%; }
   
   header{
-    height:52px;padding:0 12px;
-    position:sticky;top:env(safe-area-inset-top,0);z-index:200;
+    height:52px;padding:0 16px;
+    position:sticky;top:0;z-index:200;
   }
-  .logo{ font-size:14px;gap:6px; }
-  .logo-mark{ width:24px;height:24px;font-size:12px; }
-  .hcenter{ display:none!important; }
+  .logo{ font-size:15px; }
+  .logo-mark{ font-size:18px; }
+  .hcenter{ display:none; }
   .av{ display:none; }
-  .hbtn{ font-size:11px;padding:5px 8px; }
-  .dbtn{ font-size:14px;padding:5px 7px; }
-  #sync-btn{ font-size:11px;padding:5px 10px; }
+  .hbtn{ font-size:12px;padding:6px 10px; }
+  .dbtn{ font-size:16px;padding:6px 8px; }
 
   /* ── Navigation — bottom tab bar ── */
   .tabs-row{
@@ -949,9 +826,8 @@ header{
   /* ── Main content area ── */
   .wrap{
     padding:14px 12px;
-    padding-bottom:calc(80px + env(safe-area-inset-bottom));
+    padding-bottom:80px;
     max-width:100%;
-    overflow-x:hidden;
   }
 
   /* ── Cards & grids ── */
@@ -970,8 +846,14 @@ header{
   .fi-meta{ font-size:11px; }
   .fi-amt{ font-size:13px; }
 
-  /* ── Menú semanal — se adapta via CSS propio ── */
+  /* ── Menú semanal ── */
+  .menu-grid{ grid-template-columns:1fr!important; }
+  .menu-dia{ padding:14px; }
+  .menu-dia-title{ font-size:15px; }
 
+  /* ── Comparador ── */
+  .comp-precios{ grid-template-columns:1fr 1fr!important; }
+  .comp-entry{ padding:12px; }
 
   /* ── Modales — full screen en mobile ── */
   .ov{ align-items:flex-end; }
@@ -988,11 +870,8 @@ header{
   .m-title{ font-size:17px; }
 
   /* ── FAB ── */
-  #fab{ bottom:74px!important;right:16px!important; }
-  #fab-menu{ bottom:136px!important;right:16px!important; }
-
-  /* ── Popup recordatorios — no tapar tabs ── */
-  .rec-popup{ top:auto;bottom:calc(80px + env(safe-area-inset-bottom));right:12px;left:12px;max-width:100%;width:auto; }
+  .fab{ bottom:74px!important;right:16px!important; }
+  .fab-menu{ bottom:136px!important;right:16px!important; }
 
   /* ── Pascal ── */
   .pascal-grid{ grid-template-columns:1fr 1fr!important; }
@@ -1004,7 +883,6 @@ header{
 
   /* ── Forms ── */
   .fin{ font-size:16px; } /* 16px previene zoom en iOS */
-  .fsel{ font-size:16px; } /* también previene zoom en iOS */
   .fg{ margin-bottom:14px; }
   .m-actions{ flex-direction:column;gap:8px; }
   .m-actions button{ width:100%;padding:13px; }
@@ -1027,10 +905,7 @@ header{
   .notes-grid{ grid-template-columns:1fr!important; }
   
   /* ── Inventario ── */
-  .inv-stats-row{ grid-template-columns:repeat(3,1fr); }
-  .inv-row{ padding:7px 0; }
-  .inv-row-name{ font-size:12px; }
-  .iqnum{ font-size:11px;min-width:38px; }
+  .inv-item{ padding:10px 12px; }
   
   /* ── Recordatorios ── */
   .rec-item{ padding:10px 0; }
@@ -1207,19 +1082,17 @@ header{
     <div class="card gap">
       <div class="ch">
         <div class="ct">📦 Inventario del hogar</div>
-        <button class="btn-ghost" style="border-color:var(--rust);color:var(--rust)" onclick="openInvModal()">+ agregar</button>
-      </div>
-      <!-- stats + search + chips generados por rInventario -->
-      <div id="inv-stats-row" style="display:none"></div>
-      <div id="inv-alert-banner" style="display:none"></div>
-      <div id="inv-controls" style="display:none">
-        <div class="inv-search-wrap">
-          <span class="inv-search-icon">🔍</span>
-          <input class="inv-search" id="inv-search-input" placeholder="Buscar en inventario…" oninput="rInventario()">
+        <div style="display:flex;gap:6px">
+          <button class="btn-ghost" onclick="syncInvToCompras()" title="Pasar stock bajo a Lista de Compras">🛒 sync compras</button>
+          <button class="btn-ghost" onclick="openInvModal()">+ agregar</button>
         </div>
-        <div class="inv-chips" id="inv-chips"></div>
       </div>
-      <div id="list-inventario"></div>
+      <div id="list-inventario">
+        <div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">
+          Registra lo que tienes en casa — aceite, arroz, shampoo...<br>
+          <span style="font-size:11px">La IA lo usará para sugerir recetas</span>
+        </div>
+      </div>
     </div>
 
     <!-- Row 3: Menú semanal -->
@@ -1228,9 +1101,7 @@ header{
         <div class="ct">🍽️ Menú semanal</div>
         <div style="display:flex;gap:6px;align-items:center">
           <span id="menu-fecha-lbl" style="font-size:10px;color:var(--ink3)"></span>
-          <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="generarMenuIA(false)">✨ Generar con IA</button>
-          <button class="btn-ghost" style="border-color:var(--rust);color:var(--rust);font-size:11px" onclick="generarMenuIA(true)" title="Limpia caché y genera menú nuevo">↺ Regenerar</button>
-          <button class="btn-ghost" id="menu-dl-btn" style="font-size:11px" onclick="descargarMenuImagen()" title="Descargar menú como imagen">↓ imagen</button>
+          <button class="btn-ghost" style="border-color:var(--plum);color:var(--plum)" onclick="generarMenuIA()">✨ Generar con IA</button>
         </div>
       </div>
       <div id="menu-semanal-wrap">
@@ -1241,7 +1112,18 @@ header{
       </div>
     </div>
 
-
+    <!-- Row 4: Comparador de precios -->
+    <div class="card gap">
+      <div class="ch">
+        <div class="ct">💰 Comparador de precios</div>
+        <button class="btn-ghost" onclick="document.getElementById('comp-ov').classList.add('open');document.getElementById('comp-query').value='';document.getElementById('comp-query').focus();">+ buscar artículo</button>
+      </div>
+      <div id="list-comparador">
+        <div style="text-align:center;padding:16px;color:var(--ink3);font-size:12px">
+          Busca cualquier artículo y la IA compara precios en Jumbo, Líder, Unimarc y Walmart
+        </div>
+      </div>
+    </div>
 
   </div>
 
@@ -1695,36 +1577,10 @@ function post(body){
 
 /* ─────────────── IA proxy (OpenAI via Apps Script) ─────────────── */
 async function geminiCall(prompt, maxTokens=1000){
-  const payload = btoa(unescape(encodeURIComponent(
-    JSON.stringify({prompt, max_tokens: maxTokens})
-  )));
-  return new Promise((resolve, reject) => {
-    const cbName = '_gasIA' + (++cbN);
-    const timer  = setTimeout(() => {
-      delete window[cbName];
-      reject(new Error('Timeout — el servidor tardó demasiado'));
-    }, 55000);
-    window[cbName] = (data) => {
-      clearTimeout(timer);
-      delete window[cbName];
-      if(!data || !data.ok){
-        reject(new Error(data?.error || 'Error del servidor'));
-        return;
-      }
-      const txt = (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
-      if(!txt){ reject(new Error('La IA devolvió respuesta vacía')); return; }
-      resolve(txt);
-    };
-    const s = document.createElement('script');
-    s.src = GAS + '?action=gemini&payload=' + encodeURIComponent(payload) + '&callback=' + cbName;
-    s.onerror = () => {
-      clearTimeout(timer);
-      delete window[cbName];
-      reject(new Error('Error de red al contactar el servidor'));
-    };
-    document.head.appendChild(s);
-    setTimeout(() => { try{ s.remove(); }catch(e){} }, 60000);
-  });
+  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({prompt, max_tokens:maxTokens}))));
+  const data = await jsonp({action:'gemini', payload});
+  if(!data.ok) throw new Error(data.error||'Error del servidor');
+  return (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
 }
 
 /* ─────────────── AUTH ─────────────── */
@@ -1787,42 +1643,9 @@ async function syncAll(){
   btn.classList.remove('syncing');
   toast('Actualizado ✓','success');
   loadNews();
-  // Sincronizar Google Calendar
-  sincGoogleCalendar();
   setTimeout(()=>{
     // ofertas se verifican al entrar a pestaña Hogar
   }, 1500);
-}
-
-/* ─────────────── GOOGLE CALENDAR SYNC ─────────────── */
-async function sincGoogleCalendar(){
-  try{
-    const r = await jsonp({action:'gcal'});
-    if(!r?.ok || !r.data?.length) return;
-    // Fusionar con eventos de Sheets — no duplicar por ID
-    const existentes = new Set((D.eventos||[]).map(e=>String(e.id)));
-    let agregados = 0;
-    r.data.forEach(ev=>{
-      if(!existentes.has(String(ev.id))){
-        D.eventos = D.eventos || [];
-        D.eventos.push(ev);
-        agregados++;
-      } else {
-        // Actualizar el evento existente con datos de GCal
-        const idx = D.eventos.findIndex(e=>String(e.id)===String(ev.id));
-        if(idx>=0) D.eventos[idx] = {...D.eventos[idx], ...ev};
-      }
-    });
-    // Eliminar eventos gcal que ya no existen en Google Calendar
-    const gcalIds = new Set(r.data.map(e=>String(e.id)));
-    D.eventos = (D.eventos||[]).filter(e=>!e.gcal || gcalIds.has(String(e.id)));
-    rCalendario();
-    rEventos();
-    rResumen();
-    if(agregados>0) toast(`📅 ${agregados} evento${agregados>1?'s':''} de Google Calendar sincronizados`,'success');
-  }catch(e){
-    console.warn('sincGoogleCalendar error:', e.message);
-  }
 }
 
 /* ─────────────── RECURRENTES ─────────────── */
@@ -1969,7 +1792,7 @@ function rDonut(wid){
   CH[wid]=new Chart(document.getElementById(wid+'c').getContext('2d'),{
     type:'doughnut',
     data:{labels,datasets:[{data:vals,backgroundColor:pal,borderWidth:2,borderColor:dark?'#1e1812':'#fffdf9'}]},
-    options:{animation:false,plugins:{legend:{position:window.innerWidth<600?'bottom':'right',labels:{font:{family:'Inter',size:10},boxWidth:10,color:dark?'#c4ad98':'#6b5744'}}},cutout:'62%',responsive:true,maintainAspectRatio:false}
+    options:{animation:false,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:10},boxWidth:10,color:dark?'#c4ad98':'#6b5744'}}},cutout:'62%',responsive:false,maintainAspectRatio:false}
   });
 }
 
@@ -2252,64 +2075,21 @@ function rExtras(){
 function rTramites(){
   const el=document.getElementById('list-tramites');
   if(!D.tramites?.length){el.innerHTML=empty('Sin trámites');return;}
-
-  const sorted=[...D.tramites].sort((a,b)=>{
-    if(a.status==='listo'&&b.status!=='listo') return 1;
-    if(a.status!=='listo'&&b.status==='listo') return -1;
-    const po={urgente:0,alta:1,normal:2};
-    const pa=po[a.priority||'normal']??2, pb=po[b.priority||'normal']??2;
-    if(pa!==pb) return pa-pb;
-    if(a.due&&b.due) return new Date(a.due)-new Date(b.due);
-    return a.due?-1:b.due?1:0;
-  });
-
-  el.innerHTML=sorted.map(t=>{
-    const st  = t.status||'pendiente';
-    const pri = t.priority||'normal';
-    const ds  = t.due?new Date(normDate(t.due)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
-    const isListo = st==='listo';
-    const priCol  = pri==='urgente'?'var(--rust)':pri==='alta'?'var(--amber)':'var(--ink3)';
-    const priDot  = pri==='urgente'?'🔴':pri==='alta'?'🟠':'🟡';
-    return`<div class="tri-row" style="${isListo?'opacity:.5':''}">
-      <span style="font-size:14px;cursor:pointer;user-select:none" title="Click para cambiar prioridad" onclick="cyclePriority(${t.id})">${priDot}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:500;color:var(--ink2);${isListo?'text-decoration:line-through':''}">${t.name}</div>
-        <div style="font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px">
-          <select onchange="setPriority(${t.id},this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;background:var(--bg2);color:${priCol};cursor:pointer;font-family:'Inter';font-weight:600">
-            <option value="urgente" ${pri==='urgente'?'selected':''}>🔴 Urgente</option>
-            <option value="alta"    ${pri==='alta'?'selected':''}>🟠 Alta</option>
-            <option value="normal"  ${pri==='normal'?'selected':''}>🟡 Normal</option>
-          </select>
-          ${t.notes?`<span>${t.notes}</span>`:''}
-          ${ds?`<span style="color:var(--rust)">📅 ${ds}</span>`:''}
-        </div>
-      </div>
+  el.innerHTML=D.tramites.map(t=>{
+    const st=t.status||'pendiente';
+    const ds=t.due?new Date(normDate(t.due)+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}):'';
+    return`<div class="tri-row">
+      <span>${t.priority==='urgente'?'🔴':'🟡'}</span>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--ink2)">${t.name}</div><div style="font-size:11px;color:var(--ink3)">${t.notes||''}${ds?' · '+ds:''}</div></div>
       <div class="av-sm" style="${wS(t.who)}">${t.who}</div>
       <select onchange="setStatus(${t.id},this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:8px;padding:4px 8px;background:var(--bg2);color:var(--ink);cursor:pointer;font-family:'Inter'">
-        <option value="pendiente"   ${st==='pendiente'?'selected':''}>Pendiente</option>
+        <option value="pendiente" ${st==='pendiente'?'selected':''}>Pendiente</option>
         <option value="en-progreso" ${st==='en-progreso'?'selected':''}>En curso</option>
-        <option value="listo"       ${st==='listo'?'selected':''}>Listo ✓</option>
+        <option value="listo" ${st==='listo'?'selected':''}>Listo</option>
       </select>
       <span class="x-btn" onclick="del('tramites',${t.id})">×</span>
     </div>`;
   }).join('');
-}
-
-function setPriority(id, val){
-  const t=D.tramites.find(i=>String(i.id)===String(id));
-  if(!t) return;
-  t.priority=val;
-  post({action:'update',type:'tramites',id,field:'priority',value:val});
-  rTramites();
-  rResumen();
-  toast('Prioridad actualizada ✓','success');
-}
-
-function cyclePriority(id){
-  const t=D.tramites.find(i=>String(i.id)===String(id));
-  if(!t) return;
-  const ciclo={urgente:'alta',alta:'normal',normal:'urgente'};
-  setPriority(id, ciclo[t.priority||'normal']||'urgente');
 }
 
 function rNotas(){
@@ -2341,24 +2121,19 @@ function rResumen(){
   document.getElementById('p-tareas').style.width=all.length?Math.round(done/all.length*100)+'%':'0%';
   const pend=(D.tramites||[]).filter(t=>t.status!=='listo');
   const urg=pend.filter(t=>t.priority==='urgente');
-  const alta=pend.filter(t=>t.priority==='alta');
   document.getElementById('s-tramites').textContent=pend.length;
-  document.getElementById('s-tramites-sub').textContent=
-    (urg.length?'🔴 '+urg.length+' urgente'+(urg.length>1?'s':''):'') +
-    (urg.length&&alta.length?' · ':'') +
-    (alta.length?'🟠 '+alta.length+' alta'+(alta.length>1?'s':''):'') +
-    (!urg.length&&!alta.length?'sin urgentes':'');
-  // urgentes card — incluye urgentes y alta prioridad
+  document.getElementById('s-tramites-sub').textContent='urgentes: '+urg.length;
+  // urgentes card
   const urgEl=document.getElementById('r-urgentes');
   const urgItems=[
-    ...(D.tramites||[]).filter(t=>t.status!=='listo'&&(t.priority==='urgente'||t.priority==='alta')).map(t=>({text:t.name,due:t.due,dot:t.priority==='urgente'?'var(--rust)':'var(--amber)'})),
-    ...(D.tareas||[]).filter(t=>!isDone(t.done)&&t.priority==='urgente').map(t=>({text:t.text,due:'',dot:'var(--rust)'}))
+    ...(D.tramites||[]).filter(t=>t.status!=='listo'&&t.priority==='urgente').map(t=>({text:t.name,due:t.due})),
+    ...(D.tareas||[]).filter(t=>!isDone(t.done)&&t.priority==='urgente').map(t=>({text:t.text,due:''}))
   ];
   urgEl.innerHTML=urgItems.length?urgItems.map(u=>{
     const dStr=normDate((u.due||'').trim());
     const d=dStr?new Date(dStr+'T12:00'):null;
     const days=(d&&!isNaN(d.getTime()))?Math.ceil((d-new Date())/86400000):null;
-    const dot=u.dot||(days!==null&&days<=3?'var(--rust)':'var(--amber)');
+    const dot=days!==null&&days<=3?'var(--rust)':'var(--amber)';
     return`<div class="urg-item">
       <div class="urg-dot" style="background:${dot}"></div>
       <div style="flex:1;font-size:13px;color:var(--ink2)">${u.text}</div>
@@ -3417,7 +3192,14 @@ window.showTab = function(name, el){
       const low=INV.filter(i=>i.qty<=i.min);
       if(low.length) toast(`⚠ ${low.length} ítem${low.length>1?'s':''} con stock bajo — pulsa 🛒 sync para agregar a compras`,'');
     }, 600);
-
+    // Ofertas (once per day, only from Hogar)
+    setTimeout(()=>{
+      const items=(D.compras||[]).filter(c=>!isDone(c.done));
+      if(items.length){
+        toast('🏷️ Revisando ofertas para tu lista...','');
+        setTimeout(checkOfertasCompras, 800);
+      }
+    }, 1200);
   }
   if(name==='tramites'){
     rRecordatorios();
@@ -3428,27 +3210,18 @@ window.showTab = function(name, el){
 let COMPS = [];
 try{ COMPS=JSON.parse(localStorage.getItem('hogar-comps')||'[]'); }catch(e){ COMPS=[]; }
 
-const INV_DEFAULT = [{"id":1773799731131,"nombre":"Trucha","cat":"🥩 Carnes y pescados","unidad":"kg","qty":1,"min":0},{"id":1773799715335,"nombre":"Chuletitas de cerdo","cat":"🥩 Carnes y pescados","unidad":"kg","qty":1,"min":0},{"id":1773799701672,"nombre":"Pechugas de pollo","cat":"🥩 Carnes y pescados","unidad":"kg","qty":2,"min":1},{"id":1773799668467,"nombre":"Lomo liso","cat":"🥩 Carnes y pescados","unidad":"kg","qty":1,"min":0},{"id":1773623809050,"nombre":"cilantro","cat":"🥦 Verduras y frutas","unidad":"un","qty":1,"min":0},{"id":1773257191051,"nombre":"Shampoo Pascal","cat":"💊 Farmacia y salud","unidad":"L","qty":1,"min":0.5},{"id":1773257173298,"nombre":"Protectores diarios","cat":"💊 Farmacia y salud","unidad":"un","qty":20,"min":10},{"id":1773257023291,"nombre":"Toalla nova limpieza","cat":"🧴 Limpieza","unidad":"un","qty":1,"min":1},{"id":1773257008275,"nombre":"Toalla nova cocina","cat":"🧴 Limpieza","unidad":"un","qty":2,"min":1},{"id":1773256993736,"nombre":"Cif","cat":"🧴 Limpieza","unidad":"un","qty":1,"min":1},{"id":1773256972216,"nombre":"Sal","cat":"🧂 Condimentos y aceites","unidad":"g","qty":500,"min":100},{"id":1773256944545,"nombre":"Leche sin lactosa","cat":"🥛 Lácteos y huevos","unidad":"L","qty":2,"min":1},{"id":1773256929878,"nombre":"Leche Nido","cat":"🥛 Lácteos y huevos","unidad":"kg","qty":2,"min":1},{"id":1773256901529,"nombre":"Toallas húmedas","cat":"🧴 Limpieza","unidad":"un","qty":4,"min":2},{"id":1773256882693,"nombre":"Papel higiénico","cat":"🧴 Limpieza","unidad":"un","qty":5,"min":5},{"id":1773256867841,"nombre":"Bolsas de basura chicas","cat":"🧴 Limpieza","unidad":"un","qty":20,"min":10},{"id":1773256840571,"nombre":"Detergente ropa normal","cat":"🧴 Limpieza","unidad":"L","qty":1.5,"min":0.5},{"id":1773256813958,"nombre":"Cloro ropa color","cat":"🧴 Limpieza","unidad":"L","qty":1,"min":1},{"id":1773256800263,"nombre":"Poett","cat":"🧴 Limpieza","unidad":"L","qty":2.5,"min":1},{"id":1773256774631,"nombre":"Limpiavidrios","cat":"🧴 Limpieza","unidad":"ml","qty":200,"min":200},{"id":1773256747052,"nombre":"Antigrasa","cat":"🧴 Limpieza","unidad":"ml","qty":500,"min":200},{"id":1773256729366,"nombre":"Lavaloza","cat":"🧴 Limpieza","unidad":"ml","qty":700,"min":200},{"id":1773256705571,"nombre":"Cloro normal","cat":"🧴 Limpieza","unidad":"L","qty":3,"min":1},{"id":1773256673876,"nombre":"Ajo","cat":"🥦 Verduras y frutas","unidad":"un","qty":1,"min":1},{"id":1773256663724,"nombre":"Cebolla blanca","cat":"🥦 Verduras y frutas","unidad":"un","qty":3,"min":2},{"id":1773256649134,"nombre":"Tomates","cat":"🥦 Verduras y frutas","unidad":"un","qty":8,"min":2},{"id":1773256631697,"nombre":"Limones","cat":"🥦 Verduras y frutas","unidad":"un","qty":5,"min":5},{"id":1773256617749,"nombre":"Pimentón rojo","cat":"🥦 Verduras y frutas","unidad":"un","qty":0,"min":1},{"id":1773256600843,"nombre":"Zanahorias","cat":"🥦 Verduras y frutas","unidad":"un","qty":3,"min":3},{"id":1773256586412,"nombre":"Berenjena","cat":"🥦 Verduras y frutas","unidad":"un","qty":1,"min":1},{"id":1773256576920,"nombre":"Zapallo italiano","cat":"🥦 Verduras y frutas","unidad":"un","qty":1,"min":1},{"id":1773256561137,"nombre":"Camote","cat":"🥦 Verduras y frutas","unidad":"un","qty":1,"min":1},{"id":1773256541900,"nombre":"Manzanas verdes","cat":"🥦 Verduras y frutas","unidad":"un","qty":2,"min":2},{"id":1773256531612,"nombre":"Manzanas rojas","cat":"🥦 Verduras y frutas","unidad":"un","qty":2,"min":2},{"id":1773256516904,"nombre":"Paltas","cat":"🥦 Verduras y frutas","unidad":"un","qty":2,"min":3},{"id":1773256502010,"nombre":"Syrup con y sin azúcar","cat":"🥫 Conservas y salsas","unidad":"un","qty":2,"min":0},{"id":1773256479008,"nombre":"Manjar","cat":"🥛 Lácteos y huevos","unidad":"g","qty":300,"min":0},{"id":1773256458258,"nombre":"Mayonesa","cat":"🥫 Conservas y salsas","unidad":"kg","qty":1,"min":0.3},{"id":1773256438370,"nombre":"Mozzarella Strings","cat":"🥛 Lácteos y huevos","unidad":"un","qty":3,"min":5},{"id":1773256415958,"nombre":"Mantequilla con sal","cat":"🥛 Lácteos y huevos","unidad":"g","qty":500,"min":200},{"id":1773256382400,"nombre":"Tarro leche condensada","cat":"🥛 Lácteos y huevos","unidad":"un","qty":2,"min":1},{"id":1773256366644,"nombre":"Tarro leche evaporada","cat":"🥛 Lácteos y huevos","unidad":"un","qty":2,"min":1},{"id":1773256341494,"nombre":"Huevos","cat":"🥛 Lácteos y huevos","unidad":"un","qty":12,"min":10},{"id":1773256324765,"nombre":"Guanciale","cat":"🥩 Carnes y pescados","unidad":"g","qty":100,"min":0},{"id":1773256277880,"nombre":"Tollo","cat":"🥩 Carnes y pescados","unidad":"g","qty":300,"min":0},{"id":1773256256238,"nombre":"Salchichas artesanales (Jumbo)","cat":"🥩 Carnes y pescados","unidad":"un","qty":4,"min":0},{"id":1773256231430,"nombre":"Pastelera de choclo","cat":"🥦 Verduras y frutas","unidad":"kg","qty":0.5,"min":0},{"id":1773256201361,"nombre":"Pan multigrano congelado (Romi)","cat":"🥐 Panadería","unidad":"kg","qty":1.5,"min":0.5},{"id":1773256171266,"nombre":"Acai","cat":"🥦 Verduras y frutas","unidad":"g","qty":200,"min":0},{"id":1773256125650,"nombre":"Espinaca","cat":"🥦 Verduras y frutas","unidad":"g","qty":200,"min":100},{"id":1773256104015,"nombre":"Zapallo camote","cat":"🥦 Verduras y frutas","unidad":"kg","qty":0.5,"min":0.5},{"id":1773256077265,"nombre":"Salsa preparada de carne","cat":"🥫 Conservas y salsas","unidad":"un","qty":4,"min":2},{"id":1773256065034,"nombre":"Salsa preparada de pollo","cat":"🥫 Conservas y salsas","unidad":"un","qty":4,"min":2},{"id":1773256034544,"nombre":"Maní sin sal","cat":"🌾 Granos, pastas y arroz","unidad":"kg","qty":1,"min":0.5},{"id":1773256003209,"nombre":"Castañas de cajú","cat":"🌾 Granos, pastas y arroz","unidad":"g","qty":300,"min":100},{"id":1773255969642,"nombre":"Choritos al agua","cat":"🥫 Conservas y salsas","unidad":"un","qty":1,"min":0},{"id":1773255938171,"nombre":"Avena instantanea","cat":"🌾 Granos, pastas y arroz","unidad":"kg","qty":1,"min":0.5},{"id":1773255904129,"nombre":"Granola","cat":"🌾 Granos, pastas y arroz","unidad":"kg","qty":1,"min":0.5},{"id":1773255882843,"nombre":"Azúcar blanca","cat":"🧂 Condimentos y aceites","unidad":"kg","qty":1.5,"min":1},{"id":1773255861057,"nombre":"Azúcar rubia","cat":"🧂 Condimentos y aceites","unidad":"kg","qty":2,"min":1},{"id":1773255818689,"nombre":"Ketchup","cat":"🥫 Conservas y salsas","unidad":"L","qty":1,"min":0.5},{"id":1773255777743,"nombre":"Harina de pan","cat":"🥐 Panadería","unidad":"kg","qty":1,"min":0.5},{"id":1773255712255,"nombre":"Atún","cat":"🥫 Conservas y salsas","unidad":"un","qty":3,"min":2},{"id":1773255684430,"nombre":"Couscous","cat":"🌾 Granos, pastas y arroz","unidad":"kg","qty":0.5,"min":1},{"id":1773255658677,"nombre":"Levadura seca","cat":"🥐 Panadería","unidad":"kg","qty":1.5,"min":0.5},{"id":1773255630167,"nombre":"Crema de coco","cat":"🥛 Lácteos y huevos","unidad":"un","qty":1,"min":1},{"id":1773255602696,"nombre":"Aceite de oliva","cat":"🧂 Condimentos y aceites","unidad":"L","qty":0,"min":1},{"id":1773255587979,"nombre":"Aceite vegetal","cat":"🧂 Condimentos y aceites","unidad":"L","qty":1,"min":1},{"id":1773255560174,"nombre":"Polenta","cat":"🌾 Granos, pastas y arroz","unidad":"kg","qty":0.7,"min":1},{"id":1773255539798,"nombre":"Garbanzos","cat":"🌾 Granos, pastas y arroz","unidad":"kg","qty":0.5,"min":1},{"id":1773255510968,"nombre":"Harina sin polvos","cat":"🥐 Panadería","unidad":"kg","qty":2,"min":1},{"id":1773255375205,"nombre":"Fideos cortos (espirales, dedales, corbatas, etc)","cat":"🌾 Granos, pastas y arroz","unidad":"un","qty":5,"min":2}];
 let INV = [];
-function loadINV(){
-  try{
-    const stored = localStorage.getItem('hogar-inv');
-    INV = stored ? JSON.parse(stored) : INV_DEFAULT.map(i=>({...i}));
-    if(!INV.length) INV = INV_DEFAULT.map(i=>({...i}));
-  }catch(e){ INV = INV_DEFAULT.map(i=>({...i})); }
-}
+function loadINV(){ try{INV=JSON.parse(localStorage.getItem('hogar-inv')||'[]');}catch(e){INV=[];} }
 function saveINV(){ localStorage.setItem('hogar-inv',JSON.stringify(INV)); }
 loadINV();
 
-function openInvModal(cat){
+function openInvModal(){
   document.getElementById('inv-nombre').value='';
   document.getElementById('inv-qty').value='1';
   document.getElementById('inv-min').value='1';
-  if(cat) document.getElementById('inv-cat').value=cat;
   document.getElementById('inv-ov').classList.add('open');
   setTimeout(()=>document.getElementById('inv-nombre').focus(),80);
 }
-function openInvModalCat(cat){ openInvModal(cat); }
 
 function saveInvItem(){
   const nombre=(document.getElementById('inv-nombre')?.value||'').trim();
@@ -3483,124 +3256,49 @@ function delInv(id){
   toast('Eliminado','success');
 }
 
-/* estado del filtro activo del inventario */
-let _invFiltro = 'Todos';
-
 function rInventario(){
-  const el = document.getElementById('list-inventario');
-  const statsEl = document.getElementById('inv-stats-row');
-  const alertEl = document.getElementById('inv-alert-banner');
-  const controlsEl = document.getElementById('inv-controls');
+  const el=document.getElementById('list-inventario');
   if(!el) return;
-
   if(!INV.length){
-    if(statsEl) statsEl.style.display='none';
-    if(alertEl) alertEl.style.display='none';
-    if(controlsEl) controlsEl.style.display='none';
-    el.innerHTML='<div class="inv-empty">📦 Registra lo que tienes en casa<br><span style="font-size:11px">La IA lo usará para sugerir recetas</span></div>';
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">Registra lo que tienes en casa<br><span style="font-size:11px">La IA lo usará para sugerir recetas</span></div>';
     return;
   }
-
-  /* ── Stats ── */
-  const total = INV.length;
-  const bajos = INV.filter(i => i.qty > 0 && i.qty <= i.min).length;
-  const agotados = INV.filter(i => i.qty === 0).length;
-  if(statsEl){
-    statsEl.style.display = 'grid';
-    statsEl.className = 'inv-stats-row';
-    statsEl.innerHTML = `
-      <div class="inv-stat"><div class="inv-stat-n">${total}</div><div class="inv-stat-l">total ítems</div></div>
-      <div class="inv-stat"><div class="inv-stat-n ${bajos>0?'warn':''}">${bajos}</div><div class="inv-stat-l">stock bajo</div></div>
-      <div class="inv-stat"><div class="inv-stat-n ${agotados>0?'danger':''}">${agotados}</div><div class="inv-stat-l">agotados</div></div>`;
+  // Group by category
+  const cats={};
+  INV.forEach(i=>{const c=i.cat||'📦 Otros';if(!cats[c])cats[c]=[];cats[c].push(i);});
+  let html='<div class="g2">';
+  // Show low-stock alert first
+  const low=INV.filter(i=>i.qty<=i.min);
+  if(low.length){
+    html+=`<div style="grid-column:1/-1;background:var(--rust-bg);border:1px solid var(--rust-bg2);border-radius:10px;padding:10px 14px;margin-bottom:4px">
+      <span style="font-size:11px;font-weight:700;color:var(--rust)">⚠ Stock bajo: </span>
+      <span style="font-size:11px;color:var(--rust)">${low.map(i=>i.nombre).join(', ')}</span>
+    </div>`;
   }
-
-  /* ── Alert banner ── */
-  const criticos = INV.filter(i => i.qty <= i.min);
-  if(alertEl){
-    if(criticos.length){
-      alertEl.style.display = 'flex';
-      alertEl.className = 'inv-alert';
-      alertEl.innerHTML = `
-        <div class="inv-alert-body">
-          <div class="inv-alert-title">⚠ ${criticos.length} ítem${criticos.length>1?'s':''} necesitan reposición</div>
-          <div class="inv-alert-sub">${criticos.map(i=>i.nombre).join(' · ')}</div>
-        </div>
-        <button class="btn-ghost" style="border-color:var(--rust);color:var(--rust);font-size:11px;flex-shrink:0" onclick="syncInvToCompras()">🛒 Agregar a compras</button>`;
-    } else {
-      alertEl.style.display = 'none';
-    }
-  }
-
-  /* ── Search + chips ── */
-  if(controlsEl) controlsEl.style.display = 'block';
-  const query = (document.getElementById('inv-search-input')?.value||'').toLowerCase().trim();
-  const cats = [...new Set(INV.map(i => i.cat||'📦 Otros'))];
-  const chipsEl = document.getElementById('inv-chips');
-  if(chipsEl){
-    const opciones = ['Todos','⚠ Stock bajo', ...cats];
-    chipsEl.innerHTML = opciones.map(op =>
-      `<button class="inv-chip ${_invFiltro===op?'on':''}" onclick="_invFiltro='${op}';rInventario()">${op}</button>`
-    ).join('');
-  }
-
-  /* ── Filtrar items ── */
-  let items = INV.filter(i => {
-    if(query && !i.nombre.toLowerCase().includes(query)) return false;
-    if(_invFiltro === '⚠ Stock bajo') return i.qty <= i.min;
-    if(_invFiltro !== 'Todos') return (i.cat||'📦 Otros') === _invFiltro;
-    return true;
-  });
-
-  /* ── Ordenar: agotados primero, luego bajos, luego ok ── */
-  items.sort((a,b)=>{
-    const prio = i => i.qty===0 ? 0 : i.qty<=i.min ? 1 : 2;
-    return prio(a)-prio(b);
-  });
-
-  if(!items.length){
-    el.innerHTML = '<div class="inv-empty">No hay ítems con ese filtro</div>';
-    return;
-  }
-
-  /* ── Agrupar por categoría respetando filtro ── */
-  const grouped = {};
-  items.forEach(i => {
-    const c = i.cat||'📦 Otros';
-    if(!grouped[c]) grouped[c]=[];
-    grouped[c].push(i);
-  });
-
-  /* ── Render — filas compactas agrupadas por categoría ── */
-  el.innerHTML = Object.entries(grouped).map(([cat, citems]) => {
-    const rows = citems.map(i => {
-      const isOut = i.qty === 0;
-      const isLow = !isOut && i.qty <= i.min;
-      const dotClass = isOut ? 'dot-out' : isLow ? 'dot-low' : 'dot-ok';
-      const numClass = isOut ? 'out' : isLow ? 'low' : '';
-      const nameClass = isOut ? 'out' : isLow ? 'low' : '';
-      return `
-        <div class="inv-row">
-          <span class="inv-status-dot ${dotClass}"></span>
-          <span class="inv-row-name ${nameClass}" title="${i.nombre}">${i.nombre}</span>
-          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+  html+='</div>';
+  html+='<div>';
+  Object.entries(cats).forEach(([cat,items])=>{
+    html+=`<div class="inv-section">
+      <div class="inv-section-lbl">${cat}</div>
+      ${items.map(i=>{
+        const low=i.qty<=i.min;
+        return`<div class="inv-row">
+          <div style="flex:1">
+            <span style="font-size:13px;font-weight:500;color:${low?'var(--rust)':'var(--ink2)'}">${i.nombre}</span>
+          </div>
+          ${low?`<span class="inv-low-badge">⚠ bajo</span>`:''}
+          <div class="inv-qty">
             <button class="iqbtn" onclick="adjInv(${i.id},-1)">−</button>
-            <span class="iqnum ${numClass}">${i.qty} ${i.unidad}</span>
+            <span class="iqnum ${low?'low':''}">${i.qty} ${i.unidad}</span>
             <button class="iqbtn" onclick="adjInv(${i.id},+1)">+</button>
           </div>
-          <span class="x-btn" onclick="delInv(${i.id})" style="font-size:15px;margin-left:2px">×</span>
+          <span class="x-btn" onclick="delInv(${i.id})">×</span>
         </div>`;
-    }).join('');
-    return `
-      <div class="inv-section">
-        <div class="inv-section-hdr">
-          <span class="inv-section-icon">${cat.split(' ')[0]}</span>
-          <span class="inv-section-lbl">${cat.split(' ').slice(1).join(' ')}</span>
-          <span class="inv-section-count">${citems.length} ítem${citems.length>1?'s':''}</span>
-        </div>
-        ${rows}
-        <button class="inv-add-row" onclick="openInvModalCat('${cat.replace(/'/g,"\\'")}')">＋ añadir a esta categoría</button>
-      </div>`;
-  }).join('');
+      }).join('')}
+    </div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
 }
 
 /* ── INVENTARIO → LISTA DE COMPRAS (auto-sync) ──────────────────────────── */
@@ -3667,232 +3365,29 @@ function renderMenu(menu){
   const saved=localStorage.getItem('hogar-menu-fecha');
   const lbl=document.getElementById('menu-fecha-lbl');
   if(lbl&&saved) lbl.textContent='Generado el '+saved;
-
-  const heads=[
-    {col:'#b85c2c',emoji:'🌅'},
-    {col:'#5e3a7a',emoji:'🌤'},
-    {col:'#2d6a4f',emoji:'🌈'},
-    {col:'#9c6a1a',emoji:'🌻'},
-    {col:'#1d5f73',emoji:'⭐'},
-    {col:'#7a3060',emoji:'🌊'},
-    {col:'#5a3e28',emoji:'🌟'},
-  ];
-
-  const esc = s => (s||'').replace(/'/g,"\\'");
-
-  /* Link a receta — abre modal en desktop, Google en mobile */
-  const recetaLink = (plato) => {
-    if(!plato||plato==='—') return `<span class="menu-slot-txt">${plato}</span>`;
-    return `<span class="menu-slot-link" onclick="buscarReceta('${esc(plato)}')" title="Ver receta">${plato}</span>`;
-  };
-
-  el.innerHTML = `<div class="menu-grid">${menu.map((dia,i)=>{
-    const h   = heads[i%heads.length];
-    const d   = dia.desayuno||'—';
-    const s   = dia.colacion_jardin||dia.snack_pascal||dia.colacion||'—';
-    const a   = dia.almuerzo||'—';
-    const c   = dia.cena||'—';
-    const papa= (dia.almuerzo_papa||'').trim();
-    const validPapa = papa && !papa.startsWith('(') && papa.length > 2;
-    const cal = dia.calorias_aprox;
-
+  el.innerHTML=`<div class="menu-grid">${menu.map((dia,i)=>{
+    const tienePapa=dia.almuerzo_papa&&dia.almuerzo_papa.trim();
+    const snack=dia.snack_pascal||dia.colacion||'—';
+    const almuerzo=dia.almuerzo||'—';
+    const cena=dia.cena||'—';
     return `
-    <div class="menu-dia" id="menu-dia-${i}">
-      <div class="menu-dia-head" style="background:${h.col}">
-        <span class="menu-dia-emoji">${h.emoji}</span>
-        <div class="menu-dia-name">${dia.dia||''}</div>
-        <span onclick="editarDiaMenu(${i})" title="Editar este día"
-          style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:13px;cursor:pointer;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.25);line-height:1;min-width:26px;text-align:center">✏️</span>
+    <div class="menu-dia">
+      <div class="menu-dia-title">${dia.dia}</div>
+      <div class="menu-row"><span class="menu-label">☕ Desayuno</span><span class="menu-val">${dia.desayuno||'—'}</span></div>
+      <div class="menu-row"><span class="menu-label">🎒 Snack Pascal</span><span class="menu-val">${snack}</span></div>
+      <div class="menu-row">
+        <span class="menu-label">🍽️ Almuerzo</span>
+        <span class="menu-val">
+          <span class="menu-receta" onclick="buscarReceta('${almuerzo.replace(/'/g,"\'")}')">${almuerzo} <span style="font-size:10px;opacity:.6">🔍</span></span>
+          ${tienePapa?`<div style="font-size:11px;color:var(--ink3);margin-top:3px">🧔 ${dia.almuerzo_papa} <span class="menu-receta" onclick="buscarReceta('${(dia.almuerzo_papa||'').replace(/'/g,"\'")}')">🔍</span></div>`:''}
+        </span>
       </div>
-      <div class="menu-dia-body">
-
-        <div class="menu-slot">
-          <div class="menu-slot-lbl">☕ Desayuno</div>
-          <div class="menu-slot-txt">${d}</div>
-        </div>
-
-        <div class="menu-slot-snack">
-          <div class="menu-slot-lbl">🎒 Colación jardín</div>
-          <div class="menu-slot-txt">${s}</div>
-        </div>
-
-        <div class="menu-slot">
-          <div class="menu-slot-lbl">🍽 Almuerzo</div>
-          ${recetaLink(a)}
-          ${validPapa?`<div class="menu-slot-papa">🧔🏽 Papá: ${papa}</div>`:''}
-        </div>
-
-        <div class="menu-slot">
-          <div class="menu-slot-lbl">🌙 Cena</div>
-          ${recetaLink(c)}
-        </div>
-
-        ${cal?`<div class="menu-slot-divider"></div><div class="menu-slot-cals">🔥 ${cal} kcal</div>`:''}
+      <div class="menu-row">
+        <span class="menu-label">🌙 Cena</span>
+        <span class="menu-val"><span class="menu-receta" onclick="buscarReceta('${cena.replace(/'/g,"\'")}')">${cena} <span style="font-size:10px;opacity:.6">🔍</span></span></span>
       </div>
     </div>`;
   }).join('')}</div>`;
-}
-
-async function generarMenuIA(forzar=false){
-  const wrap=document.getElementById('menu-semanal-wrap');
-  const lbl=document.getElementById('menu-fecha-lbl');
-
-  // Si hay caché y no se está forzando, mostrar el guardado
-  if(!forzar && _menuCache){
-    renderMenu(_menuCache);
-    return;
-  }
-
-  // Limpiar caché si se fuerza regeneración
-  if(forzar){
-    _menuCache=null;
-    localStorage.removeItem('hogar-menu');
-    localStorage.removeItem('hogar-menu-fecha');
-    if(lbl) lbl.textContent='';
-  }
-
-  // Mostrar estado de carga
-  if(wrap) wrap.innerHTML='<div class="skel" style="height:180px;border-radius:12px;margin-bottom:8px"></div><div class="skel" style="height:180px;border-radius:12px"></div>';
-
-  const hoy = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-  const invDisponible = INV.filter(i => i.qty > 0);
-  const invConStock   = invDisponible.filter(i => i.qty > i.min).map(i => i.nombre);
-  const invBajo       = invDisponible.filter(i => i.qty <= i.min && i.qty > 0).map(i => i.nombre);
-
-  const invStr = invConStock.length
-    ? 'USA SOLO estos ingredientes disponibles en casa: ' + invConStock.join(', ')
-      + (invBajo.length ? '. (poco de: ' + invBajo.join(', ') + ')' : '')
-      + '. NO uses ingredientes que no estén en esta lista para las proteínas y verduras principales.'
-    : '';
-
-  const prompt =
-`Planifica menú semanal familia chilena Santiago: 2 adultos + Pascal (5 años).
-${invStr}
-REGLAS:
-1) CENA = misma proteína del almuerzo, distinta guarnición. Ej: almuerzo pollo con arroz → cena pollo con ensalada.
-2) CENA SIN: lentejas, garbanzos, porotos, brócoli, coliflor, repollo, cebolla cruda, puerro, ajo crudo.
-3) almuerzo_papa: papá NO come mariscos, pescado, zapallo italiano, berenjena, espinacas, acelgas, camote ni choclo. Si el almuerzo tiene alguno, pon en almuerzo_papa el MISMO plato con proteína similar (ej: merluza al horno → pollo al horno). Si no aplica, dejar "".
-4) colacion_jardin: colación saludable para jardín. Ej: manzana con mantequilla de maní, castañas de cajú y frutillas, palitos de zanahoria con hummus.
-TODOS los campos OBLIGATORIOS. Responde SOLO JSON sin backticks, 7 días:
-[{"dia":"Lunes","desayuno":"avena con leche","colacion_jardin":"manzana con mantequilla de maní","almuerzo":"pollo al horno con arroz","almuerzo_papa":"","cena":"pollo salteado con ensalada","calorias_aprox":1800}]`;
-
-  try{
-    const txt=await geminiCall(prompt, 1800);
-    if(!txt) throw new Error('Respuesta vacía de la IA');
-    const clean=txt.replace(/```json|```/g,'').trim();
-    let parsed;
-    try{ parsed = JSON.parse(clean); }
-    catch(parseErr){
-      console.error('JSON inválido recibido:', clean.substring(0,300));
-      throw new Error('La IA no devolvió JSON válido — respuesta: ' + clean.substring(0,120));
-    }
-    if(!Array.isArray(parsed)||!parsed.length) throw new Error('Formato inválido — se esperaba array de 7 días');
-
-    // Post-procesamiento: variante papá usando proteína del inventario
-    const carneCats = ['🥩 Carnes y pescados','🥩 Carnes','Carnes y pescados','Carnes'];
-    const protInv = INV.filter(i=>i.qty>0&&carneCats.some(c=>(i.cat||'').includes('Carne')))
-                       .map(i=>i.nombre.toLowerCase())
-                       .filter(n=>!['marisco','pescado','reineta','salmón','trucha','congrio',
-                         'merluza','corvina','tilapia','bacalao','jibia','chorito','jaiba',
-                         'almeja','camarón'].some(p=>n.includes(p)));
-    const protBase = protInv.length ? protInv[0] : 'pollo';
-
-    const ingPapa = [
-      'marisco','pescado','reineta','salmón','salmon','atún','atun','congrio','merluza',
-      'camarón','camaron','jaiba','almeja','chorito','machas','ostión','ostras','jibia',
-      'corvina','trucha','tilapia','bacalao','ceviche','sushi','paella',
-      'zapallo italiano','berenjena','espinaca','acelga','camote','choclo',
-      'maíz','maiz','polenta','humita','pastel de choclo'
-    ];
-    const sustituir = [
-      {ing:'reineta',por:protBase},{ing:'salmón',por:protBase},{ing:'salmon',por:protBase},
-      {ing:'trucha',por:protBase},{ing:'congrio',por:protBase},{ing:'merluza',por:protBase},
-      {ing:'corvina',por:protBase},{ing:'tilapia',por:protBase},{ing:'bacalao',por:protBase},
-      {ing:'pescado',por:protBase},{ing:'marisco',por:protBase},{ing:'camarón',por:protBase},
-      {ing:'camaron',por:protBase},{ing:'jaiba',por:protBase},{ing:'almeja',por:protBase},
-      {ing:'chorito',por:protBase},{ing:'jibia',por:protBase},
-      {ing:'ceviche',por:'ensalada de '+protBase},{ing:'paella',por:'arroz con '+protBase},
-      {ing:'zapallo italiano',por:'zapallo amarillo'},{ing:'berenjena',por:'zanahorias'},
-      {ing:'espinaca',por:'lechuga'},{ing:'acelga',por:'lechuga'},
-      {ing:'camote',por:'papas'},{ing:'choclo',por:'arroz'},
-      {ing:'maíz',por:'arroz'},{ing:'maiz',por:'arroz'},
-      {ing:'polenta',por:'puré de papas'},{ing:'humita',por:'arroz'},
-      {ing:'pastel de choclo',por:'pastel de papas'},
-    ];
-    parsed.forEach(dia => {
-      const aLow = (dia.almuerzo||'').toLowerCase();
-      const aplica = ingPapa.some(ing => aLow.includes(ing));
-      if(aplica){
-        let variante = dia.almuerzo;
-        sustituir.forEach(s => {
-          const re = new RegExp(s.ing, 'gi');
-          variante = variante.replace(re, s.por);
-        });
-        dia.almuerzo_papa = variante;
-      } else {
-        dia.almuerzo_papa = '';
-      }
-    });
-
-    _menuCache=parsed;
-    localStorage.setItem('hogar-menu', JSON.stringify(parsed));
-    const fechaStr=new Date().toLocaleDateString('es-CL');
-    localStorage.setItem('hogar-menu-fecha', fechaStr);
-    renderMenu(parsed);
-    toast('Menú generado ✓','success');
-  }catch(e){
-    console.error('generarMenuIA error completo:', e);
-    if(wrap) wrap.innerHTML=`<div style="text-align:center;padding:24px;color:var(--rust);font-size:13px">
-      ⚠ No se pudo generar el menú<br>
-      <span style="font-size:11px;opacity:.75">${e.message}</span><br>
-      <button class="btn-ghost" style="margin-top:12px" onclick="generarMenuIA(true)">↺ Reintentar</button>
-    </div>`;
-    toast('Error al generar menú','');
-  }
-}
-
-function editarDiaMenu(idx){
-  const dia = _menuCache[idx];
-  if(!dia) return;
-  let modal = document.getElementById('edit-menu-ov');
-  if(!modal){
-    modal = document.createElement('div');
-    modal.id = 'edit-menu-ov';
-    modal.className = 'ov';
-    modal.onclick = e=>{ if(e.target===modal) modal.classList.remove('open'); };
-    document.body.appendChild(modal);
-  }
-  const s = dia.colacion_jardin||dia.snack_pascal||dia.colacion||'';
-  modal.innerHTML = `
-    <div class="modal" style="max-width:480px">
-      <div class="m-title">✏️ Editar — ${dia.dia}</div>
-      <div class="fg"><label class="flbl">☕ Desayuno</label><input class="fin" id="em-desayuno" value="${(dia.desayuno||'').replace(/"/g,'&quot;')}"></div>
-      <div class="fg"><label class="flbl">🎒 Colación jardín</label><input class="fin" id="em-colacion" value="${s.replace(/"/g,'&quot;')}" placeholder="Ej: manzana con mantequilla de maní"></div>
-      <div class="fg"><label class="flbl">🍽 Almuerzo</label><input class="fin" id="em-almuerzo" value="${(dia.almuerzo||'').replace(/"/g,'&quot;')}"></div>
-      <div class="fg"><label class="flbl">🧔🏽 Variante papá <span style="font-size:10px;color:var(--ink3)">(solo si aplica)</span></label><input class="fin" id="em-papa" value="${(dia.almuerzo_papa||'').replace(/"/g,'&quot;')}" placeholder="Dejar vacío si no aplica"></div>
-      <div class="fg"><label class="flbl">🌙 Cena</label><input class="fin" id="em-cena" value="${(dia.cena||'').replace(/"/g,'&quot;')}"></div>
-      <div class="m-actions">
-        <button class="btn-sec" onclick="document.getElementById('edit-menu-ov').classList.remove('open')">Cancelar</button>
-        <button class="btn-prim" onclick="guardarEditDia(${idx})">Guardar cambios</button>
-      </div>
-    </div>`;
-  modal.classList.add('open');
-  setTimeout(()=>document.getElementById('em-desayuno')?.focus(),80);
-}
-
-function guardarEditDia(idx){
-  if(!_menuCache || !_menuCache[idx]) return;
-  _menuCache[idx].desayuno      = document.getElementById('em-desayuno')?.value||'';
-  _menuCache[idx].colacion_jardin = document.getElementById('em-colacion')?.value||'';
-  _menuCache[idx].snack_pascal  = _menuCache[idx].colacion_jardin;
-  _menuCache[idx].almuerzo      = document.getElementById('em-almuerzo')?.value||'';
-  _menuCache[idx].almuerzo_papa = document.getElementById('em-papa')?.value||'';
-  _menuCache[idx].cena          = document.getElementById('em-cena')?.value||'';
-  localStorage.setItem('hogar-menu', JSON.stringify(_menuCache));
-  document.getElementById('edit-menu-ov').classList.remove('open');
-  renderMenu(_menuCache);
-  toast('Día actualizado ✓','success');
 }
 
 async function buscarReceta(plato){
@@ -4018,7 +3513,112 @@ function delComp(id){
   rComparadorList();
 }
 
-/* ── Ofertas automáticas eliminadas por solicitud del usuario ─────────── */
+/* ── ALERTAS DE OFERTA ──────────────────────────────────────────────────── */
+let ALERTAS_VISTAS=[];
+try{ALERTAS_VISTAS=JSON.parse(localStorage.getItem('hogar-alertas-vistas')||'[]');}catch(e){}
+
+function checkOfertasCompras(){
+  // Only run once per day
+  const hoy=new Date().toDateString();
+  const lastCheck=localStorage.getItem('hogar-oferta-check');
+  if(lastCheck===hoy) return;
+
+  const items=(D.compras||[]).filter(c=>!isDone(c.done));
+  if(!items.length) return;
+
+  // Mark as checked today
+  localStorage.setItem('hogar-oferta-check', hoy);
+
+  buscarOfertasOnline(items);
+}
+
+async function buscarOfertasOnline(items){
+  const nombres=items.slice(0,12).map(c=>c.text).join(', ');
+  const hoy=new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  
+  const prompt=`Hoy es ${hoy} en Chile. El usuario tiene esta lista de compras pendiente: ${nombres}
+
+Tu tarea: Para CADA artículo, busca si hay una oferta o precio conveniente HOY en los supermercados chilenos (Jumbo, Líder, Unimarc, Walmart, SMU). 
+
+Considera:
+- Ofertas semanales típicas de supermercados chilenos
+- Días de descuento (martes/miércoles suelen tener ofertas)
+- Precios convenientes del momento
+- Si no sabes si hay oferta específica hoy, indica el supermercado donde suele ser más barato ese artículo
+
+Responde SOLAMENTE con JSON puro sin backticks ni texto adicional:
+{"fecha":"${hoy}","ofertas":[
+  {"articulo":"nombre del artículo","tienda":"Jumbo","precio":0,"descuento":"ej: 30% off o 2x1","url":"https://www.jumbo.cl/search?q=ARTICULO","confianza":"alta/media/baja","nota":"por qué conviene"}
+]}
+
+Solo incluye artículos donde realmente haya algo conveniente. Si ninguno tiene oferta relevante, devuelve {"fecha":"${hoy}","ofertas":[]}`;
+
+  try{
+    const txt=await geminiCall(prompt,1200);
+    if(!txt) return;
+    const clean=txt.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    if(parsed.ofertas?.length){
+      // Filter out ones already seen
+      const nuevas=parsed.ofertas.filter(o=>{
+        const key='oferta_'+o.articulo+hoy;
+        return !ALERTAS_VISTAS.includes(key);
+      });
+      if(nuevas.length) showOfertasPopup(nuevas, true);
+    }
+  }catch(e){
+    console.log('Oferta check:', e.message);
+  }
+}
+
+
+function showOfertasPopup(alertas, esOnline=false){
+  const popup=document.createElement('div');
+  popup.className='oferta-popup';
+  const hoy=new Date().toDateString();
+  // Build keys for "ya vista"
+  const keys=alertas.map(a=>esOnline?('oferta_'+a.articulo+new Date().toLocaleDateString('es-CL')):String(a.id));
+  popup.innerHTML=`
+    <div class="oferta-popup-hdr">
+      <span style="font-size:22px">🏷️</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--ink)">¡Ofertas en tu lista hoy!</div>
+        <div style="font-size:11px;color:var(--ink3)">${esOnline?'Encontradas online ahora':'Precios por debajo de tu referencia'}</div>
+      </div>
+      <span class="x-btn" onclick="this.closest('.oferta-popup').remove()">×</span>
+    </div>
+    <div style="max-height:280px;overflow-y:auto">
+    ${alertas.map(a=>`
+      <div style="padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink2)">${a.articulo}</div>
+            ${a.precio>0?`<div style="font-size:13px;font-weight:700;color:var(--sage);margin-top:2px">${clp(a.precio)} <span style="color:var(--ink3);font-size:10px;font-weight:400">en ${a.tienda}</span></div>`:''}
+            ${a.descuento?`<div style="font-size:11px;color:var(--rust);font-weight:600">${a.descuento}</div>`:''}
+            ${a.nota?`<div style="font-size:10px;color:var(--ink3);margin-top:2px;font-style:italic">${a.nota}</div>`:''}
+          </div>
+          ${a.url?`<a href="${a.url}" target="_blank" style="flex-shrink:0;font-size:11px;color:var(--rust);font-weight:600;text-decoration:none;border:1px solid var(--rust);border-radius:20px;padding:3px 10px;white-space:nowrap">ver →</a>`:''}
+        </div>
+      </div>`).join('')}
+    </div>
+    <button onclick="cerrarOferta(${JSON.stringify(keys)},this)"
+      style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:none;background:var(--sage);color:#fff;font-size:12px;font-weight:700;cursor:pointer">
+      ✓ Entendido, no mostrar de nuevo hoy
+    </button>`;
+  document.body.appendChild(popup);
+}
+
+function cerrarOferta(keys, btn){
+  const popup=btn.closest('.oferta-popup');
+  if(popup) popup.remove();
+  keys.forEach(k=>{if(!ALERTAS_VISTAS.includes(String(k)))ALERTAS_VISTAS.push(String(k));});
+  localStorage.setItem('hogar-alertas-vistas',JSON.stringify(ALERTAS_VISTAS));
+}
+
+/* rTermometro: definida en sección TERMÓMETRO HORMIGA */
+
+/* ── Llamar checkOfertas al cargar ──────────────────────────────────────── */
+/* Will be called after syncAll */
 
 
 
@@ -4235,121 +3835,6 @@ function saveRec(){
 }
 
 
-
-/* ─────────────── DESCARGAR MENÚ COMO IMAGEN ─────────────── */
-async function descargarMenuImagen(){
-  if(!_menuCache || !_menuCache.length){
-    toast('Primero genera el menú ✨','');
-    return;
-  }
-  const btn = document.getElementById('menu-dl-btn');
-  btn.textContent = '⏳ generando…';
-  btn.disabled = true;
-
-  await new Promise((res, rej) => {
-    if(window.html2canvas){ res(); return; }
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload = res; s.onerror = rej;
-    document.head.appendChild(s);
-  });
-
-  const fecha  = localStorage.getItem('hogar-menu-fecha') || new Date().toLocaleDateString('es-CL');
-  const bg     = '#faf6f0';
-  const bgCard = '#fffdf9';
-  const border = '#e6ddd2';
-  const ink    = '#2c1f14';
-  const ink2   = '#6b5744';
-  const ink3   = '#a89280';
-  const plumBg = '#f4eef9';
-  const plum   = '#5e3a7a';
-  const sageBg = '#eaf3ec';
-  const sage   = '#2d6a4f';
-
-  const heads = [
-    {col:'#b85c2c',emoji:'🌅'},
-    {col:'#5e3a7a',emoji:'🌤'},
-    {col:'#2d6a4f',emoji:'🌈'},
-    {col:'#9c6a1a',emoji:'🌻'},
-    {col:'#1d5f73',emoji:'⭐'},
-    {col:'#7a3060',emoji:'🌊'},
-    {col:'#5a3e28',emoji:'🌟'},
-  ];
-
-  const lbl = (txt, color) =>
-    `<div style="font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:${color||ink3};margin-bottom:3px">${txt}</div>`;
-
-  const diasHtml = _menuCache.map((dia, i) => {
-    const h     = heads[i % heads.length];
-    const snack = dia.snack_pascal || dia.colacion || '—';
-    const papa  = (dia.almuerzo_papa||'').trim();
-    const validPapa = papa && !papa.startsWith('(') && papa.length > 2;
-    const cal   = dia.calorias_aprox;
-
-    return `
-    <div style="background:${bgCard};border:1px solid ${border};border-radius:14px;overflow:hidden;display:flex;flex-direction:column;">
-      <div style="background:${h.col};padding:9px 6px 7px;text-align:center;">
-        <div style="font-size:18px;line-height:1;margin-bottom:3px">${h.emoji}</div>
-        <div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#fff">${dia.dia}</div>
-      </div>
-      <div style="padding:10px 10px 8px;flex:1;font-family:'Inter',system-ui,sans-serif;">
-        <div style="margin-bottom:8px">
-          ${lbl('☕ Desayuno')}
-          <div style="font-size:11px;color:${ink2};line-height:1.4">${dia.desayuno||'—'}</div>
-        </div>
-        <div style="background:${plumBg};border-radius:8px;padding:6px 8px;margin-bottom:8px">
-          ${lbl('🎒 Pascal', plum)}
-          <div style="font-size:11px;color:${plum};font-weight:500;line-height:1.4">${snack}</div>
-        </div>
-        <div style="margin-bottom:8px">
-          ${lbl('🍽 Almuerzo')}
-          <div style="font-size:11px;color:${ink2};line-height:1.4">${dia.almuerzo||'—'}</div>
-          ${validPapa?`<div style="margin-top:4px;padding:3px 7px;background:${sageBg};border-radius:6px;font-size:9px;color:${sage};line-height:1.35">🧔🏽 Papá: ${papa}</div>`:''}
-        </div>
-        <div style="margin-bottom:${cal?'6px':'0'}">
-          ${lbl('🌙 Cena')}
-          <div style="font-size:11px;color:${ink2};line-height:1.4">${dia.cena||'—'}</div>
-        </div>
-        ${cal?`<div style="border-top:1px solid ${border};padding-top:5px;font-size:9px;color:${ink3};text-align:right">🔥 ${cal} kcal</div>`:''}
-      </div>
-    </div>`;
-  }).join('');
-
-  const node = document.createElement('div');
-  node.style.cssText = `position:fixed;left:-9999px;top:0;width:980px;background:${bg};padding:32px;font-family:'Inter',system-ui,sans-serif;box-sizing:border-box;`;
-  node.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;padding-bottom:16px;border-bottom:2px solid #b85c2c">
-      <div>
-        <div style="font-family:'Playfair Display',Georgia,serif;font-size:24px;font-style:italic;color:${ink};letter-spacing:-.3px">Nuestro Hogar ✦</div>
-        <div style="font-size:11px;color:${ink3};margin-top:3px;letter-spacing:.2px">Menú semanal · ${fecha}</div>
-      </div>
-      <div style="font-size:32px">🍽️</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px">
-      ${diasHtml}
-    </div>
-    <div style="margin-top:18px;text-align:center;font-size:9px;color:${ink3};letter-spacing:.3px">
-      ✦ Nuestro Hogar · ${fecha}
-    </div>`;
-
-  document.body.appendChild(node);
-  try {
-    const canvas = await html2canvas(node, {
-      scale:2, useCORS:true, backgroundColor:bg, logging:false,
-    });
-    const link = document.createElement('a');
-    link.download = `menu-${fecha.replace(/\//g,'-')}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    toast('Imagen descargada ✓','success');
-  } catch(e){
-    toast('No se pudo generar la imagen','');
-  } finally {
-    document.body.removeChild(node);
-    btn.textContent = '↓ imagen';
-    btn.disabled = false;
-  }
-}
 
 /* ─────────────── INIT ─────────────── */
 document.getElementById('hDate').textContent=(()=>{
