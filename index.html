@@ -1527,7 +1527,7 @@ let D = {tareas:[],compras:[],finanzas:[],tramites:[],notas:[],metas:[],eventos:
 let AUSENCIAS = {};
 try{ AUSENCIAS=JSON.parse(localStorage.getItem('hogar-ausencias')||'{}'); }catch(e){ AUSENCIAS={}; }
 function saveAusencias(){ localStorage.setItem('hogar-ausencias',JSON.stringify(AUSENCIAS)); }
-let curModal=null, cbN=0, calY, calM, CH={}, fabOpen=false;
+let curModal=null, calY, calM, CH={}, fabOpen=false;
 let nCache={cl:null,int:null}, newsLoading=false;
 
 /* ─────────────── DARK MODE ─────────────── */
@@ -1558,17 +1558,10 @@ document.addEventListener('click',e=>{
 
 /* ─────────────── NETWORK ─────────────── */
 function jsonp(p){
-  return new Promise((ok,fail)=>{
-    const n='_cb'+(++cbN);
-    const t=setTimeout(()=>{delete window[n];fail('timeout');},13000);
-    window[n]=d=>{clearTimeout(t);delete window[n];ok(d);};
-    const qs=Object.entries({...p,callback:n}).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-    const s=document.createElement('script');
-    s.src=GAS+'?'+qs;
-    s.onerror=()=>{clearTimeout(t);delete window[n];fail('err');};
-    document.head.appendChild(s);
-    setTimeout(()=>s.remove&&s.remove(),16000);
-  });
+  const qs=Object.entries(p).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+  return fetch(GAS+'?'+qs)
+    .then(r=>r.json())
+    .catch(()=>({ok:false,error:'Error de conexión'}));
 }
 function post(body){
   return fetch(GAS,{method:'POST',body:JSON.stringify(body),headers:{'Content-Type':'text/plain'}})
@@ -1577,8 +1570,7 @@ function post(body){
 
 /* ─────────────── IA proxy (OpenAI via Apps Script) ─────────────── */
 async function geminiCall(prompt, maxTokens=1000){
-  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({prompt, max_tokens:maxTokens}))));
-  const data = await jsonp({action:'gemini', payload});
+  const data = await post({action:'gemini', prompt, max_tokens:maxTokens});
   if(!data.ok) throw new Error(data.error||'Error del servidor');
   return (data.content||[]).find(b=>b.type==='text')?.text || data.text || '';
 }
