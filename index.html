@@ -1167,26 +1167,6 @@ header{
       </div>
     </div>
 
-    <!-- GASTO RÁPIDO -->
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:16px">
-      <div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">⚡ Gasto rápido</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-        <div style="flex:2;min-width:140px">
-          <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">Descripción</div>
-          <input id="qg-name" class="fin" placeholder="Ej: Almacén Doña Clarita" style="margin:0">
-        </div>
-        <div style="flex:1;min-width:90px">
-          <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">Monto ($)</div>
-          <input id="qg-amount" class="fin" type="number" placeholder="0" style="margin:0">
-        </div>
-        <div style="flex:1;min-width:120px">
-          <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">Categoría</div>
-          <select id="qg-cat" class="fsel" style="margin:0"><option>Hogar</option><option>Alimentación</option><option>Servicios</option><option>Salud</option><option>Trabajo</option><option>Transporte</option><option>Uber/Rappi</option><option>Almacén</option><option>Entretenimiento</option><option>Personal del hogar</option><option>Otro</option></select>
-        </div>
-        <button onclick="quickGasto()" style="background:var(--rust);color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;height:38px">Guardar</button>
-      </div>
-    </div>
-
     <!-- TERMÓMETRO HORMIGA -->
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <div style="flex:1;min-width:200px">
@@ -3000,81 +2980,132 @@ function loadPDFJS(){
 
 function parseSantanderPDF(text){
   const movimientos = [];
-  const lines = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
-  const fullText = lines.join('\n');
 
-  // Detectar período facturado para asignar año correcto
+  // El texto viene separado por | dentro de cada página
+  // Unimos todas las páginas en un solo string de tokens
+  const tokens = text.replace(/\n---PAGE---\n/g,'|').split('|').map(t=>t.trim());
+
+  // Detectar año del período facturado
   let año = new Date().getFullYear();
-  const periodoMatch = fullText.match(/PERÍODO FACTURADO[^\d]*(\d{2})\/(\d{2})\/(\d{4})/);
-  if(periodoMatch) año = parseInt(periodoMatch[3]);
+  const fullStr = tokens.join(' ');
+  const periodoM = fullStr.match(/PERÍODO FACTURADO\s+(\d{2})\/(\d{2})\/(\d{4})/);
+  if(periodoM) año = parseInt(periodoM[3]);
 
-  // Patrón: DD/MM/YY o DD/MM/YYYY seguido de descripción y monto al final
-  // Formato del estado de cuenta: fecha | descripción | [cuota info] | monto
-  const linePattern = /(\d{2})\/(\d{2})\/(\d{2,4})\s+(.+?)\s+\$\s*([\d.,]+)\s*$/;
-  // También captura líneas sin fecha pero con monto de cargo (cuotas)
-  const cargoPattern = /^(.+?)\s+(?:CUOTA\s+(?:FIJA|COMERCIO)[^$]*)\s+\$[\d.,]+\s+\$[\d.,]+\s+\d+\/\d+\s+\$([\d.,]+)$/i;
+  // Fecha de corte del estado (para asignar mes a cuotas)
+  const fechaCorteM = fullStr.match(/FECHA ESTADO DE CUENTA\s+(\d{2})\/(\d{2})\/(\d{4})/);
+  const mesCorte = fechaCorteM
+    ? `${fechaCorteM[3]}-${fechaCorteM[2].padStart(2,'0')}`
+    : `${año}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
 
-  lines.forEach(line=>{
-    // Ignorar líneas de totales, cancelaciones, headers
-    if(/MONTO CANCELADO|TOTAL OPERACIONES|MOVIMIENTOS TARJETA|PERÍODO ANTERIOR|PERÍODO ACTUAL|PRODUCTOS O SERVICIOS|CARGOS, COMISIONES|INFORMACION COMPRAS|SALDO ADEUDADO|MONTO FACTURADO|MONTO PAGADO/i.test(line)) return;
-    if(/INTERESES|IMPUESTOS/i.test(line)){
-      // Capturar intereses e impuestos como categoría Servicios
-      const mMatch = line.match(/\$([\d.,]+)\s*$/);
-      if(mMatch){
-        const monto = parseMonto(mMatch[1]);
-        if(monto>0){
-          const fecha = new Date().toISOString().slice(0,10);
-          const tipo = /INTERESES/i.test(line)?'Intereses tarjeta':'Impuestos tarjeta';
-          movimientos.push({id:Date.now()+movimientos.length, name:tipo, type:'gasto', amount:monto, date:fecha, category:'Servicios', source:'santander-pdf'});
+  const fechaHoy = mesCorte + '-01';
+
+  // Buscar secuencias de tokens que forman movimientos
+  // Cuota: [fecha DD/MM/YY] [lugar?] [$monto_origen] [$monto_total] [X%] [CUOTA FIJA|CUOTA COMERCIO] [$cargo] [NR/TOTAL] [descripcion]
+  // Compra directa: [fecha DD/MM/YY] [lugar?] [$cargo] [descripcion]
+  // Intereses/Impuestos: [fecha DD/MM/YY] [$monto] [INTERESES|IMPUESTOS]
+
+  const dateRe = /^\d{2}\/\d{2}\/\d{2,4}$/;
+  const montoRe = /^\$[\d.,]+$/;
+  const montoNegRe = /^\$\s*-[\d.,]+$/;
+
+  let i = 0;
+  while(i < tokens.length){
+    const tok = tokens[i];
+
+    if(!dateRe.test(tok)){ i++; continue; }
+
+    // Tenemos una fecha
+    const [dd,mm,yy] = tok.split('/');
+    const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
+    const fechaOrig = `${yearFull}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+
+    // Lookahead: recolectar los siguientes ~10 tokens
+    const ahead = tokens.slice(i+1, i+12);
+    const aheadStr = ahead.join(' ');
+
+    // Ignorar si es cancelación
+    if(aheadStr.includes('MONTO CANCELADO')){ i++; continue; }
+
+    // CUOTA: tiene CUOTA FIJA o CUOTA COMERCIO en el bloque
+    if(/CUOTA\s+(?:FIJA|COMERCIO)/i.test(aheadStr)){
+      // Buscar $cargo (el monto pequeño con $XX.XXX sin punto de miles grande)
+      // El cargo es el último monto antes del NR/TOTAL (ej: $22.291)
+      const cuotaNrM = aheadStr.match(/\$([\d.,]+)\s+\d+\/\d+/);
+      const desc = ahead.find(t=> t.length>2 && !dateRe.test(t) && !montoRe.test(t) && !/CUOTA|FIJA|COMERCIO|%/i.test(t) && !/^\d+\/\d+$/.test(t)) || 'Cuota';
+      if(cuotaNrM){
+        const monto = parseMonto(cuotaNrM[1]);
+        if(monto>0 && monto<10000000){
+          movimientos.push({
+            id: Date.now()+movimientos.length,
+            name: desc.trim()+' (cuota)',
+            type: 'gasto',
+            amount: monto,
+            date: fechaHoy,
+            category: guessCategory(desc),
+            source: 'santander-pdf'
+          });
         }
       }
-      return;
+      i++; continue;
     }
 
-    // Línea con fecha al inicio: movimientos directos
-    const m = line.match(/^(\d{2})\/(\d{2})\/(\d{2,4})\s+(.+?)\s+\$\s*([\d.,]+)\s*$/);
-    if(m){
-      const [,dd,mm,yy,desc,montoStr] = m;
-      const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
-      const fecha = `${yearFull}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
-      const monto = parseMonto(montoStr);
-      if(monto>0 && monto<50000000){
+    // INTERESES o IMPUESTOS
+    if(/INTERESES|IMPUESTOS/i.test(aheadStr)){
+      const montoM = ahead.find(t=>montoRe.test(t)&&!montoNegRe.test(t));
+      if(montoM){
+        const monto = parseMonto(montoM.replace('$',''));
+        const nombre = /INTERESES/i.test(aheadStr) ? 'Intereses tarjeta' : 'Impuestos tarjeta';
+        if(monto>0){
+          movimientos.push({
+            id: Date.now()+movimientos.length,
+            name: nombre,
+            type: 'gasto',
+            amount: monto,
+            date: fechaHoy,
+            category: 'Servicios',
+            source: 'santander-pdf'
+          });
+        }
+      }
+      i++; continue;
+    }
+
+    // COMPRA DIRECTA: fecha + [lugar opcional] + $monto + descripcion
+    // Patrón: después de la fecha, buscar un monto positivo pequeño seguido de texto
+    const montoIdx = ahead.findIndex(t=>montoRe.test(t) && !montoNegRe.test(t));
+    if(montoIdx>=0){
+      const montoTok = ahead[montoIdx];
+      const monto = parseMonto(montoTok.replace('$',''));
+      // descripcion = tokens después del monto que no son montos ni fechas
+      const descToks = ahead.slice(montoIdx+1).filter(t=>
+        t.length>1 && !montoRe.test(t) && !dateRe.test(t) && !montoNegRe.test(t) &&
+        !/^(DE|A|Y|EN|LA|EL|LOS|LAS)$/i.test(t)
+      );
+      const desc = descToks.slice(0,3).join(' ').trim() || ahead.slice(0,montoIdx).filter(t=>t.length>2&&!montoRe.test(t)&&!dateRe.test(t)).join(' ').trim() || 'Compra';
+
+      if(monto>0 && monto<50000000 && desc && !/MONTO|SALDO|TOTAL|FACTURA|PERÍODO/i.test(desc)){
         movimientos.push({
-          id:Date.now()+movimientos.length,
+          id: Date.now()+movimientos.length,
           name: desc.trim(),
-          type:'gasto',
+          type: 'gasto',
           amount: monto,
-          date: fecha,
+          date: fechaOrig,
           category: guessCategory(desc),
-          source:'santander-pdf'
+          source: 'santander-pdf'
         });
       }
-      return;
     }
 
-    // Línea de cuota: sin fecha propia, cargo mensual al final
-    // Patrón: DESCRIPCION CUOTA FIJA X.XX% $ORIGEN $TOTAL NR/TOTAL $CARGO
-    const cuotaM = line.match(/^(\d{2})\/(\d{2})\/(\d{2,4})\s+(.+?)\s+CUOTA\s+(?:FIJA|COMERCIO)\s+[\d.,]+\s*%\s+\$([\d.,]+)\s+\$([\d.,]+)\s+\d+\/\d+\s+\$([\d.,]+)/i);
-    if(cuotaM){
-      const [,dd,mm,yy,desc,,,cargoStr] = cuotaM;
-      const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
-      const fecha = `${año}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
-      const monto = parseMonto(cargoStr);
-      if(monto>0){
-        movimientos.push({
-          id:Date.now()+movimientos.length,
-          name: desc.trim()+' (cuota)',
-          type:'gasto',
-          amount: monto,
-          date: `${año}-${String(new Date().getMonth()+1).padStart(2,'0')}-${dd.padStart(2,'0')}`,
-          category: guessCategory(desc),
-          source:'santander-pdf'
-        });
-      }
-    }
+    i++;
+  }
+
+  // Deduplicar por nombre+monto
+  const seen = new Set();
+  return movimientos.filter(m=>{
+    const key=`${m.name}|${m.amount}`;
+    if(seen.has(key)) return false;
+    seen.add(key); return true;
   });
-
-  return movimientos;
 }
 
 function showImportPreview(){
