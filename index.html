@@ -2980,72 +2980,65 @@ function loadPDFJS(){
 
 function parseSantanderPDF(text){
   const movimientos = [];
-
-  // El texto viene separado por | dentro de cada página
-  // Unimos todas las páginas en un solo string de tokens
   const tokens = text.replace(/\n---PAGE---\n/g,'|').split('|').map(t=>t.trim());
-
-  // Detectar año del período facturado
-  let año = new Date().getFullYear();
   const fullStr = tokens.join(' ');
+
+  // Año del período
+  let año = new Date().getFullYear();
   const periodoM = fullStr.match(/PERÍODO FACTURADO\s+(\d{2})\/(\d{2})\/(\d{4})/);
   if(periodoM) año = parseInt(periodoM[3]);
-
-  // Fecha de corte del estado (para asignar mes a cuotas)
   const fechaCorteM = fullStr.match(/FECHA ESTADO DE CUENTA\s+(\d{2})\/(\d{2})\/(\d{4})/);
   const mesCorte = fechaCorteM
     ? `${fechaCorteM[3]}-${fechaCorteM[2].padStart(2,'0')}`
     : `${año}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
-
   const fechaHoy = mesCorte + '-01';
 
-  // Buscar secuencias de tokens que forman movimientos
-  // Cuota: [fecha DD/MM/YY] [lugar?] [$monto_origen] [$monto_total] [X%] [CUOTA FIJA|CUOTA COMERCIO] [$cargo] [NR/TOTAL] [descripcion]
-  // Compra directa: [fecha DD/MM/YY] [lugar?] [$cargo] [descripcion]
-  // Intereses/Impuestos: [fecha DD/MM/YY] [$monto] [INTERESES|IMPUESTOS]
-
   const dateRe = /^\d{2}\/\d{2}\/\d{2,4}$/;
-  const montoRe = /^\$[\d.,]+$/;
-  const montoNegRe = /^\$\s*-[\d.,]+$/;
+  // Monto: $22.291 o $ 22.291 — con o sin espacio
+  const isMontoPos = t => /^\$[\d.,]+$/.test(t);
+  const isMontoNeg = t => /^\$\s*-[\d.,]+$/.test(t);
+  const isNrCuota = t => /^\d+\/\d+$/.test(t);
+
+  // Ignorar fechas fuera del detalle (header, comprobante, etc)
+  const IGNORAR_TRAS_FECHA = /FECHA ESTADO|NOMBRE DEL|PERÍODO FACTURADO|PERÍODO DE FACTURACIÓN|PAGAR HASTA|XXXX|COMPROBANTE|PRÓXIMO PERÍODO/i;
 
   let i = 0;
   while(i < tokens.length){
     const tok = tokens[i];
-
     if(!dateRe.test(tok)){ i++; continue; }
 
-    // Tenemos una fecha
+    const ahead = tokens.slice(i+1, i+16);
+    const aheadStr = ahead.join(' ');
+
+    // Ignorar fechas de header/comprobante
+    if(IGNORAR_TRAS_FECHA.test(aheadStr)){ i++; continue; }
+
     const [dd,mm,yy] = tok.split('/');
     const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
     const fechaOrig = `${yearFull}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
 
-    // Lookahead: recolectar los siguientes ~10 tokens
-    const ahead = tokens.slice(i+1, i+15);
-    const aheadStr = ahead.join(' ');
-
-    // Ignorar si es cancelación
+    // Ignorar cancelaciones
     if(aheadStr.includes('MONTO CANCELADO')){ i++; continue; }
 
-    // CUOTA: tiene CUOTA FIJA o CUOTA COMERCIO en el bloque
+    // ── CUOTA: contiene CUOTA FIJA o CUOTA COMERCIO ──
     if(/CUOTA\s+(?:FIJA|COMERCIO)/i.test(aheadStr)){
-      const cuotaNrM = aheadStr.match(/\$([\d.,]+)\s+\d+\/\d+/);
-      const nrIdx = ahead.findIndex(t=>/^\d+\/\d+$/.test(t));
-      let desc = '';
-      if(nrIdx>=0){
-        // Descripción: solo el primer token limpio después de NR/TOTAL
-        desc = ahead.slice(nrIdx+1)
-          .filter(t=>t.length>1 && !/^\$/.test(t) && !dateRe.test(t) && t.trim()!=='')
-          .slice(0,1).join('').trim();
-      }
-      if(!desc){
-        desc = ahead.filter(t=>t.length>2 && !dateRe.test(t) && !montoRe.test(t) && !/CUOTA|FIJA|COMERCIO|%/i.test(t) && !/^\d+\/\d+$/.test(t) && t.trim()!=='').slice(0,1).join('').trim() || 'Cuota';
-      }
-      if(cuotaNrM){
-        const monto = parseMonto(cuotaNrM[1]);
-        if(monto>0 && monto<10000000){
+      // nrCuota token: ej "11/24", "06/06"
+      const nrIdx = ahead.findIndex(t => isNrCuota(t));
+      // cargo = monto justo antes del NR/CUOTA
+      const cargoIdx = nrIdx > 0 ? nrIdx - 1 : -1;
+      const cargoTok = cargoIdx >= 0 ? ahead[cargoIdx] : null;
+      const nrCuota = nrIdx >= 0 ? ahead[nrIdx] : '';
+      // descripcion = primer token de texto DESPUÉS de NR/CUOTA
+      const desc = nrIdx >= 0
+        ? ahead.slice(nrIdx+1).find(t => t.length > 2 && !isMontoPos(t) && !dateRe.test(t) && t.trim() !== '') || 'Cuota'
+        : 'Cuota';
+
+      if(cargoTok && isMontoPos(cargoTok)){
+        const monto = parseMonto(cargoTok.replace('$',''));
+        if(monto > 0 && monto < 10000000){
           movimientos.push({
             id: Date.now()+movimientos.length,
-            name: desc.trim()+' (cuota)',
+            name: desc.trim() + (nrCuota ? ` (cuota ${nrCuota})` : ' (cuota)'),
             type: 'gasto',
             amount: monto,
             date: fechaHoy,
@@ -3057,13 +3050,13 @@ function parseSantanderPDF(text){
       i++; continue;
     }
 
-    // INTERESES o IMPUESTOS
-    if(/INTERESES|IMPUESTOS/i.test(aheadStr)){
-      const montoM = ahead.find(t=>montoRe.test(t)&&!montoNegRe.test(t));
-      if(montoM){
-        const monto = parseMonto(montoM.replace('$',''));
+    // ── INTERESES / IMPUESTOS ──
+    if(/^INTERESES$|^IMPUESTOS$/i.test(aheadStr.split(' ').find(t=>/INTERESES|IMPUESTOS/i.test(t))||'')){
+      const montoTok = ahead.find(t => isMontoPos(t));
+      if(montoTok){
+        const monto = parseMonto(montoTok.replace('$',''));
         const nombre = /INTERESES/i.test(aheadStr) ? 'Intereses tarjeta' : 'Impuestos tarjeta';
-        if(monto>0){
+        if(monto > 0){
           movimientos.push({
             id: Date.now()+movimientos.length,
             name: nombre,
@@ -3078,26 +3071,26 @@ function parseSantanderPDF(text){
       i++; continue;
     }
 
-    // COMPRA DIRECTA: fecha + [lugar opcional] + $monto + descripcion
-    const montoIdx = ahead.findIndex(t=>montoRe.test(t) && !montoNegRe.test(t));
-    if(montoIdx>=0){
-      const montoTok = ahead[montoIdx];
-      const monto = parseMonto(montoTok.replace('$',''));
-      // descripcion puede estar antes O después del monto
-      const descAfter = ahead.slice(montoIdx+1).filter(t=>
-        t.length>1 && !montoRe.test(t) && !dateRe.test(t) && !montoNegRe.test(t) &&
-        !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t)
+    // ── COMPRA DIRECTA: fecha → [lugar] → $monto → descripcion ──
+    const montoIdx = ahead.findIndex(t => isMontoPos(t));
+    if(montoIdx >= 0){
+      const monto = parseMonto(ahead[montoIdx].replace('$',''));
+      // descripcion: primer texto limpio después del monto
+      const descAfter = ahead.slice(montoIdx+1).find(t =>
+        t.length > 1 && !isMontoPos(t) && !isMontoNeg(t) && !dateRe.test(t) &&
+        !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t) &&
+        !/COMPROBANTE|MONTO|SALDO|TOTAL|FACTURA|PAGAR|PERÍODO/i.test(t)
       );
-      const descBefore = ahead.slice(0,montoIdx).filter(t=>
-        t.length>1 && !montoRe.test(t) && !dateRe.test(t) && !montoNegRe.test(t) &&
-        !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t)
+      // o lugar antes del monto
+      const descBefore = ahead.slice(0, montoIdx).find(t =>
+        t.length > 2 && !isMontoPos(t) && !isMontoNeg(t) && !dateRe.test(t)
       );
-      const desc = (descAfter.length ? descAfter.slice(0,3).join(' ') : descBefore.slice(-2).join(' ')).trim() || 'Compra';
+      const desc = (descAfter || descBefore || '').trim();
 
-      if(monto>0 && monto<50000000 && desc && !/MONTO|SALDO|TOTAL|FACTURA|PERÍODO|PAGAR|COMPROBANTE/i.test(desc)){
+      if(monto > 0 && monto < 50000000 && desc){
         movimientos.push({
           id: Date.now()+movimientos.length,
-          name: desc.trim(),
+          name: desc,
           type: 'gasto',
           amount: monto,
           date: fechaOrig,
@@ -3110,10 +3103,10 @@ function parseSantanderPDF(text){
     i++;
   }
 
-  // Deduplicar por nombre+monto
+  // Deduplicar
   const seen = new Set();
-  return movimientos.filter(m=>{
-    const key=`${m.name}|${m.amount}`;
+  return movimientos.filter(m => {
+    const key = `${m.name}|${m.amount}`;
     if(seen.has(key)) return false;
     seen.add(key); return true;
   });
