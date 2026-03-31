@@ -1215,13 +1215,25 @@ header{
       <div class="card">
         <div class="ch">
           <div class="ct">Movimientos</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input id="f-search" class="fin" placeholder="🔍 buscar..." style="margin:0;padding:5px 10px;font-size:12px;width:130px" oninput="rFinanzas()">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input id="f-search" class="fin" placeholder="🔍 buscar..." style="margin:0;padding:5px 10px;font-size:12px;width:120px" oninput="rFinanzas()">
             <select id="f-filter-cat" class="fsel" style="margin:0;padding:5px 8px;font-size:12px" onchange="rFinanzas()">
               <option value="">Todas</option>
               <option>Hogar</option><option>Alimentación</option><option>Servicios</option><option>Salud</option><option>Trabajo</option><option>Transporte</option><option>Uber/Rappi</option><option>Almacén</option><option>Entretenimiento</option><option>Personal del hogar</option><option>Otro</option>
             </select>
+            <select id="f-filter-medio" class="fsel" style="margin:0;padding:5px 8px;font-size:12px" onchange="rFinanzas()">
+              <option value="">Débito + TC</option>
+              <option value="debito">Solo débito</option>
+              <option value="tc">Solo tarjeta crédito</option>
+            </select>
           </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;padding:8px 0;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--ink3)">Desde</span>
+          <input id="f-desde" type="date" class="fin" style="margin:0;padding:4px 8px;font-size:12px;width:130px" onchange="rFinanzas()">
+          <span style="font-size:11px;color:var(--ink3)">Hasta</span>
+          <input id="f-hasta" type="date" class="fin" style="margin:0;padding:4px 8px;font-size:12px;width:130px" onchange="rFinanzas()">
+          <button onclick="limpiarFiltroFechas()" style="font-size:11px;color:var(--ink3);background:none;border:none;cursor:pointer;text-decoration:underline">limpiar</button>
         </div>
         <div id="list-finanzas"><div class="skel" style="height:40px"></div></div>
       </div>
@@ -1909,6 +1921,17 @@ function rFinanzas(){
   if(search) items=items.filter(f=>(f.name||'').toLowerCase().includes(search)||(f.category||'').toLowerCase().includes(search));
   if(catFilter) items=items.filter(f=>f.category===catFilter);
 
+  // Filtro medio de pago
+  const medioFilter=document.getElementById('f-filter-medio')?.value||'';
+  if(medioFilter==='tc') items=items.filter(f=>f.source==='santander-pdf');
+  if(medioFilter==='debito') items=items.filter(f=>f.source==='santander'||!f.source);
+
+  // Filtro rango de fechas
+  const desde=document.getElementById('f-desde')?.value||'';
+  const hasta=document.getElementById('f-hasta')?.value||'';
+  if(desde) items=items.filter(f=>(f.date||'')>=desde);
+  if(hasta) items=items.filter(f=>(f.date||'')<=hasta);
+
   if(!items.length){el.innerHTML=empty('Sin movimientos este mes');return;}
 
   // Agrupar por día
@@ -1941,7 +1964,13 @@ function rFinanzas(){
   }).join('');
 }
 
-/* ── GASTO RÁPIDO ── */
+function limpiarFiltroFechas(){
+  const d=document.getElementById('f-desde');
+  const h=document.getElementById('f-hasta');
+  if(d) d.value='';
+  if(h) h.value='';
+  rFinanzas();
+}
 async function quickGasto(){
   const name=document.getElementById('qg-name').value.trim();
   const amount=parseFloat(document.getElementById('qg-amount').value);
