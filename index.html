@@ -1946,10 +1946,16 @@ function rFinanzas(){
     const dayLbl=date?new Date(date+'T12:00').toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'}):'Sin fecha';
     const rows=fs.map(f=>{
       const isIn=f.type==='ingreso';
+      const isTC=f.source==='santander-pdf';
+      // Para cuotas TC: mostrar fecha de compra original
+      const fechaCompraStr = isTC && f.fecha_compra && f.fecha_compra!==f.date
+        ? '<span style="color:var(--ink3);font-size:10px"> · compra: '+new Date(f.fecha_compra+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'2-digit'})+'</span>'
+        : '';
+      const tcBadge = isTC ? '<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:var(--plum-bg);color:var(--plum);margin-left:4px">TC</span>' : '';
       return`<div class="fi-row">
         <div>
-          <div class="fi-name">${f.name}${f.recurrenteId?'<span class="tag-rec">↻</span>':''}</div>
-          <div class="fi-meta">${f.category||''}</div>
+          <div class="fi-name">${f.name}${tcBadge}${f.recurrenteId?'<span class="tag-rec">↻</span>':''}</div>
+          <div class="fi-meta">${f.category||''}${fechaCompraStr}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="fi-amt ${isIn?'amt-in':'amt-out'}">${isIn?'+':'-'} ${clp(f.amount)}</div>
@@ -3066,7 +3072,7 @@ function parseSantanderPDF(text){
       const nr = nrIdx>=0 ? ahead[nrIdx] : '';
       let desc='Cuota';
       if(nrIdx>=0){ for(const t of ahead.slice(nrIdx+1)){ if(t.length>2&&!t.startsWith('$')&&!dateRe.test(t)&&t.trim()&&!/PRODUCTOS|SERVICIOS|CARGOS|COMISIONES|MOVIMIENTOS/i.test(t)){ desc=t; break; } } }
-      if(cargo){ const monto=pMonto(cargo); if(monto>0&&monto<10000000) movimientos.push({id:Date.now()+movimientos.length,name:`${desc} (cuota ${nr})`,type:'gasto',amount:monto,date:fechaHoy,category:guessCategory(desc),source:'santander-pdf'}); }
+      if(cargo){ const monto=pMonto(cargo); if(monto>0&&monto<10000000) movimientos.push({id:Date.now()+movimientos.length,name:`${desc} (cuota ${nr})`,type:'gasto',amount:monto,date:fechaHoy,fecha_compra:fecha,category:guessCategory(desc),source:'santander-pdf'}); }
       i++; continue;
     }
 
