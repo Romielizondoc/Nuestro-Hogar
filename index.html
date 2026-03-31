@@ -3022,18 +3022,21 @@ function parseSantanderPDF(text){
 
     // ── CUOTA: contiene CUOTA FIJA o CUOTA COMERCIO ──
     if(/CUOTA\s+(?:FIJA|COMERCIO)/i.test(aheadStr)){
-      // nrCuota token: ej "11/24", "06/06"
       const nrIdx = ahead.findIndex(t => isNrCuota(t));
-      // cargo = monto justo antes del NR/CUOTA
-      const cargoIdx = nrIdx > 0 ? nrIdx - 1 : -1;
-      const cargoTok = cargoIdx >= 0 ? ahead[cargoIdx] : null;
+      // cargo = último monto positivo ANTES del NR/CUOTA (saltando vacíos)
+      let cargoTok = null;
+      for(let j = nrIdx-1; j >= 0; j--){
+        if(ahead[j].trim() === '') continue;
+        if(isMontoPos(ahead[j])){ cargoTok = ahead[j]; break; }
+        break;
+      }
       const nrCuota = nrIdx >= 0 ? ahead[nrIdx] : '';
       // descripcion = primer token de texto DESPUÉS de NR/CUOTA
       const desc = nrIdx >= 0
-        ? ahead.slice(nrIdx+1).find(t => t.length > 2 && !isMontoPos(t) && !dateRe.test(t) && t.trim() !== '') || 'Cuota'
+        ? ahead.slice(nrIdx+1).find(t => t.length > 2 && !isMontoPos(t) && !dateRe.test(t) && t.trim() !== '' && !/PRODUCTOS|SERVICIOS|CARGOS|COMISIONES/i.test(t)) || 'Cuota'
         : 'Cuota';
 
-      if(cargoTok && isMontoPos(cargoTok)){
+      if(cargoTok){
         const monto = parseMonto(cargoTok.replace('$',''));
         if(monto > 0 && monto < 10000000){
           movimientos.push({
@@ -3071,23 +3074,26 @@ function parseSantanderPDF(text){
       i++; continue;
     }
 
-    // ── COMPRA DIRECTA: fecha → [lugar] → $monto → descripcion ──
-    const montoIdx = ahead.findIndex(t => isMontoPos(t));
+    // ── COMPRA DIRECTA ──
+    // buscar primer monto positivo (con o sin espacio: $3.990 o $ 3.990)
+    const montoIdx = ahead.findIndex(t => /^\$\s*[\d.,]+$/.test(t) && !/^\$\s*-/.test(t));
     if(montoIdx >= 0){
-      const monto = parseMonto(ahead[montoIdx].replace('$',''));
-      // descripcion: primer texto limpio después del monto
+      const monto = parseMonto(ahead[montoIdx].replace(/\$\s*/,''));
+      // descripcion después del monto
       const descAfter = ahead.slice(montoIdx+1).find(t =>
-        t.length > 1 && !isMontoPos(t) && !isMontoNeg(t) && !dateRe.test(t) &&
+        t.length > 1 && !/^\$/.test(t) && !dateRe.test(t) &&
         !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t) &&
-        !/COMPROBANTE|MONTO|SALDO|TOTAL|FACTURA|PAGAR|PERÍODO/i.test(t)
+        !/COMPROBANTE|MONTO|SALDO|TOTAL|FACTURA|PAGAR|PERÍODO|MOVIMIENTOS/i.test(t)
       );
-      // o lugar antes del monto
+      // o lugar antes del monto (ej: LAS CONDES)
       const descBefore = ahead.slice(0, montoIdx).find(t =>
-        t.length > 2 && !isMontoPos(t) && !isMontoNeg(t) && !dateRe.test(t)
+        t.length > 2 && !/^\$/.test(t) && !dateRe.test(t) &&
+        !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t)
       );
       const desc = (descAfter || descBefore || '').trim();
 
-      if(monto > 0 && monto < 50000000 && desc){
+      if(monto > 0 && monto < 50000000 && desc &&
+         !/MONTO|SALDO|TOTAL|FACTURA|PERÍODO|PAGAR|COMPROBANTE|MOVIMIENTOS TARJETA/i.test(desc)){
         movimientos.push({
           id: Date.now()+movimientos.length,
           name: desc,
