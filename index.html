@@ -3020,7 +3020,7 @@ function parseSantanderPDF(text){
     const fechaOrig = `${yearFull}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
 
     // Lookahead: recolectar los siguientes ~10 tokens
-    const ahead = tokens.slice(i+1, i+12);
+    const ahead = tokens.slice(i+1, i+15);
     const aheadStr = ahead.join(' ');
 
     // Ignorar si es cancelación
@@ -3028,16 +3028,17 @@ function parseSantanderPDF(text){
 
     // CUOTA: tiene CUOTA FIJA o CUOTA COMERCIO en el bloque
     if(/CUOTA\s+(?:FIJA|COMERCIO)/i.test(aheadStr)){
-      // El cargo es el monto antes de NR/TOTAL (ej: $22.291)
       const cuotaNrM = aheadStr.match(/\$([\d.,]+)\s+\d+\/\d+/);
-      // La descripción viene DESPUÉS del NR/TOTAL (último token de texto)
       const nrIdx = ahead.findIndex(t=>/^\d+\/\d+$/.test(t));
       let desc = '';
       if(nrIdx>=0){
-        desc = ahead.slice(nrIdx+1).filter(t=>t.length>1 && !/^\$/.test(t) && !dateRe.test(t)).join(' ').trim();
+        // Descripción: solo el primer token limpio después de NR/TOTAL
+        desc = ahead.slice(nrIdx+1)
+          .filter(t=>t.length>1 && !/^\$/.test(t) && !dateRe.test(t) && t.trim()!=='')
+          .slice(0,1).join('').trim();
       }
       if(!desc){
-        desc = ahead.filter(t=> t.length>2 && !dateRe.test(t) && !montoRe.test(t) && !/CUOTA|FIJA|COMERCIO|%/i.test(t) && !/^\d+\/\d+$/.test(t) && t.trim()!=='').join(' ').trim() || 'Cuota';
+        desc = ahead.filter(t=>t.length>2 && !dateRe.test(t) && !montoRe.test(t) && !/CUOTA|FIJA|COMERCIO|%/i.test(t) && !/^\d+\/\d+$/.test(t) && t.trim()!=='').slice(0,1).join('').trim() || 'Cuota';
       }
       if(cuotaNrM){
         const monto = parseMonto(cuotaNrM[1]);
@@ -3177,21 +3178,18 @@ function detectSantanderCols(rows){
 /* Mapeo automático de categorías por descripción */
 function guessCategory(desc){
   const d=(desc||'').toLowerCase();
-  // Almacén — PRIMERO para que Doña Clarita/Orígenes/Roberto Campos no caigan en Otro
-  if(/do.a clarita|roberto campos|origenes|almac[eé]n|minimarket|bodega|abarrot/.test(d)) return 'Almacén';
-  // Uber/Rappi — delivery y apps
-  if(/uber.*eats|ubereats|rappi|pedidos.*ya|ifood/.test(d)) return 'Uber/Rappi';
-  // Uber transporte (sin "eats") va a Transporte
-  if(/uber|cabify|didi|taxi/.test(d)) return 'Transporte';
-  if(/farmacia|clinica|hospital|medic|dental|salud|isapre|bsalud|cruz.*verde|ahumada|salcobrand/.test(d)) return 'Salud';
-  if(/supermercado|jumbo|lider|unimarc|santa.*isabel|tottus|acuenta|ekono|central.*mayorista/.test(d)) return 'Alimentación';
-  if(/restauran|sushi|pizza|burger|mcdonalds|subway|starbucks|cafe|bar |rappi/.test(d)) return 'Alimentación';
-  if(/copec|shell|petrobras|bencin|parking|peaje|autopista|metro|transantiago|bip/.test(d)) return 'Transporte';
-  if(/netflix|spotify|amazon|disney|hbo|youtube|apple.*one|prime/.test(d)) return 'Entretenimiento';
-  if(/falabella|ripley|paris|zara|h&m|tienda|ropa|zapato/.test(d)) return 'Hogar';
-  if(/entel|movistar|claro|vtr|internet|telefon/.test(d)) return 'Servicios';
-  if(/luz|agua|gas |enel|metrogas|aguas/.test(d)) return 'Servicios';
-  if(/nana|jardin|niñ|personal|emplead/.test(d)) return 'Personal del hogar';
+  // Reglas fijas — siempre primero
+  if(/uber|rappi|pedidos.*ya|ifood|ubereats|uber.*eats/i.test(d)) return 'Uber/Rappi';
+  if(/do.a clarita|roberto campos|origenes|orígenes|almac[eé]n|minimarket|bodega|abarrot/i.test(d)) return 'Almacén';
+  // Resto
+  if(/farmacia|cl[ií]nica|hospital|medic|dental|salud|isapre|bsalud|cruz.*verde|ahumada|salcobrand/i.test(d)) return 'Salud';
+  if(/supermercado|jumbo|lider|unimarc|santa.*isabel|tottus|acuenta|ekono|central.*mayorista/i.test(d)) return 'Alimentación';
+  if(/restauran|sushi|pizza|burger|mcdonalds|subway|starbucks|cafe|bar /i.test(d)) return 'Alimentación';
+  if(/copec|shell|petrobras|bencin|parking|peaje|autopista|metro|transantiago|bip|cabify|didi|taxi/i.test(d)) return 'Transporte';
+  if(/netflix|spotify|amazon|disney|hbo|youtube|apple.*one|prime/i.test(d)) return 'Entretenimiento';
+  if(/falabella|ripley|paris|zara|h&m|tienda|ropa|zapato/i.test(d)) return 'Hogar';
+  if(/entel|movistar|claro|vtr|internet|telefon|luz|agua|gas |enel|metrogas|aguas/i.test(d)) return 'Servicios';
+  if(/nana|jardin|ni[ñn]|personal|emplead/i.test(d)) return 'Personal del hogar';
   return 'Otro';
 }
 
