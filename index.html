@@ -2993,36 +2993,38 @@ function parseSantanderPDF(text){
     : `${año}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
   const fechaHoy = mesCorte + '-01';
 
-  const dateRe = /^\d{2}\/\d{2}\/\d{2,4}$/;
-  // Monto: $22.291 o $ 22.291 — con o sin espacio
-  const isMontoPos = t => /^\$[\d.,]+$/.test(t);
-  const isMontoNeg = t => /^\$\s*-[\d.,]+$/.test(t);
-  const isNrCuota = t => /^\d+\/\d+$/.test(t);
+  // Extraer solo tokens entre "2.PERÍODO ACTUAL" y "COMPROBANTE DE PAGO"
+  // usando índices de tokens para mayor robustez
+  const seccionTokens = [];
+  let inSeccion = false;
+  for(let t of tokens){
+    if(/2\.PER[IÍ]ODO ACTUAL/i.test(t)) inSeccion = true;
+    if(/COMPROBANTE DE PAGO/i.test(t)) inSeccion = false;
+    if(inSeccion) seccionTokens.push(t.trim());
+  }
+  // fallback: si no encontró sección, usar todos los tokens
+  const workTokens = seccionTokens.length > 5 ? seccionTokens : tokens;
 
-  // Ignorar fechas fuera del detalle (header, comprobante, etc)
-  const IGNORAR_TRAS_FECHA = /FECHA ESTADO|NOMBRE DEL|PERÍODO FACTURADO|PERÍODO DE FACTURACIÓN|PAGAR HASTA|XXXX|COMPROBANTE|PRÓXIMO PERÍODO/i;
+  const dateRe = /^\d{2}\/\d{2}\/\d{2,4}$/;
+  const isMontoPos = t => /^\$\s*[\d.,]+$/.test(t);
+  const isMontoNeg = t => /^\$\s*-/.test(t);
+  const isNrCuota = t => /^\d+\/\d+$/.test(t) && !dateRe.test(t);
 
   let i = 0;
-  while(i < tokens.length){
-    const tok = tokens[i];
+  while(i < workTokens.length){
+    const tok = workTokens[i];
     if(!dateRe.test(tok)){ i++; continue; }
 
-    const ahead = tokens.slice(i+1, i+16);
+    const ahead = workTokens.slice(i+1, i+16);
     const aheadStr = ahead.join(' ');
-
-    // Ignorar fechas de header/comprobante
-    if(IGNORAR_TRAS_FECHA.test(aheadStr)){ i++; continue; }
 
     const [dd,mm,yy] = tok.split('/');
     const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
     const fechaOrig = `${yearFull}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
 
-    // Ignorar cancelaciones — solo si el token inmediato siguiente (no vacío) indica cancelación
-    const primerToken = ahead.find(t => t.trim() !== '');
-    if(primerToken && /MONTO CANCELADO/i.test(primerToken)){ i++; continue; }
-    // O si el primer monto es negativo
-    const primerMonto = ahead.find(t => /^\$/.test(t));
-    if(primerMonto && /^\$\s*-/.test(primerMonto)){ i++; continue; }
+    // Ignorar si el primer monto es negativo (cancelación)
+    const primerMonto = ahead.find(t => /^\$/.test(t.trim()));
+    if(primerMonto && isMontoNeg(primerMonto)){ i++; continue; }
 
     // ── CUOTA: contiene CUOTA FIJA o CUOTA COMERCIO ──
     if(/CUOTA\s+(?:FIJA|COMERCIO)/i.test(aheadStr)){
