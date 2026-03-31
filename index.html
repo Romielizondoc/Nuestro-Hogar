@@ -3017,8 +3017,12 @@ function parseSantanderPDF(text){
     const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
     const fechaOrig = `${yearFull}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
 
-    // Ignorar cancelaciones
-    if(aheadStr.includes('MONTO CANCELADO')){ i++; continue; }
+    // Ignorar cancelaciones — solo si el token inmediato siguiente (no vacío) indica cancelación
+    const primerToken = ahead.find(t => t.trim() !== '');
+    if(primerToken && /MONTO CANCELADO/i.test(primerToken)){ i++; continue; }
+    // O si el primer monto es negativo
+    const primerMonto = ahead.find(t => /^\$/.test(t));
+    if(primerMonto && /^\$\s*-/.test(primerMonto)){ i++; continue; }
 
     // ── CUOTA: contiene CUOTA FIJA o CUOTA COMERCIO ──
     if(/CUOTA\s+(?:FIJA|COMERCIO)/i.test(aheadStr)){
