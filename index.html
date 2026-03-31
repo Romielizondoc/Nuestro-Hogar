@@ -2983,145 +2983,86 @@ function parseSantanderPDF(text){
   const tokens = text.replace(/\n---PAGE---\n/g,'|').split('|').map(t=>t.trim());
   const fullStr = tokens.join(' ');
 
-  // Año del período
+  // Fecha de corte → mes de las cuotas
   let año = new Date().getFullYear();
-  const periodoM = fullStr.match(/PERÍODO FACTURADO\s+(\d{2})\/(\d{2})\/(\d{4})/);
-  if(periodoM) año = parseInt(periodoM[3]);
   const fechaCorteM = fullStr.match(/FECHA ESTADO DE CUENTA\s+(\d{2})\/(\d{2})\/(\d{4})/);
   const mesCorte = fechaCorteM
     ? `${fechaCorteM[3]}-${fechaCorteM[2].padStart(2,'0')}`
     : `${año}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
   const fechaHoy = mesCorte + '-01';
 
-  // Extraer solo tokens entre "2.PERÍODO ACTUAL" y "COMPROBANTE DE PAGO"
-  // usando índices de tokens para mayor robustez
-  const seccionTokens = [];
-  let inSeccion = false;
-  for(let t of tokens){
-    if(/2\.PER[IÍ]ODO ACTUAL/i.test(t)) inSeccion = true;
-    if(/COMPROBANTE DE PAGO/i.test(t)) inSeccion = false;
-    if(inSeccion) seccionTokens.push(t.trim());
+  // Extraer tokens de secciones 2.PERÍODO ACTUAL (puede haber una por tarjeta)
+  const work = [];
+  let inSec = false;
+  for(const t of tokens){
+    if(/2\.PER/i.test(t)) inSec = true;
+    if(/COMPROBANTE DE PAGO/i.test(t)) inSec = false;
+    if(inSec) work.push(t);
   }
-  // fallback: si no encontró sección, usar todos los tokens
-  const workTokens = seccionTokens.length > 5 ? seccionTokens : tokens;
+  const wt = work.length > 5 ? work : tokens;
 
-  const dateRe = /^\d{2}\/\d{2}\/\d{2,4}$/;
-  const isMontoPos = t => /^\$\s*[\d.,]+$/.test(t);
-  const isMontoNeg = t => /^\$\s*-/.test(t);
-  const isNrCuota = t => /^\d+\/\d+$/.test(t) && !dateRe.test(t);
+  const dateRe  = /^\d{2}\/\d{2}\/\d{2,4}$/;
+  const isPos   = t => /^\$\s*[\d.,]+$/.test(t);
+  const isNeg   = t => /^\$\s*-/.test(t);
+  const isNrC   = t => /^\d+\/\d+$/.test(t) && !dateRe.test(t);
+
+  const pMonto = s => {
+    s = s.replace(/[\$\s]/g,'');
+    // formato chileno: puntos = miles
+    if(s.includes(',')) s = s.replace(/\./g,'').replace(',','.');
+    else s = s.replace(/\./g,'');
+    return parseFloat(s)||0;
+  };
 
   let i = 0;
-  while(i < workTokens.length){
-    const tok = workTokens[i];
+  while(i < wt.length){
+    const tok = wt[i];
     if(!dateRe.test(tok)){ i++; continue; }
 
-    const ahead = workTokens.slice(i+1, i+16);
-    const aheadStr = ahead.join(' ');
-
+    const ahead = wt.slice(i+1, i+16);
+    const aStr  = ahead.join(' ');
     const [dd,mm,yy] = tok.split('/');
-    const yearFull = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
-    const fechaOrig = `${yearFull}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+    const yr = yy.length===2 ? 2000+parseInt(yy) : parseInt(yy);
+    const fecha = `${yr}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
 
-    // Ignorar si el primer monto es negativo (cancelación)
-    const primerMonto = ahead.find(t => /^\$/.test(t.trim()));
-    if(primerMonto && isMontoNeg(primerMonto)){ i++; continue; }
+    // Skip cancelaciones
+    const pm = ahead.find(t=>t.startsWith('$'));
+    if(pm && isNeg(pm)){ i++; continue; }
 
-    // ── CUOTA: contiene CUOTA FIJA o CUOTA COMERCIO ──
-    if(/CUOTA\s+(?:FIJA|COMERCIO)/i.test(aheadStr)){
-      const nrIdx = ahead.findIndex(t => isNrCuota(t));
-      // cargo = último monto positivo ANTES del NR/CUOTA (saltando vacíos)
-      let cargoTok = null;
-      for(let j = nrIdx-1; j >= 0; j--){
-        if(ahead[j].trim() === '') continue;
-        if(isMontoPos(ahead[j])){ cargoTok = ahead[j]; break; }
-        break;
-      }
-      const nrCuota = nrIdx >= 0 ? ahead[nrIdx] : '';
-      // descripcion = primer token de texto DESPUÉS de NR/CUOTA
-      const desc = nrIdx >= 0
-        ? ahead.slice(nrIdx+1).find(t => t.length > 2 && !isMontoPos(t) && !dateRe.test(t) && t.trim() !== '' && !/PRODUCTOS|SERVICIOS|CARGOS|COMISIONES/i.test(t)) || 'Cuota'
-        : 'Cuota';
-
-      if(cargoTok){
-        const monto = parseMonto(cargoTok.replace('$',''));
-        if(monto > 0 && monto < 10000000){
-          movimientos.push({
-            id: Date.now()+movimientos.length,
-            name: desc.trim() + (nrCuota ? ` (cuota ${nrCuota})` : ' (cuota)'),
-            type: 'gasto',
-            amount: monto,
-            date: fechaHoy,
-            category: guessCategory(desc),
-            source: 'santander-pdf'
-          });
-        }
-      }
+    // ── CUOTA ──
+    if(/CUOTA\s+(FIJA|COMERCIO)/i.test(aStr)){
+      const nrIdx = ahead.findIndex(t=>isNrC(t));
+      let cargo=null;
+      for(let j=nrIdx-1;j>=0;j--){ if(ahead[j]==='') continue; if(isPos(ahead[j])){ cargo=ahead[j]; break; } break; }
+      const nr = nrIdx>=0 ? ahead[nrIdx] : '';
+      let desc='Cuota';
+      if(nrIdx>=0){ for(const t of ahead.slice(nrIdx+1)){ if(t.length>2&&!t.startsWith('$')&&!dateRe.test(t)&&t.trim()&&!/PRODUCTOS|SERVICIOS|CARGOS|COMISIONES|MOVIMIENTOS/i.test(t)){ desc=t; break; } } }
+      if(cargo){ const monto=pMonto(cargo); if(monto>0&&monto<10000000) movimientos.push({id:Date.now()+movimientos.length,name:`${desc} (cuota ${nr})`,type:'gasto',amount:monto,date:fechaHoy,category:guessCategory(desc),source:'santander-pdf'}); }
       i++; continue;
     }
 
     // ── INTERESES / IMPUESTOS ──
-    if(/^INTERESES$|^IMPUESTOS$/i.test(aheadStr.split(' ').find(t=>/INTERESES|IMPUESTOS/i.test(t))||'')){
-      const montoTok = ahead.find(t => isMontoPos(t));
-      if(montoTok){
-        const monto = parseMonto(montoTok.replace('$',''));
-        const nombre = /INTERESES/i.test(aheadStr) ? 'Intereses tarjeta' : 'Impuestos tarjeta';
-        if(monto > 0){
-          movimientos.push({
-            id: Date.now()+movimientos.length,
-            name: nombre,
-            type: 'gasto',
-            amount: monto,
-            date: fechaHoy,
-            category: 'Servicios',
-            source: 'santander-pdf'
-          });
-        }
-      }
+    if(/\bINTERESES\b|\bIMPUESTOS\b/i.test(aStr)){
+      const mt=ahead.find(t=>isPos(t));
+      if(mt){ const monto=pMonto(mt); const nombre=/INTERES/i.test(aStr)?'Intereses tarjeta':'Impuestos tarjeta'; if(monto>0) movimientos.push({id:Date.now()+movimientos.length,name:nombre,type:'gasto',amount:monto,date:fechaHoy,category:'Servicios',source:'santander-pdf'}); }
       i++; continue;
     }
 
     // ── COMPRA DIRECTA ──
-    // buscar primer monto positivo (con o sin espacio: $3.990 o $ 3.990)
-    const montoIdx = ahead.findIndex(t => /^\$\s*[\d.,]+$/.test(t) && !/^\$\s*-/.test(t));
-    if(montoIdx >= 0){
-      const monto = parseMonto(ahead[montoIdx].replace(/\$\s*/,''));
-      // descripcion después del monto
-      const descAfter = ahead.slice(montoIdx+1).find(t =>
-        t.length > 1 && !/^\$/.test(t) && !dateRe.test(t) &&
-        !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t) &&
-        !/COMPROBANTE|MONTO|SALDO|TOTAL|FACTURA|PAGAR|PERÍODO|MOVIMIENTOS/i.test(t)
-      );
-      // o lugar antes del monto (ej: LAS CONDES)
-      const descBefore = ahead.slice(0, montoIdx).find(t =>
-        t.length > 2 && !/^\$/.test(t) && !dateRe.test(t) &&
-        !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t)
-      );
-      const desc = (descAfter || descBefore || '').trim();
-
-      if(monto > 0 && monto < 50000000 && desc &&
-         !/MONTO|SALDO|TOTAL|FACTURA|PERÍODO|PAGAR|COMPROBANTE|MOVIMIENTOS TARJETA/i.test(desc)){
-        movimientos.push({
-          id: Date.now()+movimientos.length,
-          name: desc,
-          type: 'gasto',
-          amount: monto,
-          date: fechaOrig,
-          category: guessCategory(desc),
-          source: 'santander-pdf'
-        });
-      }
+    const mi=ahead.findIndex(t=>isPos(t));
+    if(mi>=0){
+      const monto=pMonto(ahead[mi]);
+      const dAfter=ahead.slice(mi+1).find(t=>t.length>1&&!t.startsWith('$')&&!dateRe.test(t)&&t.trim()&&!/COMPROBANTE|MONTO|PAGAR|MOVIMIENTOS/i.test(t));
+      const dBefore=ahead.slice(0,mi).find(t=>t.length>2&&!t.startsWith('$')&&!dateRe.test(t)&&t.trim());
+      const desc=(dAfter||dBefore||'').trim();
+      if(monto>0&&monto<50000000&&desc&&!/MONTO|SALDO|TOTAL|FACTURA|PERÍODO|PAGAR|COMPROBANTE|MOVIMIENTOS TARJETA/i.test(desc))
+        movimientos.push({id:Date.now()+movimientos.length,name:desc,type:'gasto',amount:monto,date:fecha,category:guessCategory(desc),source:'santander-pdf'});
     }
-
     i++;
   }
 
-  // Deduplicar
-  const seen = new Set();
-  return movimientos.filter(m => {
-    const key = `${m.name}|${m.amount}`;
-    if(seen.has(key)) return false;
-    seen.add(key); return true;
-  });
+  const seen=new Set();
+  return movimientos.filter(m=>{ const k=`${m.name}|${m.amount}`; if(seen.has(k)) return false; seen.add(k); return true; });
 }
 
 function showImportPreview(){
