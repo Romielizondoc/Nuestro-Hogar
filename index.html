@@ -3028,10 +3028,17 @@ function parseSantanderPDF(text){
 
     // CUOTA: tiene CUOTA FIJA o CUOTA COMERCIO en el bloque
     if(/CUOTA\s+(?:FIJA|COMERCIO)/i.test(aheadStr)){
-      // Buscar $cargo (el monto pequeño con $XX.XXX sin punto de miles grande)
-      // El cargo es el último monto antes del NR/TOTAL (ej: $22.291)
+      // El cargo es el monto antes de NR/TOTAL (ej: $22.291)
       const cuotaNrM = aheadStr.match(/\$([\d.,]+)\s+\d+\/\d+/);
-      const desc = ahead.find(t=> t.length>2 && !dateRe.test(t) && !montoRe.test(t) && !/CUOTA|FIJA|COMERCIO|%/i.test(t) && !/^\d+\/\d+$/.test(t)) || 'Cuota';
+      // La descripción viene DESPUÉS del NR/TOTAL (último token de texto)
+      const nrIdx = ahead.findIndex(t=>/^\d+\/\d+$/.test(t));
+      let desc = '';
+      if(nrIdx>=0){
+        desc = ahead.slice(nrIdx+1).filter(t=>t.length>1 && !/^\$/.test(t) && !dateRe.test(t)).join(' ').trim();
+      }
+      if(!desc){
+        desc = ahead.filter(t=> t.length>2 && !dateRe.test(t) && !montoRe.test(t) && !/CUOTA|FIJA|COMERCIO|%/i.test(t) && !/^\d+\/\d+$/.test(t) && t.trim()!=='').join(' ').trim() || 'Cuota';
+      }
       if(cuotaNrM){
         const monto = parseMonto(cuotaNrM[1]);
         if(monto>0 && monto<10000000){
@@ -3071,19 +3078,22 @@ function parseSantanderPDF(text){
     }
 
     // COMPRA DIRECTA: fecha + [lugar opcional] + $monto + descripcion
-    // Patrón: después de la fecha, buscar un monto positivo pequeño seguido de texto
     const montoIdx = ahead.findIndex(t=>montoRe.test(t) && !montoNegRe.test(t));
     if(montoIdx>=0){
       const montoTok = ahead[montoIdx];
       const monto = parseMonto(montoTok.replace('$',''));
-      // descripcion = tokens después del monto que no son montos ni fechas
-      const descToks = ahead.slice(montoIdx+1).filter(t=>
+      // descripcion puede estar antes O después del monto
+      const descAfter = ahead.slice(montoIdx+1).filter(t=>
         t.length>1 && !montoRe.test(t) && !dateRe.test(t) && !montoNegRe.test(t) &&
-        !/^(DE|A|Y|EN|LA|EL|LOS|LAS)$/i.test(t)
+        !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t)
       );
-      const desc = descToks.slice(0,3).join(' ').trim() || ahead.slice(0,montoIdx).filter(t=>t.length>2&&!montoRe.test(t)&&!dateRe.test(t)).join(' ').trim() || 'Compra';
+      const descBefore = ahead.slice(0,montoIdx).filter(t=>
+        t.length>1 && !montoRe.test(t) && !dateRe.test(t) && !montoNegRe.test(t) &&
+        !/^(DE|A|Y|EN|LA|EL|LOS|LAS|\s*)$/i.test(t)
+      );
+      const desc = (descAfter.length ? descAfter.slice(0,3).join(' ') : descBefore.slice(-2).join(' ')).trim() || 'Compra';
 
-      if(monto>0 && monto<50000000 && desc && !/MONTO|SALDO|TOTAL|FACTURA|PERÍODO/i.test(desc)){
+      if(monto>0 && monto<50000000 && desc && !/MONTO|SALDO|TOTAL|FACTURA|PERÍODO|PAGAR|COMPROBANTE/i.test(desc)){
         movimientos.push({
           id: Date.now()+movimientos.length,
           name: desc.trim(),
